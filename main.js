@@ -129,7 +129,7 @@ var functionCall = element.template(
     var edit = "edit(\""+this.id+"\")"
 
     var button = element(
-      "button.depth-1.function-call-name.button-"+this.id,
+      ".button.depth-1.function-call-name.button-"+this.id,
       expression.functionName,
       {onclick: edit}
     )
@@ -147,38 +147,31 @@ var functionCall = element.template(
 
 
 
-// interactive
-
-var editingId
 function edit(id) {
 
   var expression = expressionsByElementId[id]
 
-  var input = document.querySelector(".human-words-and-stuff")
-
-
-  editingId = id
-
-  input.value = expression.functionName
-  input.style.display = "block"
-  input.focus()
-
   var el = document.querySelector(".button-"+id)
 
-  el.style["padding-top"] = "5px"
-  el.style["border-top"] = "6px solid red"
-  el.style.color = "black"
-  el.style.background = "white"
-  el.style.opacity = "0.7"
+  streamHumanInput(
+    expression.functionName,
+    function onChange(value) {
+      el.innerHTML = value
+    },
+    function done() {
+      el.classList.remove("being-edited-by-human")
+    }
+  )
+
+  el.classList.add("being-edited-by-human")
 }
 
 
 
 
 
-
 var stringElement = element.template(
-  "button.literal.depth-2",
+  ".button.literal.depth-2",
   function(string) {
     this.children.push(
       element("span", "\"")
@@ -200,7 +193,7 @@ var functionLiteral =
 
       children.push(
         element(
-          "button.depth-2",
+          ".button.depth-2",
           "function"
         )
       )
@@ -244,7 +237,7 @@ function argumentNames(names) {
 
 function argumentName(name) {
   return element(
-    "button.argument-name",
+    ".button.argument-name",
     element.raw(name)
   )
 }
@@ -253,7 +246,7 @@ var variableAssignment = element.template(
   ".variable-assignment",
   function(expression) {
     var lhs = element(
-      "button.variable-name",
+      ".button.variable-name",
       [
         element("span", "var&nbsp;"),
         element("span",
@@ -289,7 +282,7 @@ var keyPair = element.template(
   function(key, value) {
 
     this.children.push(element(
-      "button.key.depth-2",
+      ".button.key.depth-2",
       [
         element("span", element.raw(key)),
         element("span", ":")
@@ -303,7 +296,7 @@ var keyPair = element.template(
 )
 
 var variableReference = element.template(
-  "button.variable-reference",
+  ".button.variable-reference",
   function(expression) {
     this.children.push(element.raw(
       expression.variableName
@@ -314,15 +307,16 @@ var variableReference = element.template(
 var arrayLiteral = element.template(
   ".array-literal",
   function(expression) {
-    this.children = expression.items.map(function(item) {
-      var el = expressionToElement(item)
-      el.classes.push("array-item")
-      return el
-    })
+    this.children = expression.items.map(itemToElement)
   }
 )
 
-
+function itemToElement(item) {
+  return element(
+    ".array-item",
+    expressionToElement(item)
+  )
+}
 
 
 
@@ -352,30 +346,90 @@ function expressionToElement(expression, parent) {
   return el
 }
 
+
+
+
+
+// HUMAN WORDS
+
 var humanWords = element.template(
   "input.human-words-and-stuff",
-  {style: "display: none"}
+  {
+    onKeyUp: "handleHumanInput(this)"
+  }
 )
 
-function drawProgram(expression) {
-  var program = expressionToElement(
-    expression
-  )
-    
-  var page = element([
-    element(
-      ".program", 
-      [
-        program,
-        element(".logo", "EZJS"),
-      ]
-    ),
-    element(
-      {style: "position: fixed; top: 20%; left: 0; width: 100%"},
-      humanWords()
-    )
-  ])
+var listener
 
+function handleHumanInput(el) {
+  var newText = el.value
+  listener(newText)
+}
+
+function getInputElement() {
+  return document.querySelector(".human-words-and-stuff")
+}  
+
+function streamHumanInput(startingText, callback, done) {
+  listener = callback
+  var input = getInputElement()
+  var tapCatcher = document.getElementById("tap-catcher")
+  tapCatcher.style.display = "block"
+  input.value = startingText
+  input.focus()
+
+  tapOutCallback = function() {
+    document.getElementById("tap-catcher").style.display = "none"
+    done()
+  }
+
+}
+
+var tapOutCallback
+
+function tapCatcher(child, callback) {
+
+  var style = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none;"
+
+  var catcher = element(
+    {
+      id: "tap-catcher",
+      style: style,
+      onclick: "tapOutCallback()"
+    },
+    child
+  )
+
+  return catcher
+}
+
+
+
+
+
+
+
+function drawProgram(expression) {
+
+  var program = element(
+    ".program", 
+    [
+      expressionToElement(
+  expression),
+      element(".logo", "EZJS")
+    ]
+  )
+
+
+  var input = tapCatcher(
+    humanWords(),
+    function() {
+      console.log("done")
+    }
+  )
+
+    
+  var page = element([program, input])
 
   addToDom(page.html())
 }

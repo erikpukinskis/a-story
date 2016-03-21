@@ -3,16 +3,27 @@ body {
 }
 body, button {
   font-family: sans-serif;
-  color: white;
   font-size: 11pt;
 }
 
 .program {
   max-width: 340px;
   margin: 0 auto;
+  position: relative;
+}
+
+.output {
+  position: absolute;
+  left: 380px;
+  top: 598px;
+  width: 200px;
+  height: 200px;
+  background: #eee;
+  padding: 10px;
 }
 
 .button, .argument-name {
+  color: white;
   padding: 10px 12px;
 }
 

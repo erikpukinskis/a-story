@@ -41,12 +41,12 @@ var program = {
           variableName: "page",
           expression: {
             kind: "function call",
-            functionName: "element",
+            functionName: "element.template.container",
             arguments: [
               "body",
               {
                 kind: "function call",
-                functionName: "element.styles",
+                functionName: "element.style",
                 arguments: [
                   {
                     kind: "object literal",
@@ -58,8 +58,7 @@ var program = {
                       }
                   }
                 ]
-              },
-              "sup family"
+              }
             ]
           }
         }, /////////////////
@@ -77,8 +76,9 @@ var program = {
               functionName: "bridge.sendPage",
               arguments: [
                 {
-                  kind: "variable reference",
-                  variableName: "page"
+                  kind: "function call",
+                  functionName: "page",
+                  arguments: ["sup family"]
                 }
               ]
             }                
@@ -322,32 +322,6 @@ function itemToElement(item) {
 
 
 
-var expressionHandlers = {
-  "function call": functionCall,
-  "function literal": functionLiteral,
-  "variable reference": variableReference,
-  "variable assignment": variableAssignment,
-  "object literal": objectLiteral,
-  "array literal": arrayLiteral
-}
-
-var elements = []
-var expressions = []
-
-function expressionToElement(expression, parent) {
-
-  if (typeof expression == "string") {
-    var el = stringElement(expression)
-  } else {
-    var el = expressionHandlers[
-      expression.kind
-    ](expression)
-  }
-    
-  return el
-}
-
-
 
 
 
@@ -410,17 +384,49 @@ function tapCatcher(child, callback) {
 
 
 
+// Program parsing kind of stuff
+
+var renderers = {
+  "function call": functionCall,
+  "function literal": functionLiteral,
+  "variable reference": variableReference,
+  "variable assignment": variableAssignment,
+  "object literal": objectLiteral,
+  "array literal": arrayLiteral,
+  "string literal": stringElement
+}
+
+function expressionToElement(expression) {
+  return traverseExpression(expression, renderers)
+}
+
+function traverseExpression(expression, handlers) {
+  if (typeof expression == "string") {
+    var kind = "string literal"
+  } else {
+    var kind = expression.kind
+  }
+  
+  var handler = handlers[kind]
+  if (typeof handler != "function") {
+    throw new Error("The object you provided had no "+kind+" handler")
+  }
+  var el = handler(expression)
+    
+  return el  
+} 
+
 function drawProgram(expression) {
 
   var program = element(
     ".program", 
     [
+      element(".output"),
       expressionToElement(
   expression),
       element(".logo", "EZJS")
     ]
   )
-
 
   var input = tapCatcher(
     humanWords(),
@@ -429,14 +435,114 @@ function drawProgram(expression) {
     }
   )
 
-    
   var page = element([program, input])
 
   addToDom(page.html())
 }
 
+
+
+
+
+// running the demo
+
+function pad(str) {
+  var lines = str.split("\n")
+  return lines.map(function(line) {
+    return "  "+line
+  }).join("\n")
+}
+
+var codeGenerators = {
+  "function call": function(expression) {
+    var args = expression.arguments.map(
+      expressionToJavascript
+    ).join(",\n")
+    return expression.functionName+"(\n"+pad(args)+"\n)"
+  },
+  "array literal": function(expression) {
+    var items = expression.items.map(
+      expressionToJavascript
+    )
+    return "[\n"+pad(items.join(",\n"))+"\n]"
+  },
+  "function literal": function(expression) {
+    var names = expression.argumentNames.join(", ")
+    var lines = expression.body.map(
+      expressionToJavascript
+    )
+    var code = "function("
+      +names
+      +") {\n"
+      +pad(lines.join("\n"))
+      +"\n}"
+
+    return code
+  },
+  "string literal": function(expression) {
+    return JSON.stringify(expression)
+  },
+  "variable assignment": function(expression) {
+    return "var "
+      +expression.variableName
+      +" = "
+      +expressionToJavascript(expression.expression)
+  },
+  "variable reference": function(expression) {
+    return expression.variableName
+  },
+  "object literal": function(expression) {
+    return JSON.stringify(expression.object, null, 2)
+  }
+}
+
+function runIt(program) {
+  var js = expressionToJavascript(program)
+
+  console.log(js)
+
+  js = js + "\n//# sourceURL=home-page.js"
+
+  eval(js)
+}
+
+function expressionToJavascript(expression) {
+  return traverseExpression(
+    expression,
+    codeGenerators
+  )
+}
+
+var library = new Library()
+var using = library.using.bind(library)
+library.define("element", function () {
+  return element
+})
+library.define("bridge-route", function() {
+  return function(path, handler) {
+    var bridge = {
+      sendPage: function(element) {
+        console.log("sending", element.html())
+        var out = document.querySelector(".output")
+        out.innerHTML = element.html()
+      }
+    }
+    
+    handler(bridge)
+  }
+})
+
+
+
+
+
+
+
+// At the bottom: main.
+
 drawProgram(program)
 
+runIt(program)
 
 
 

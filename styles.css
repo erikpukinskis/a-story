@@ -1,0 +1,152 @@
+body {
+  padding: 30px 20px
+}
+body, button {
+  font-family: sans-serif;
+  color: white;
+  font-size: 11pt;
+}
+
+.program {
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+button, .argument-name {
+  padding: 10px 12px;
+}
+
+button {
+  color: white;
+  border: 0;
+  background: transparent;
+}
+
+.depth-1 {
+  background: #99f;
+}
+
+.depth-2 {
+  background: #88f;
+}
+
+.argument-name {
+  display: inline-block;
+  background: #8af;
+  margin-right: 12px;
+}
+
+.argument-name {
+  display: inline-block;
+}
+
+.function-argument-names {
+  display: inline;
+}
+
+.variable-assignment .function-call {
+  display: inline;
+}
+
+.function-argument {
+  clear: right;
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* Yucky inheritance stuff that has to be updated when things change: */
+.variable-assignment .function-call.function-argument {
+  display: block;
+}
+
+
+.call-in-call .function-call-name,
+.call-in-call .function-call-args {
+  border: 2px solid #88f;
+  box-sizing: border-box;
+}
+  
+.call-in-call .function-call-name {
+  border-bottom-width: 0;
+  margin-bottom: -2px;
+}
+
+.function-argument:last-child {
+  margin-bottom: 0;
+}
+
+.function-call-args {
+  background: #99f;
+  padding: 12px;
+}
+
+
+
+.function-literal-body {
+  padding: 12px;
+}
+
+.function-literal-line {
+  margin-bottom: 12px;
+}
+.function-literal-line:last-child {
+  margin-bottom: 0;
+}
+
+
+
+.variable-assignment, .variable-reference {
+  background: #a8f;  
+}
+
+.variable-assignment {
+  padding: 0 12px 12px 12px;
+}
+
+.variable-name {
+  margin-left: -10px;
+}
+
+.key-pair .literal {
+  display: inline-block;
+}
+
+.key-pair {
+  margin-bottom: 12px;
+}
+
+.key-pair:last-child {
+  margin-bottom: 0;
+}
+
+.key {
+  margin-right: 12px;
+}
+
+.object-literal, .array-literal {
+  border-left: 2px solid #bbf;
+}
+
+.array-item {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.logo {
+  margin-top: 0px;
+  color: #99f;
+  font-size: 22pt;
+}
+
+/* Hide everything but buttons
+
+div, button {
+  background: none !important;
+  border: none !important;  
+  color: black;
+}
+
+button {
+  background: #ccc !important;
+} /**/
+

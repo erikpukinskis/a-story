@@ -75,6 +75,10 @@ body, button {
   margin-bottom: -2px;
 }
 
+button.function-call-name {
+  max-width: 70%;
+}
+
 .function-argument:last-child {
   margin-bottom: 0;
 }
@@ -157,6 +161,7 @@ body, button {
 
 .being-edited-by-human {
   padding-top: 4px !important;
+  border-width: 0px !important;
   border-top: 6px solid red !important;
   color: black !important;
   background: white !important;

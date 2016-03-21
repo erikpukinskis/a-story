@@ -157,6 +157,7 @@ function edit(id) {
     expression.functionName,
     function onChange(value) {
       el.innerHTML = value
+      expression.functionName = value
     },
     function done() {
       el.classList.remove("being-edited-by-human")

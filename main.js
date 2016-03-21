@@ -24,70 +24,70 @@ var program = {
   kind: "function call",
   functionName: "using",
   arguments: [
-    // // "eriks-homepage",
-    // {
-    //   kind: "array literal",
-    //   items: [
-    //     "element",
-    //     "bridge-route"
-    //   ]
-    // },
-    // {
-    //   kind: "function literal",
-    //   argumentNames: ["element", "bridgeRoute"],
-    //   body: [
-    //     {//////////
-    //       kind: "variable assignment",
-    //       variableName: "page",
-    //       expression: {
-    //         kind: "function call",
-    //         functionName: "element",
-    //         arguments: [
-    //           "body",
-    //           {
-    //             kind: "function call",
-    //             functionName: "element.styles",
-    //             arguments: [
-    //               {
-    //                 kind: "object literal",
-    //                 object: 
-    //                   {
-    //                 "background": "smoke",
-    //                 "color": "wood",
-    //                 "font-family": "Georgia"
-    //                   }
-    //               }
-    //             ]
-    //           },
-    //           "sup family"
-    //         ]
-    //       }
-    //     }, /////////////////
-    //     {
-    //       kind: "function call",
-    //       functionName: "bridgeRoute",
-    //       arguments: [
-    //         "/",
-    //         {
-    //           kind: "function literal",
-    //           argumentNames: ["bridge"],
-    //           body: [
-    //         {
-    //           kind: "function call",
-    //           functionName: "bridge.sendPage",
-    //           arguments: [
-    //             {
-    //               kind: "variable reference",
-    //               variableName: "page"
-    //             }
-    //           ]
-    //         }                
-    //           ]
-    //         }
-    //       ]
-    //     }//////////////////
-    //   ]
-    // }
+    // "eriks-homepage",
+    {
+      kind: "array literal",
+      items: [
+        "element",
+        "bridge-route"
+      ]
+    },
+    {
+      kind: "function literal",
+      argumentNames: ["element", "bridgeRoute"],
+      body: [
+        {//////////
+          kind: "variable assignment",
+          variableName: "page",
+          expression: {
+            kind: "function call",
+            functionName: "element",
+            arguments: [
+              "body",
+              {
+                kind: "function call",
+                functionName: "element.styles",
+                arguments: [
+                  {
+                    kind: "object literal",
+                    object: 
+                      {
+                    "background": "smoke",
+                    "color": "wood",
+                    "font-family": "Georgia"
+                      }
+                  }
+                ]
+              },
+              "sup family"
+            ]
+          }
+        }, /////////////////
+        {
+          kind: "function call",
+          functionName: "bridgeRoute",
+          arguments: [
+            "/",
+            {
+              kind: "function literal",
+              argumentNames: ["bridge"],
+              body: [
+            {
+              kind: "function call",
+              functionName: "bridge.sendPage",
+              arguments: [
+                {
+                  kind: "variable reference",
+                  variableName: "page"
+                }
+              ]
+            }                
+              ]
+            }
+          ]
+        }//////////////////
+      ]
+    }
   ]
 }
 
@@ -126,28 +126,52 @@ var functionCall = element.template(
     this.assignId()
     expressionsByElementId[this.id] = expression
 
+    var edit = "edit(\""+this.id+"\")"
+
     var button = element(
-      "button.depth-1.function-call-name",
+      "button.depth-1.function-call-name.button-"+this.id,
       expression.functionName,
-      {onclick: "edit("+this.id+")"}
+      {onclick: edit}
     )
 
     this.children.push(button)
-    
-    this.children.push(
-      argumentsToElements(
-        expression.arguments
-      )
+
+    var elements = argumentsToElements(
+      expression.arguments
     )
+
+    this.children = this.children.concat(elements)
   }
 )
 
+
+
+
 // interactive
+
+var editingId
 function edit(id) {
-  var el = document.getElementById(id)
-  console.log("id is", id, "el is", el)
-  el.style.border = "5px solid white"
+
+  var expression = expressionsByElementId[id]
+
+  var input = document.querySelector(".human-words-and-stuff")
+
+
+  editingId = id
+
+  input.value = expression.functionName
+  input.style.display = "block"
+  input.focus()
+
+  var el = document.querySelector(".button-"+id)
+
+  el.style["padding-top"] = "5px"
+  el.style["border-top"] = "6px solid red"
+  el.style.color = "black"
+  el.style.background = "white"
+  el.style.opacity = "0.7"
 }
+
 
 
 
@@ -328,174 +352,36 @@ function expressionToElement(expression, parent) {
   return el
 }
 
+var humanWords = element.template(
+  "input.human-words-and-stuff",
+  {style: "display: none"}
+)
+
 function drawProgram(expression) {
   var program = expressionToElement(
     expression
   )
     
-  var page = element(
-    ".program", 
-    [
-      program,
-      element(".logo", "EZJS")
-    ]
-  )
+  var page = element([
+    element(
+      ".program", 
+      [
+        program,
+        element(".logo", "EZJS"),
+      ]
+    ),
+    element(
+      {style: "position: fixed; top: 20%; left: 0; width: 100%"},
+      humanWords()
+    )
+  ])
+
 
   addToDom(page.html())
 }
 
 drawProgram(program)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-var menu = element.template(
-  ".menu",
-  function(row, col, items) {
-
-    for(var i=0; i<items.length; i++) {
-      var item = items[i]
-      var v = 9-i
-      var style = "transform: "
-        +transform(row+i/1.86+.4, col+i/3.4+.22)
-        +"; background: #"+v+v+"f"
-
-      var onclick = "setContent("
-        +row+", "
-        +col+", "
-        +JSON.stringify(item)
-        +")"
- 
-      this.children.push(element(
-        ".voxel.menu-item-voxel",
-        {
-          style: style,
-          onclick: onclick
-        },
-        item && element.raw(item)
-      ))                  
-    }
-  }
-)
-
-var voxelContents = [
-  [],[],[],[]
-]
-
-var voxelIds = [
-  [],[],[],[]
-]
-
-function setContent(row, col, content) {
-  voxelContents[row][col] = content
-  var el = document.getElementById(voxelIds[row][col])
-  el.innerHTML = content
-  el.classList.add("occupied-voxel")
-  deleteMenu(row, col)
-  openMenu = null
-}
-
-drawVoxel()
-
-
-function drawVoxel() {
-  for(var row=0; row<4; row++) {
-    for(var col=0; col<1; col++) {
-      var id = "voxel-0-0-"+row+"-"+col
-
-      var voxel = element(".voxel."+id, {
-        style: "transform: "+transform(row, col),
-        onclick: "handleAttention("+row+","+col+")"
-      })
-    
-      voxelIds[row][col] = voxel.assignId()
-
-      addToDom(voxel.html())
-    }
-  }
-}
-
-function transform(row, col) {
-  return "translate("
-    +(col*110)
-    +"px,"
-    +(row*60+1000)
-    +"px)"
-}
-
-var openMenu
-
-var menuCache = [
-  [],[],[],[]
-]
-
-function closeOpenMenu() {
-  if (openMenu) {
-    var el = document.getElementById(openMenu.id)
-    el.style.display = "none"
-    el.classList.remove("menu-voxel")
-    openMenu = null
-  }
-}
-
-function deleteMenu(row, col) {
-  var id = menuCache[row][col].id
-  delete menuCache[row][col]
-  var menu = document.getElementById(id)
-  body().removeChild(menu)
-}
-
-function handleAttention(row, col) {
-  var cached = menuCache[row][col]
-  var wasAlreadyOpen = openMenu && openMenu == cached
-
-  closeOpenMenu()
-
-  addClassToVoxel(row, col, "menu-voxel")
-
-  if (wasAlreadyOpen) {
-    // leave it closed
-  } else if (cached) {
-    openMenu = cached
-    var el = document.getElementById(openMenu.id)
-    el.style.display = "block"
-  } else {
-    var content = voxelContents[row][col]
-    var choices = ["function", "var", "define"]
-    if (content) {
-      var i = choices.indexOf(content)
-      choices.splice(i, 1, null)
-    }
-    openMenu = menu(row, col, choices)
-    openMenu.assignId()
-    addToDom(openMenu.html())
-    menuCache[row][col] = openMenu
-  }
-}
-
-function addClassToVoxel(row, col) {
-  var id = ".voxel-0-0-"+row+"-"+col
-  var el = document.querySelector(id)
-  el.classList.add("menu-voxel")  
-}
-
-function removeClassFromVoxel(row, col) {
-  var id = ".voxel-0-0-"+row+"-"+col
-  var el = document.querySelector(id)
-  el.classList.remove("menu-voxel")  
-}
-
-// handleAttention(0, 0)
 
 
 

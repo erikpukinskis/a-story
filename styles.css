@@ -138,6 +138,19 @@ button {
   font-size: 22pt;
 }
 
+.human-words-and-stuff  {
+  width: 80%;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 40px;
+  border: none;
+  border-top: 20px solid red;
+  background: white;
+  padding: 0px 30px 20px 30px;
+}
+
+
+
 /* Hide everything but buttons
 
 div, button {

@@ -117,22 +117,19 @@ function argumentsToElements(args) {
   return container
 }
 
-var expressionsByElementId = {}
 
 var functionCall = element.template(
   ".function-call",
   function(expression) {
 
     this.assignId()
-    expressionsByElementId[this.id] = expression
-
-    var edit = "edit(\""+this.id+"\")"
 
     var button = element(
-      ".button.depth-1.function-call-name.button-"+this.id,
-      expression.functionName,
-      {onclick: edit}
+      ".button.depth-1.function-call-name",
+      expression.functionName
     )
+
+    makeEditable(this.id, button, expression)
 
     this.children.push(button)
 
@@ -143,32 +140,6 @@ var functionCall = element.template(
     this.children = this.children.concat(elements)
   }
 )
-
-
-
-
-function edit(id) {
-
-  var expression = expressionsByElementId[id]
-
-  var el = document.querySelector(".button-"+id)
-
-  streamHumanInput(
-    expression.functionName,
-    function onChange(value) {
-      el.innerHTML = value
-      expression.functionName = value
-    },
-    function done() {
-      el.classList.remove("being-edited-by-human")
-    }
-  )
-
-  el.classList.add("being-edited-by-human")
-}
-
-
-
 
 
 var stringElement = element.template(
@@ -185,6 +156,7 @@ var stringElement = element.template(
     )
   }
 )
+
 
 var functionLiteral =
   element.template(
@@ -227,8 +199,7 @@ var functionLiteralBody = element.template(
 
   }
 )
-
-              
+      
 function argumentNames(names) {
   return element(
     ".function-argument-names",
@@ -242,6 +213,7 @@ function argumentName(name) {
     element.raw(name)
   )
 }
+
 
 var variableAssignment = element.template(
   ".variable-assignment",
@@ -265,6 +237,7 @@ var variableAssignment = element.template(
     )
   }
 )
+
 
 var objectLiteral = element.template(
   ".object-literal",
@@ -296,6 +269,7 @@ var keyPair = element.template(
   }
 )
 
+
 var variableReference = element.template(
   ".button.variable-reference",
   function(expression) {
@@ -304,6 +278,7 @@ var variableReference = element.template(
     ))
   }
 )
+
 
 var arrayLiteral = element.template(
   ".array-literal",
@@ -327,23 +302,38 @@ function itemToElement(item) {
 
 // HUMAN WORDS
 
-var humanWords = element.template(
-  "input.human-words-and-stuff",
-  {
-    onKeyUp: "handleHumanInput(this)"
-  }
-)
+var expressionsByElementId = {}
 
-var listener
+function makeEditable(id, button, expression) {
+    button.classes.push("editable-"+id)
 
-function handleHumanInput(el) {
-  var newText = el.value
-  listener(newText)
+    expressionsByElementId[id] = expression
+
+    var edit = "edit(\""+id+"\")"
+
+    button.attributes.onclick = edit
 }
 
-function getInputElement() {
-  return document.querySelector(".human-words-and-stuff")
-}  
+function edit(id) {
+  var expression = expressionsByElementId[id]
+
+  var el = document.querySelector(".editable-"+id)
+
+  streamHumanInput(
+    expression.functionName,
+    function onChange(value) {
+      el.innerHTML = value
+      expression.functionName = value
+    },
+    function done() {
+      el.classList.remove("being-edited-by-human")
+    }
+  )
+
+  el.classList.add("being-edited-by-human")
+}
+
+var tapOutCallback
 
 function streamHumanInput(startingText, callback, done) {
   listener = callback
@@ -360,7 +350,25 @@ function streamHumanInput(startingText, callback, done) {
 
 }
 
-var tapOutCallback
+function getInputElement() {
+  return document.querySelector(".human-words-and-stuff")
+}  
+
+// These are the actual element generators that have to be included on the page:
+
+var humanWords = element.template(
+  "input.human-words-and-stuff",
+  {
+    onKeyUp: "handleHumanInput(this)"
+  }
+)
+
+var listener
+
+function handleHumanInput(el) {
+  var newText = el.value
+  listener(newText)
+}
 
 function tapCatcher(child, callback) {
 

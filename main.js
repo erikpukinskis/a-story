@@ -122,14 +122,16 @@ var functionCall = element.template(
   ".function-call",
   function(expression) {
 
-    this.assignId()
-
     var button = element(
       ".button.depth-1.function-call-name",
       expression.functionName
     )
 
-    makeEditable(this.id, button, expression)
+    makeEditable(
+      button,
+      get.bind(null, expression, "functionName"),
+      set.bind(null, expression, "functionName")
+    )
 
     this.children.push(button)
 
@@ -141,6 +143,13 @@ var functionCall = element.template(
   }
 )
 
+function get(object, key) {
+  return object[key]
+}
+
+function set(object, key, value) {
+  object[key] = value
+}
 
 var stringElement = element.template(
   ".button.literal.depth-2",
@@ -302,35 +311,38 @@ function itemToElement(item) {
 
 // HUMAN WORDS
 
-var expressionsByElementId = {}
+var getters = {}
+var setters = {}
 
-function makeEditable(id, button, expression) {
-    button.classes.push("editable-"+id)
-
-    expressionsByElementId[id] = expression
-
-    var edit = "edit(\""+id+"\")"
-
-    button.attributes.onclick = edit
+function makeEditable(button, get, set) {
+  button.assignId()
+  getters[button.id] = get
+  setters[button.id] = set
+  button.classes.push("editable-"+button.id)
+  var edit = "edit(\""+button.id+"\")"
+  button.attributes.onclick = edit
 }
 
 function edit(id) {
-  var expression = expressionsByElementId[id]
+ 
+  var getValue = getters[id]
+  var setValue = setters[id]
 
   var el = document.querySelector(".editable-"+id)
 
+  el.classList.add("being-edited-by-human")
+
   streamHumanInput(
-    expression.functionName,
+    getValue(),
     function onChange(value) {
       el.innerHTML = value
-      expression.functionName = value
+      setValue(value)
     },
     function done() {
       el.classList.remove("being-edited-by-human")
     }
   )
 
-  el.classList.add("being-edited-by-human")
 }
 
 var tapOutCallback

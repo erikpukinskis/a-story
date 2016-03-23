@@ -131,7 +131,10 @@ function get(object, key) {
 }
 
 function set(object, key, value) {
+  console.log("setting", key, "on", object, "to", value)
   object[key] = value
+  console.log("program:", program)
+  runIt(program)
 }
 
 function argumentsToElements(args) {
@@ -384,12 +387,20 @@ function edit(id) {
 
 }
 
+var humanInputListener
 var tapOutCallback
 
 function streamHumanInput(startingText, callback, done) {
-  listener = callback
+
+  humanInputListener = notifyOnChange
+  .bind({
+    oldText: startingText,
+    callback: callback
+  })
+
   var input = getInputElement()
   var tapCatcher = document.getElementById("tap-catcher")
+
   tapCatcher.style.display = "block"
   input.value = startingText
   input.focus()
@@ -401,6 +412,12 @@ function streamHumanInput(startingText, callback, done) {
 
 }
 
+function notifyOnChange(newText) {
+  if (newText == this.oldText) {return}
+  this.oldText = newText
+  this.callback(newText)
+}
+
 function getInputElement() {
   return document.querySelector(".human-words-and-stuff")
 }
@@ -410,16 +427,9 @@ function getInputElement() {
 var humanWords = element.template(
   "input.human-words-and-stuff",
   {
-    onKeyUp: "handleHumanInput(this)"
+    onKeyUp: "humanInputListener(this.value)"
   }
 )
-
-var listener
-
-function handleHumanInput(el) {
-  var newText = el.value
-  listener(newText)
-}
 
 function tapCatcher(child, callback) {
 
@@ -551,7 +561,7 @@ var codeGenerators = {
 function runIt(program) {
   var js = expressionToJavascript(program)
 
-  console.log(js)
+  // console.log(js)
 
   js = js + "\n//# sourceURL=home-page.js"
 
@@ -570,6 +580,7 @@ var using = library.using.bind(library)
 library.define("element", function () {
   return element
 })
+
 library.define("bridge-route", function() {
   return function(path, handler) {
     var bridge = {

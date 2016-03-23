@@ -49,10 +49,10 @@ var program = {
                     kind: "object literal",
                     object:
                       {
-                    "background": "lightgray",
-                    "color": "burlywood",
-                    "font-size": "30pt",
-                    "font-family": "Georgia"
+                    "background": ezjsJson("lightgray"),
+                    "color": ezjsJson("burlywood"),
+                    "font-size": ezjsJson("30pt"),
+                    "font-family": ezjsJson("Georgia")
                       }
                   }
                 ]
@@ -131,9 +131,7 @@ function get(object, key) {
 }
 
 function set(object, key, value) {
-  console.log("setting", key, "on", object, "to", value)
   object[key] = value
-  console.log("program:", program)
   runIt(program)
 }
 
@@ -288,7 +286,7 @@ var objectLiteral = element.template(
 
 var keyPair = element.template(
   ".key-pair",
-  function(key, value) {
+  function(key, valueExpression) {
 
     this.children.push(element(
       ".button.key.depth-2",
@@ -299,7 +297,7 @@ var keyPair = element.template(
     ))
 
     this.children.push(
-      expressionToElement(ezjsJson(value))
+      expressionToElement(valueExpression)
     )
   }
 )
@@ -554,14 +552,22 @@ var codeGenerators = {
     return expression.variableName
   },
   "object literal": function(expression) {
-    return JSON.stringify(expression.object, null, 2)
+    var keyPairs = []
+
+    for(var key in expression.object) {
+      keyPairs.push(
+        "  "
+        +JSON.stringify(key)
+        +": "
+        +expressionToJavascript(expression.object[key])
+      )
+    }
+    return "{\n"+keyPairs.join(",\n")+"\n}"
   }
 }
 
 function runIt(program) {
   var js = expressionToJavascript(program)
-
-  // console.log(js)
 
   js = js + "\n//# sourceURL=home-page.js"
 
@@ -585,7 +591,6 @@ library.define("bridge-route", function() {
   return function(path, handler) {
     var bridge = {
       sendPage: function(element) {
-        console.log("sending", element.html())
         var out = document.querySelector(".output")
         out.innerHTML = element.html()
       }

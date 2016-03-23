@@ -13,12 +13,9 @@ function addToDom(html) {
 }
 
 
-// SOME MIDDLEWARE PERHAPS?
 
 
 // OUR PROGRAM
-
-
 
 var program = {
   kind: "function call",
@@ -50,7 +47,7 @@ var program = {
                 arguments: [
                   {
                     kind: "object literal",
-                    object: 
+                    object:
                       {
                     "background": "lightgray",
                     "color": "burlywood",
@@ -82,7 +79,7 @@ var program = {
                   variableName: "page"
                 }
               ]
-            }                
+            }
               ]
             }
           ]
@@ -99,32 +96,10 @@ function ezjsJson(string) {
   }
 }
 
-function argumentsToElements(args) {
-  var container = element(
-    ".function-call-args"
-  )
-  
-  for(var i=0; i<args.length; i++) {
-    var expression = args[i]
-    var isFunctionCall =      
-      expression.kind
-      == "function call"
-    var arg = expressionToElement(
-      expression)
-    
-    arg.classes.push(
-      "function-argument")
-    
-    if (isFunctionCall) {
-      arg.classes.push("call-in-call")
-    }
 
-    container.children.push(arg)
-  }
-  
-  return container
-}
 
+
+// RENDERERS
 
 var functionCall = element.template(
   ".function-call",
@@ -159,6 +134,33 @@ function set(object, key, value) {
   object[key] = value
 }
 
+function argumentsToElements(args) {
+  var container = element(
+    ".function-call-args"
+  )
+
+  for(var i=0; i<args.length; i++) {
+
+    var expression = args[i]
+    var isFunctionCall = expression.kind == "function call"
+    var arg = expressionToElement(expression)
+
+    arg.classes.push(
+      "function-argument")
+
+    if (isFunctionCall) {
+      arg.classes.push("call-in-call")
+    }
+
+    container.children.push(arg)
+  }
+
+  return container
+}
+
+
+
+
 var stringLiteral = element.template(
   ".button.literal.depth-2",
   function(expression) {
@@ -180,6 +182,8 @@ var stringLiteral = element.template(
 
   }
 )
+
+
 
 
 var functionLiteral =
@@ -208,6 +212,20 @@ var functionLiteral =
     }
    )
 
+function argumentNames(names) {
+  return element(
+    ".function-argument-names",
+    names.map(argumentName)
+  )
+}
+
+function argumentName(name) {
+  return element(
+    ".button.argument-name",
+    element.raw(name)
+  )
+}
+
 var functionLiteralBody = element.template(
   ".function-literal-body",
   function(lines) {
@@ -223,20 +241,8 @@ var functionLiteralBody = element.template(
 
   }
 )
-      
-function argumentNames(names) {
-  return element(
-    ".function-argument-names",
-    names.map(argumentName)
-  )
-}
 
-function argumentName(name) {
-  return element(
-    ".button.argument-name",
-    element.raw(name)
-  )
-}
+
 
 
 var variableAssignment = element.template(
@@ -252,7 +258,7 @@ var variableAssignment = element.template(
         element("span", "&nbsp;=")
       ]
     )
-    
+
     this.children.push(lhs)
     this.children.push(
       expressionToElement(
@@ -261,6 +267,8 @@ var variableAssignment = element.template(
     )
   }
 )
+
+
 
 
 var objectLiteral = element.template(
@@ -286,12 +294,14 @@ var keyPair = element.template(
         element("span", ":")
       ]
     ))
-    
+
     this.children.push(
       expressionToElement(ezjsJson(value))
     )
   }
 )
+
+
 
 
 var variableReference = element.template(
@@ -302,6 +312,8 @@ var variableReference = element.template(
     ))
   }
 )
+
+
 
 
 var arrayLiteral = element.template(
@@ -321,16 +333,12 @@ function itemToElement(item) {
 
 
 
-
-
-
 // HUMAN WORDS
 
 var getters = {}
 var setters = {}
-var updateElements = {}
 
-function makeEditable(button, get, set, options) {
+function makeEditable(button, getText, setText, options) {
   button.assignId()
 
   if (options) {
@@ -343,8 +351,8 @@ function makeEditable(button, get, set, options) {
 
   button.classes.push("editable-"+button.id)
 
-  getters[button.id] = get
-  setters[button.id] = set
+  getters[button.id] = getText
+  setters[button.id] = setText
 
   var edit = "edit(\""+button.id+"\")"
 
@@ -352,9 +360,9 @@ function makeEditable(button, get, set, options) {
 }
 
 function edit(id) {
- 
-  var getValue = getters[id]
-  var setValue = setters[id]
+
+  var getText = getters[id]
+  var setText = setters[id]
 
   var el = document.querySelector(
     ".editable-"+id)
@@ -364,10 +372,10 @@ function edit(id) {
   el.classList.add("being-edited-by-human")
 
   streamHumanInput(
-    getValue(),
+    getText(),
     function onChange(value) {
       target.innerHTML = value
-      setValue(value)
+      setText(value)
     },
     function done() {
       el.classList.remove("being-edited-by-human")
@@ -395,7 +403,7 @@ function streamHumanInput(startingText, callback, done) {
 
 function getInputElement() {
   return document.querySelector(".human-words-and-stuff")
-}  
+}
 
 // These are the actual element generators that have to be included on the page:
 
@@ -432,10 +440,7 @@ function tapCatcher(child, callback) {
 
 
 
-
-
-
-// Program parsing kind of stuff
+// DRAW THE PROGRAM
 
 var renderers = {
   "function call": functionCall,
@@ -453,7 +458,7 @@ function expressionToElement(expression) {
 
 function traverseExpression(expression, handlers) {
 
-  var kind = expression.kind  
+  var kind = expression.kind
   var handler = handlers[kind]
 
   if (typeof handler != "function") {
@@ -461,12 +466,12 @@ function traverseExpression(expression, handlers) {
   }
 
   return handler(expression)
-} 
+}
 
 function drawProgram(expression) {
 
   var program = element(
-    ".program", 
+    ".program",
     [
       element(".output"),
       expressionToElement(
@@ -491,7 +496,7 @@ function drawProgram(expression) {
 
 
 
-// running the demo
+// RUN THE PROGRAM
 
 function pad(str) {
   var lines = str.split("\n")
@@ -574,7 +579,7 @@ library.define("bridge-route", function() {
         out.innerHTML = element.html()
       }
     }
-    
+
     handler(bridge)
   }
 })
@@ -585,7 +590,7 @@ library.define("bridge-route", function() {
 
 
 
-// At the bottom: main.
+// BOTTOM OF THE FILE
 
 drawProgram(program)
 

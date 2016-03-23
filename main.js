@@ -28,8 +28,8 @@ var program = {
     {
       kind: "array literal",
       items: [
-        "element",
-        "bridge-route"
+        ezjsJson("element"),
+        ezjsJson("bridge-route")
       ]
     },
     {
@@ -41,9 +41,9 @@ var program = {
           variableName: "page",
           expression: {
             kind: "function call",
-            functionName: "element.template.container",
+            functionName: "element",
             arguments: [
-              "body",
+              // ezjsJson("body"),
               {
                 kind: "function call",
                 functionName: "element.style",
@@ -52,13 +52,15 @@ var program = {
                     kind: "object literal",
                     object: 
                       {
-                    "background": "smoke",
-                    "color": "wood",
+                    "background": "lightgray",
+                    "color": "burlywood",
+                    "font-size": "30pt",
                     "font-family": "Georgia"
                       }
                   }
                 ]
-              }
+              },
+              ezjsJson("sup family"),
             ]
           }
         }, /////////////////
@@ -66,7 +68,7 @@ var program = {
           kind: "function call",
           functionName: "bridgeRoute",
           arguments: [
-            "/",
+            ezjsJson("/"),
             {
               kind: "function literal",
               argumentNames: ["bridge"],
@@ -76,9 +78,8 @@ var program = {
               functionName: "bridge.sendPage",
               arguments: [
                 {
-                  kind: "function call",
-                  functionName: "page",
-                  arguments: ["sup family"]
+                  kind: "variable reference",
+                  variableName: "page"
                 }
               ]
             }                
@@ -89,6 +90,13 @@ var program = {
       ]
     }
   ]
+}
+
+function ezjsJson(string) {
+  return {
+    kind: "string literal",
+    string: string
+  }
 }
 
 function argumentsToElements(args) {
@@ -151,18 +159,25 @@ function set(object, key, value) {
   object[key] = value
 }
 
-var stringElement = element.template(
+var stringLiteral = element.template(
   ".button.literal.depth-2",
-  function(string) {
+  function(expression) {
+
+    var stringElement = element("span", element.raw(expression.string))
+
     this.children.push(
+      element("span", "\""),
+      stringElement,
       element("span", "\"")
     )
-    this.children.push(
-      element.raw(string)
+
+    makeEditable(
+      this,
+      get.bind(null, expression, "string"),
+      set.bind(null, expression, "string"),
+      {updateElement: stringElement}
     )
-    this.children.push(
-      element("span", "\"")
-    )
+
   }
 )
 
@@ -273,7 +288,7 @@ var keyPair = element.template(
     ))
     
     this.children.push(
-      expressionToElement(value)
+      expressionToElement(ezjsJson(value))
     )
   }
 )
@@ -313,13 +328,26 @@ function itemToElement(item) {
 
 var getters = {}
 var setters = {}
+var updateElements = {}
 
-function makeEditable(button, get, set) {
+function makeEditable(button, get, set, options) {
   button.assignId()
+
+  if (options) {
+    var updateElement = options.updateElement
+  } else {
+    var updateElement = button
+  }
+
+  updateElement.classes.push("editable-"+button.id+"-target")
+
+  button.classes.push("editable-"+button.id)
+
   getters[button.id] = get
   setters[button.id] = set
-  button.classes.push("editable-"+button.id)
+
   var edit = "edit(\""+button.id+"\")"
+
   button.attributes.onclick = edit
 }
 
@@ -328,14 +356,17 @@ function edit(id) {
   var getValue = getters[id]
   var setValue = setters[id]
 
-  var el = document.querySelector(".editable-"+id)
+  var el = document.querySelector(
+    ".editable-"+id)
+  var target = document.querySelector(
+    ".editable-"+id+"-target")
 
   el.classList.add("being-edited-by-human")
 
   streamHumanInput(
     getValue(),
     function onChange(value) {
-      el.innerHTML = value
+      target.innerHTML = value
       setValue(value)
     },
     function done() {
@@ -413,7 +444,7 @@ var renderers = {
   "variable assignment": variableAssignment,
   "object literal": objectLiteral,
   "array literal": arrayLiteral,
-  "string literal": stringElement
+  "string literal": stringLiteral
 }
 
 function expressionToElement(expression) {
@@ -421,19 +452,15 @@ function expressionToElement(expression) {
 }
 
 function traverseExpression(expression, handlers) {
-  if (typeof expression == "string") {
-    var kind = "string literal"
-  } else {
-    var kind = expression.kind
-  }
-  
+
+  var kind = expression.kind  
   var handler = handlers[kind]
+
   if (typeof handler != "function") {
-    throw new Error("The object you provided had no "+kind+" handler")
+    throw new Error("The object you provided had no "+kind+" handler, which is the kind of your expression: "+JSON.stringify(expression))
   }
-  var el = handler(expression)
-    
-  return el  
+
+  return handler(expression)
 } 
 
 function drawProgram(expression) {
@@ -500,7 +527,7 @@ var codeGenerators = {
     return code
   },
   "string literal": function(expression) {
-    return JSON.stringify(expression)
+    return JSON.stringify(expression.string)
   },
   "variable assignment": function(expression) {
     return "var "

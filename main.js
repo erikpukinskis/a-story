@@ -21,7 +21,6 @@ var program = {
   kind: "function call",
   functionName: "using",
   arguments: [
-    // "eriks-homepage",
     {
       kind: "array literal",
       items: [
@@ -40,6 +39,7 @@ var program = {
             kind: "function call",
             functionName: "element",
             arguments: [
+              ezjsJson("sup family"),
               // ezjsJson("body"),
               {
                 kind: "function call",
@@ -56,8 +56,7 @@ var program = {
                       }
                   }
                 ]
-              },
-              ezjsJson("sup family"),
+              }
             ]
           }
         }, /////////////////
@@ -403,8 +402,13 @@ function streamHumanInput(startingText, callback, done) {
   input.value = startingText
   input.focus()
 
-  tapOutCallback = function() {
+  tapOutCallback = function(event) {
+    if (event.target != tapCatcher) {
+      return
+    }
+
     document.getElementById("tap-catcher").style.display = "none"
+
     done()
   }
 
@@ -437,7 +441,7 @@ function tapCatcher(child, callback) {
     {
       id: "tap-catcher",
       style: style,
-      onclick: "tapOutCallback()"
+      onclick: "tapOutCallback(event)"
     },
     child
   )

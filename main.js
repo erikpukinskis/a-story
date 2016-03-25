@@ -274,26 +274,59 @@ var variableAssignment = element.template(
 var objectLiteral = element.template(
   ".object-literal",
   function(expression) {
+
     var object = expression.object
+
     for(var key in object) {
-      this.children.push(
-        keyPair(key, object[key])
+      var pair = keyPair(
+        key,
+        object[key],
+        function onKeyRename(newKey, oldKey) {
+          var valueExpression = object[oldKey]
+          if (!valueExpression) {
+            debugger
+          }
+          object[newKey] = object[oldKey]
+          delete object[oldKey]
+          runIt(program)
+        }
       )
+
+      this.children.push(pair)
     }
   }
 )
 
+function renameKey(oldKey, newKey) {
+  this[newKey] = this[oldKey]
+  delete this[oldKey]
+}
+
 var keyPair = element.template(
   ".key-pair",
-  function(key, valueExpression) {
+  function(key, valueExpression, valueChanged) {
 
-    this.children.push(element(
+    var textElement = element(
+      "span",
+      element.raw(key)
+    )
+
+    var keyButton = element(
       ".button.key.depth-2",
       [
-        element("span", element.raw(key)),
+        textElement,
         element("span", ":")
       ]
-    ))
+    )
+
+    makeEditable(
+      keyButton,
+      function () { return key},
+      valueChanged,
+      {updateElement: textElement}
+    )
+
+    this.children.push(keyButton)
 
     this.children.push(
       expressionToElement(valueExpression)
@@ -366,16 +399,19 @@ function edit(id) {
 
   var el = document.querySelector(
     ".editable-"+id)
-  var target = document.querySelector(
+  var toUpdate = document.querySelector(
     ".editable-"+id+"-target")
 
   el.classList.add("being-edited-by-human")
 
+  var oldValue = getText()
+
   streamHumanInput(
-    getText(),
+    oldValue,
     function onChange(value) {
-      target.innerHTML = value
-      setText(value)
+      toUpdate.innerHTML = value
+      setText(value, oldValue)
+      oldValue = value
     },
     function done() {
       el.classList.remove("being-edited-by-human")

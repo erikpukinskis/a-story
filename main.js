@@ -270,6 +270,7 @@ var variableAssignment = element.template(
 
 
 
+var expressionsByElementId = {}
 
 var objectLiteral = element.template(
   ".object-literal",
@@ -294,8 +295,42 @@ var objectLiteral = element.template(
 
       this.children.push(pair)
     }
+
+    this.assignId()
+
+    expressionsByElementId[this.id] = expression
+
+    this.attributes.onclick = "addGhostBabyKeyPair(\""+this.id+"\", event)"
   }
 )
+
+var ghostBabyKeyPairs = {}
+
+function addGhostBabyKeyPair(id, el) {
+
+  if (ghostBabyKeyPairs[id]) {
+    return
+  }
+
+  ghostBabyKeyPairs[id] = true
+
+  var object = expressionsByElementId[id].object
+
+  var container = document.getElementById(id)
+
+  var newPair = keyPair(
+    "",
+    ezjsJson(""),
+    function(newValue) {
+      object[key] = newValue
+      ghostBabyKeyPairs[id] = false
+    }
+  )
+
+  newPair.classes.push("ghost-baby-key-pair")
+
+  container.innerHTML = container.innerHTML + newPair.html()
+}
 
 function renameKey(oldKey, newKey) {
   this[newKey] = this[oldKey]

@@ -24,8 +24,8 @@ var program = {
     {
       kind: "array literal",
       items: [
-        ezjsJson("element"),
-        ezjsJson("bridge-route")
+        stringLiteralJson("element"),
+        stringLiteralJson("bridge-route")
       ]
     },
     {
@@ -39,8 +39,8 @@ var program = {
             kind: "function call",
             functionName: "element",
             arguments: [
-              ezjsJson("sup family"),
-              // ezjsJson("body"),
+              stringLiteralJson("sup family"),
+              // stringLiteralJson("body"),
               {
                 kind: "function call",
                 functionName: "element.style",
@@ -49,10 +49,10 @@ var program = {
                     kind: "object literal",
                     object:
                       {
-                    "background": ezjsJson("lightgray"),
-                    "color": ezjsJson("burlywood"),
-                    "font-size": ezjsJson("30pt"),
-                    "font-family": ezjsJson("Georgia")
+                    "background": stringLiteralJson("lightgray"),
+                    "color": stringLiteralJson("burlywood"),
+                    "font-size": stringLiteralJson("30pt"),
+                    "font-family": stringLiteralJson("Georgia")
                       }
                   }
                 ]
@@ -64,7 +64,7 @@ var program = {
           kind: "function call",
           functionName: "bridgeRoute",
           arguments: [
-            ezjsJson("/"),
+            stringLiteralJson("/"),
             {
               kind: "function literal",
               argumentNames: ["bridge"],
@@ -88,7 +88,7 @@ var program = {
   ]
 }
 
-function ezjsJson(string) {
+function stringLiteralJson(string) {
   return {
     kind: "string literal",
     string: string
@@ -282,15 +282,7 @@ var objectLiteral = element.template(
       var pair = keyPair(
         key,
         object[key],
-        function onKeyRename(newKey, oldKey) {
-          var valueExpression = object[oldKey]
-          if (!valueExpression) {
-            debugger
-          }
-          object[newKey] = object[oldKey]
-          delete object[oldKey]
-          runIt(program)
-        }
+        onKeyRename.bind(null, object)
       )
 
       this.children.push(pair)
@@ -303,6 +295,16 @@ var objectLiteral = element.template(
     this.attributes.onclick = "addGhostBabyKeyPair(\""+this.id+"\", event)"
   }
 )
+
+function onKeyRename(object, newKey, oldKey) {
+  var valueExpression = object[oldKey]
+  if (!valueExpression) {
+    debugger
+  }
+  object[newKey] = object[oldKey]
+  delete object[oldKey]
+  runIt(program)
+}
 
 var ghostBabyKeyPairs = {}
 
@@ -320,14 +322,31 @@ function addGhostBabyKeyPair(id, el) {
 
   var newPair = keyPair(
     "",
-    ezjsJson(""),
-    function(newValue) {
-      object[key] = newValue
+    stringLiteralJson(""),
+    function onKeyText(newKey, oldKey) {
+      var value = object[oldKey]
+
+      if (!value) {
+        object[oldKey] = stringLiteralJson("")
+      }
+
+      onKeyRename(object, newKey, oldKey)
+
+      if (!ghostBabyKeyPairs[id]) { return}
+
       ghostBabyKeyPairs[id] = false
+
+      var el = document.querySelector(".ghost-baby-key-pair-"+id)
+
+      if (!el) { return }
+
+      el.classList.remove("ghost-baby-key-pair")
+      el.classList.remove("ghost-baby-key-pair-"+id)
     }
   )
 
   newPair.classes.push("ghost-baby-key-pair")
+  newPair.classes.push("ghost-baby-key-pair-"+id)
 
   container.innerHTML = container.innerHTML + newPair.html()
 }
@@ -399,14 +418,9 @@ function itemToElement(item) {
 }
 
 
-
-
 // HUMAN WORDS
 
-var getters = {}
-var setters = {}
-
-function makeEditable(button, getText, setText, options) {
+function makeEditable(button, getValue, setValue, options) {
   button.assignId()
 
   if (options) {
@@ -415,17 +429,20 @@ function makeEditable(button, getText, setText, options) {
     var updateElement = button
   }
 
+  getters[button.id] = getValue
+  setters[button.id] = setValue
+
   updateElement.classes.push("editable-"+button.id+"-target")
 
   button.classes.push("editable-"+button.id)
-
-  getters[button.id] = getText
-  setters[button.id] = setText
 
   var edit = "edit(\""+button.id+"\")"
 
   button.attributes.onclick = edit
 }
+
+var getters = {}
+var setters = {}
 
 function edit(id) {
 

@@ -177,6 +177,9 @@ button.function-call-name {
   opacity: 0.7 !important;
 }
 
+.ghost-baby-key-pair .button.depth-2 {
+  background: #99e;
+}
 
 
 

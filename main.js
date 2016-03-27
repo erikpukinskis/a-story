@@ -270,7 +270,30 @@ var variableAssignment = element.template(
 
 
 
-var expressionsByElementId = {}
+var indexedById = {}
+var specificity = 3
+
+function barCode(expression) {
+  var id = expression.id
+
+  if (!id) {
+    do {
+      var id = Math.random().toString(36).substr(2, specificity)
+    } while(indexedById[id] && specificity++)
+
+    expression.id = id
+    indexedById[id] = expression
+  }
+
+  return id
+}
+
+barCode.scan = function(id) {
+  return indexedById[id]
+}
+
+
+
 
 var objectLiteral = element.template(
   ".object-literal",
@@ -288,12 +311,12 @@ var objectLiteral = element.template(
       this.children.push(pair)
     }
 
-    this.assignId()
+    var id = barCode(expression)
 
-    expressionsByElementId[this.id] = expression
+    this.classes.push("container-"+id)
 
     this.attributes.onclick =functionCall(addGhostBabyKeyPair).withArgs(
-        this.id,
+        id,
         functionCall.raw("event")
       ).evalable()
 
@@ -320,18 +343,18 @@ function addGhostBabyKeyPair(id, el) {
 
   ghostBabyKeyPairs[id] = true
 
-  var object = expressionsByElementId[id].object
+  var object = barCode.scan(id).object
 
-  var container = document.getElementById(id)
+  var expression = stringLiteralJson("")
 
   var newPair = keyPair(
     "",
-    stringLiteralJson(""),
+    expression,
     function onKeyText(newKey, oldKey) {
       var value = object[oldKey]
 
       if (!value) {
-        object[oldKey] = stringLiteralJson("")
+        object[oldKey] = expression
       }
 
       onKeyRename(object, newKey, oldKey)
@@ -346,11 +369,14 @@ function addGhostBabyKeyPair(id, el) {
 
       el.classList.remove("ghost-baby-key-pair")
       el.classList.remove("ghost-baby-key-pair-"+id)
+
     }
   )
 
   newPair.classes.push("ghost-baby-key-pair")
   newPair.classes.push("ghost-baby-key-pair-"+id)
+
+  var container = document.querySelector(".container-"+id)
 
   container.innerHTML = container.innerHTML + newPair.html()
 }
@@ -362,7 +388,7 @@ function renameKey(oldKey, newKey) {
 
 var keyPair = element.template(
   ".key-pair",
-  function(key, valueExpression, valueChanged) {
+  function(key, valueExpression, onKeyRename) {
 
     var textElement = element(
       "span",
@@ -380,7 +406,7 @@ var keyPair = element.template(
     makeEditable(
       keyButton,
       function () { return key},
-      valueChanged,
+      onKeyRename,
       {updateElement: textElement}
     )
 

@@ -100,7 +100,7 @@ function stringLiteralJson(string) {
 
 // RENDERERS
 
-var functionCall = element.template(
+var renderFunctionCall = element.template(
   ".function-call",
   function(expression) {
 
@@ -292,7 +292,11 @@ var objectLiteral = element.template(
 
     expressionsByElementId[this.id] = expression
 
-    this.attributes.onclick = "addGhostBabyKeyPair(\""+this.id+"\", event)"
+    this.attributes.onclick =functionCall(addGhostBabyKeyPair).withArgs(
+        this.id,
+        functionCall.raw("event")
+      ).evalable()
+
   }
 )
 
@@ -436,9 +440,7 @@ function makeEditable(button, getValue, setValue, options) {
 
   button.classes.push("editable-"+button.id)
 
-  var edit = "edit(\""+button.id+"\")"
-
-  button.attributes.onclick = edit
+  button.attributes.onclick = functionCall(edit).withArgs(button.id).evalable()
 }
 
 var getters = {}
@@ -490,18 +492,18 @@ function streamHumanInput(startingText, callback, done) {
   input.value = startingText
   input.focus()
 
-  tapOutCallback = function(event) {
-    if (event.target != tapCatcher) {
-      return
-    }
-
-    document.getElementById("tap-catcher").style.display = "none"
-
-    done()
-  }
-
+  tapOutCallback = done
 }
 
+function onTapOut(event) {
+  if (event.target.id != "tap-catcher") {
+    return
+  }
+
+  event.target.style.display = "none"
+
+  tapOutCallback()
+}
 function notifyOnChange(newText) {
   if (newText == this.oldText) {return}
   this.oldText = newText
@@ -529,7 +531,7 @@ function tapCatcher(child, callback) {
     {
       id: "tap-catcher",
       style: style,
-      onclick: "tapOutCallback(event)"
+      onclick: functionCall(onTapOut).withArgs(functionCall.raw("event")).evalable()
     },
     child
   )
@@ -543,7 +545,7 @@ function tapCatcher(child, callback) {
 // DRAW THE PROGRAM
 
 var renderers = {
-  "function call": functionCall,
+  "function call": renderFunctionCall,
   "function literal": functionLiteral,
   "variable reference": variableReference,
   "variable assignment": variableAssignment,

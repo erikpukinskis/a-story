@@ -506,37 +506,47 @@ function makeEditable(button, getValue, setValue, options) {
 
   button.classes.push("editable-"+button.id)
 
-  button.attributes.onclick = functionCall(edit).withArgs(button.id, getValue, setValue).evalable()
+  button.attributes.onclick = functionCall(startEditing).withArgs(button.id, getValue, setValue).evalable()
 }
 
-function edit(id, getValue, setValue) {
+function startEditing(id, getValue, callback) {
 
   var el = document.querySelector(
     ".editable-"+id)
 
   el.classList.add("being-edited-by-human")
 
-  var oldValue = getValue()
+  var editable = {
+    id: id,
+    oldValue: getValue()
+  }
 
   streamHumanInput(
-    oldValue,
-    function onChange(value) {
-
-      var toUpdate = document.querySelector(
-          ".editable-"
-          +id
-          +"-target")
-
-      toUpdate.innerHTML = value
-      setValue(value, oldValue)
-      oldValue = value
-    },
-    function done() {
-      el.classList.remove("being-edited-by-human")
-    }
+    editable.oldValue,
+    updateEditable.bind(null, editable, callback),
+    stopEditing.bind(null, editable.id)
   )
 
 }
+
+function updateEditable(editable, callback, value) {
+
+  var toUpdate = document.querySelector(
+      ".editable-"
+      +editable.id
+      +"-target")
+
+  toUpdate.innerHTML = value
+  callback(value, editable.oldValue)
+  editable.oldValue = value
+}
+
+function stopEditing(id) {
+  var el = document.querySelector(".editable-"+id)
+  el.classList.remove("being-edited-by-human")
+}
+
+
 
 var humanInputListener
 var tapOutCallback

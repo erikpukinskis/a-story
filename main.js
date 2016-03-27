@@ -12,6 +12,27 @@ function addToDom(html) {
   body().innerHTML = body().innerHTML + html
 }
 
+var indexedById = {}
+var lastInteger = 1999
+
+function barCode(expression) {
+  var id = expression.id
+
+  if (!id) {
+    lastInteger += 1
+    id = lastInteger.toString(36)
+    expression.id = id
+    indexedById[id] = expression
+  }
+
+  return id
+}
+
+barCode.scan = function(id) {
+  return indexedById[id]
+}
+
+
 
 
 
@@ -109,10 +130,12 @@ var renderFunctionCall = element.template(
       expression.functionName
     )
 
+    var expressionId = barCode(expression)
+
     makeEditable(
       button,
-      get.bind(null, expression, "functionName"),
-      set.bind(null, expression, "functionName")
+      functionCall(getProperty).withArgs("functionName", expressionId),
+      functionCall(setProperty).withArgs("functionName", expressionId)
     )
 
     this.children.push(button)
@@ -125,12 +148,14 @@ var renderFunctionCall = element.template(
   }
 )
 
-function get(object, key) {
-  return object[key]
+function getProperty(property, expressionId) {
+  var expression = barCode.scan(expressionId)
+  return expression[property]
 }
 
-function set(object, key, value) {
-  object[key] = value
+function setProperty(property, expressionId, newValue, oldValue) {
+  var expression = barCode.scan(expressionId)
+  expression[property] = newValue
   runIt(program)
 }
 
@@ -175,8 +200,8 @@ var stringLiteral = element.template(
 
     makeEditable(
       this,
-      get.bind(null, expression, "string"),
-      set.bind(null, expression, "string"),
+      functionCall(getProperty).withArgs("string", barCode(expression)),
+      functionCall(setProperty).withArgs("string", barCode(expression)),
       {updateElement: stringElement}
     )
 
@@ -270,27 +295,6 @@ var variableAssignment = element.template(
 
 
 
-var indexedById = {}
-var specificity = 3
-
-function barCode(expression) {
-  var id = expression.id
-
-  if (!id) {
-    do {
-      var id = Math.random().toString(36).substr(2, specificity)
-    } while(indexedById[id] && specificity++)
-
-    expression.id = id
-    indexedById[id] = expression
-  }
-
-  return id
-}
-
-barCode.scan = function(id) {
-  return indexedById[id]
-}
 
 
 
@@ -302,93 +306,121 @@ var objectLiteral = element.template(
     var object = expression.object
 
     for(var key in object) {
-      var pair = keyPair(
-        key,
-        object[key],
-        onKeyRename.bind(null, object)
+      var pairExpression = {
+        key: key,
+        expression: expression
+      }
+
+      var el = keyPair(
+        pairExpression,
+        functionCall(onKeyRename).withArgs(barCode(pairExpression))
       )
 
-      this.children.push(pair)
+      this.children.push(el)
     }
 
-    var id = barCode(expression)
-
-    this.classes.push("container-"+id)
+    this.classes.push("container-"+barCode(expression))
 
     this.attributes.onclick =functionCall(addGhostBabyKeyPair).withArgs(
-        id,
+        barCode(expression),
         functionCall.raw("event")
       ).evalable()
 
   }
 )
 
-function onKeyRename(object, newKey, oldKey) {
-  var valueExpression = object[oldKey]
-  if (!valueExpression) {
-    debugger
-  }
+function onKeyRename(pairId, newKey, oldKey) {
+  var pairExpression = barCode.scan(pairId)
+  var object = pairExpression.expression.object
+
+  pairExpression.key = newKey
   object[newKey] = object[oldKey]
+
   delete object[oldKey]
   runIt(program)
 }
 
-var ghostBabyKeyPairs = {}
+var expressionHasGhostPair = {}
 
-function addGhostBabyKeyPair(id, el) {
+function addGhostBabyKeyPair(expressionId, el) {
+  // ghost = true
+  var expression = barCode.scan(expressionId)
+  var object = expression.object
 
-  if (ghostBabyKeyPairs[id]) {
+  if (expressionHasGhostPair[expressionId]) {
     return
   }
 
-  ghostBabyKeyPairs[id] = true
+  expressionHasGhostPair[expressionId] = true
 
-  var object = barCode.scan(id).object
+  var pair = {
+    kind: "key pair",
+    key: "",
+    expression: expression,
+    valueExpression: stringLiteralJson("")
+  }
 
-  var expression = stringLiteralJson("")
+  var pairId = barCode(pair)
 
-  var newPair = keyPair(
-    "",
-    expression,
-    function onKeyText(newKey, oldKey) {
-      var value = object[oldKey]
-
-      if (!value) {
-        object[oldKey] = expression
-      }
-
-      onKeyRename(object, newKey, oldKey)
-
-      if (!ghostBabyKeyPairs[id]) { return}
-
-      ghostBabyKeyPairs[id] = false
-
-      var el = document.querySelector(".ghost-baby-key-pair-"+id)
-
-      if (!el) { return }
-
-      el.classList.remove("ghost-baby-key-pair")
-      el.classList.remove("ghost-baby-key-pair-"+id)
-
-    }
+  var pairElement = keyPair(
+    pair,
+    functionCall(onNewObjectKey).withArgs(barCode(pair))
   )
 
-  newPair.classes.push("ghost-baby-key-pair")
-  newPair.classes.push("ghost-baby-key-pair-"+id)
+  pairElement.classes.push("ghost-baby-key-pair")
+  pairElement.classes.push("ghost-baby-key-pair-"+pairId)
 
-  var container = document.querySelector(".container-"+id)
+  var container = document.querySelector(".container-"+expressionId)
 
-  container.innerHTML = container.innerHTML + newPair.html()
+  container.innerHTML = container.innerHTML + pairElement.html()
 }
 
-function renameKey(oldKey, newKey) {
-  this[newKey] = this[oldKey]
-  delete this[oldKey]
+function onNewObjectKey(pairId, newKey, oldKey) {
+
+  var pairExpression = barCode.scan(pairId)
+
+  var hasExistingValue = pairExpression.expression.object[oldKey]
+
+  if (hasExistingValue) {
+    onKeyRename(pairId, newKey, oldKey)
+  } else {
+    turnGhostPairIntoRegularPair(pairId, newKey)
+  }
 }
+
+function turnGhostPairIntoRegularPair(pairId, newKey) {
+
+  var pairExpression = barCode.scan(pairId)
+
+  var object = pairExpression.expression.object
+
+  object[newKey] = pairExpression.valueExpression
+
+  runIt(program)
+
+  var pairElement = document.querySelector(".ghost-baby-key-pair-"+pairId)
+
+  pairElement.classList.remove("ghost-baby-key-pair")
+  pairElement.classList.remove("ghost-baby-key-pair-"+pairId)
+
+  var expressionId = barCode(pairExpression.expression)
+
+  expressionHasGhostPair[expressionId] = false
+}
+
+
+
 
 var keyPair = element.template(
   ".key-pair",
-  function(key, valueExpression, onKeyRename) {
+  function keyPair(pairExpression, keyRenameHandler) {
+
+    pairExpression.kind = "key pair"
+
+    var expression = pairExpression.expression
+    var key = pairExpression.key
+
+    var valueExpression = expression.object[key] || pairExpression.valueExpression
 
     var textElement = element(
       "span",
@@ -403,22 +435,33 @@ var keyPair = element.template(
       ]
     )
 
+    var pairId = barCode(pairExpression)
+
     makeEditable(
       keyButton,
-      function () { return key},
-      onKeyRename,
+      functionCall(getKeyName).withArgs(pairId),
+      keyRenameHandler,
       {updateElement: textElement}
     )
 
-    this.children.push(keyButton)
+    if (keyButton.attributes.onclick.match(/undefined/)) {
+      throw new Error("undefined in onclick")
+    }
 
-    this.children.push(
+    var valueElement =
       expressionToElement(valueExpression)
-    )
+    if (ghost) { debugger }
+    this.children.push(keyButton)
+    this.children.push(valueElement)
   }
 )
 
+function getKeyName(id) {
+  var pairExpression = barCode.scan(id)
+  return pairExpression.key
+}
 
+var ghost
 
 
 var variableReference = element.template(
@@ -459,38 +502,33 @@ function makeEditable(button, getValue, setValue, options) {
     var updateElement = button
   }
 
-  getters[button.id] = getValue
-  setters[button.id] = setValue
-
   updateElement.classes.push("editable-"+button.id+"-target")
 
   button.classes.push("editable-"+button.id)
 
-  button.attributes.onclick = functionCall(edit).withArgs(button.id).evalable()
+  button.attributes.onclick = functionCall(edit).withArgs(button.id, getValue, setValue).evalable()
 }
 
-var getters = {}
-var setters = {}
-
-function edit(id) {
-
-  var getText = getters[id]
-  var setText = setters[id]
+function edit(id, getValue, setValue) {
 
   var el = document.querySelector(
     ".editable-"+id)
-  var toUpdate = document.querySelector(
-    ".editable-"+id+"-target")
 
   el.classList.add("being-edited-by-human")
 
-  var oldValue = getText()
+  var oldValue = getValue()
 
   streamHumanInput(
     oldValue,
     function onChange(value) {
+
+      var toUpdate = document.querySelector(
+          ".editable-"
+          +id
+          +"-target")
+
       toUpdate.innerHTML = value
-      setText(value, oldValue)
+      setValue(value, oldValue)
       oldValue = value
     },
     function done() {

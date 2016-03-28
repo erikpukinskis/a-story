@@ -16,16 +16,25 @@ var indexedById = {}
 var lastInteger = 1999
 
 function barCode(expression) {
-  var id = expression.id
+  var id = expression.__barCode
 
   if (!id) {
     lastInteger += 1
-    id = lastInteger.toString(36)
-    expression.id = id
+    id = "BC"+lastInteger.toString(36)
+    expression.__barCode = id
     indexedById[id] = expression
+    checkSize()
   }
 
   return id
+}
+
+function checkSize() {
+  if (lastInteger == 2999) {
+    console.log("Whoa! 1000 items in the index! Getting fancy.")
+  } else if (lastInteger == 11999) {
+    console.log("Um, 10,000 indexed items is a lot. Are there even 10,000 perceptible features on the page?")
+  }
 }
 
 barCode.scan = function(id) {
@@ -113,12 +122,24 @@ function stringLiteralJson(string) {
 var ghostExpression = element.template(
   ".ghost-expression.ghost.button",
   "&nbsp;",
-  function(onWhite) {
-    if (onWhite) {
+  function(options) {
+
+    var containerId = options && options.containerId
+
+    this.attributes.onclick = functionCall(openMenu).evalable()
+
+    if (!containerId) {
       this.classes.push("on-white")
     }
   }
 )
+
+function openMenu() {
+  console.log("da!")
+}
+
+
+
 
 var renderFunctionCall = element.template(
   ".function-call",
@@ -189,7 +210,6 @@ function argumentsToElements(args) {
 
 
 
-
 var stringLiteral = element.template(
   ".button.literal.depth-2",
   function(expression) {
@@ -211,6 +231,8 @@ var stringLiteral = element.template(
 
   }
 )
+
+
 
 
 var functionLiteral =
@@ -298,9 +320,6 @@ var variableAssignment = element.template(
 
 
 
-
-
-
 var objectLiteral = element.template(
   ".object-literal",
   function(expression) {
@@ -345,6 +364,81 @@ function onKeyRename(pairId, newKey, oldKey) {
 
 
 
+var keyPair = element.template(
+  ".key-pair",
+  function keyPair(pairExpression, keyRenameHandler) {
+
+    pairExpression.kind = "key pair"
+
+    var expression = pairExpression.expression
+    var key = pairExpression.key
+
+    var valueExpression = expression.object[key] || pairExpression.valueExpression
+
+    var textElement = element(
+      "span",
+      element.raw(key)
+    )
+
+    var pairId = barCode(pairExpression)
+
+    var keyButton = element(
+      ".button.key.depth-2.key-pair-"+pairId+"-key",
+      [
+        textElement,
+        element("span", ":")
+      ]
+    )
+
+    makeEditable(
+      keyButton,
+      functionCall(getKeyName).withArgs(pairId),
+      keyRenameHandler,
+      {updateElement: textElement}
+    )
+
+    if (keyButton.attributes.onclick.match(/undefined/)) {
+      throw new Error("undefined in onclick")
+    }
+
+    var valueElement =
+      expressionToElement(valueExpression)
+
+    this.children.push(keyButton)
+    this.children.push(valueElement)
+  }
+)
+
+function getKeyName(id) {
+  var pairExpression = barCode.scan(id)
+  return pairExpression.key
+}
+
+var variableReference = element.template(
+  ".button.variable-reference",
+  function(expression) {
+    this.children.push(element.raw(
+      expression.variableName
+    ))
+  }
+)
+
+
+
+
+var arrayLiteral = element.template(
+  ".array-literal",
+  function(expression) {
+    this.children = expression.items.map(itemToElement)
+  }
+)
+
+function itemToElement(item) {
+  return element(
+    ".array-item",
+    expressionToElement(item)
+  )
+}
 
 
 
@@ -353,26 +447,28 @@ function onKeyRename(pairId, newKey, oldKey) {
 
 var expressionHasGhostBaby = {}
 
-function addGhost(expressionId, el) {
-  if (expressionHasGhostBaby[expressionId]) {
+function addGhost(containerId, el) {
+  if (expressionHasGhostBaby[containerId]) {
     return
   }
 
-  expressionHasGhostBaby[expressionId] = true
+  expressionHasGhostBaby[containerId] = true
 
-  var container = document.querySelector(".container-"+expressionId)
+  var container = document.querySelector(".container-"+containerId)
 
   container.innerHTML = container.innerHTML + el.html()
 }
 
 // GHOST BABY MAKERS
 
-function addGhostBabyArgument(expressionId, event) {
-  var el = ghostExpression()
+function addGhostBabyArgument(callId, event) {
+  var el = ghostExpression({
+    containerId: callId
+  })
   el.classes.push("ghost-baby-arg")
   el.classes.push("ghost")
   el.classes.push("function-argument")
-  addGhost(expressionId, el)
+  addGhost(callId, el)
 }
 
 function addGhostBabyKeyPair(expressionId, event) {
@@ -437,94 +533,6 @@ function turnGhostPairIntoRegularPair(pairId, newKey) {
 
 
 
-
-
-
-
-
-
-
-
-var keyPair = element.template(
-  ".key-pair",
-  function keyPair(pairExpression, keyRenameHandler) {
-
-    pairExpression.kind = "key pair"
-
-    var expression = pairExpression.expression
-    var key = pairExpression.key
-
-    var valueExpression = expression.object[key] || pairExpression.valueExpression
-
-    var textElement = element(
-      "span",
-      element.raw(key)
-    )
-
-    var pairId = barCode(pairExpression)
-
-    var keyButton = element(
-      ".button.key.depth-2.key-pair-"+pairId+"-key",
-      [
-        textElement,
-        element("span", ":")
-      ]
-    )
-
-    makeEditable(
-      keyButton,
-      functionCall(getKeyName).withArgs(pairId),
-      keyRenameHandler,
-      {updateElement: textElement}
-    )
-
-    if (keyButton.attributes.onclick.match(/undefined/)) {
-      throw new Error("undefined in onclick")
-    }
-
-    var valueElement =
-      expressionToElement(valueExpression)
-
-    this.children.push(keyButton)
-    this.children.push(valueElement)
-  }
-)
-
-function getKeyName(id) {
-  var pairExpression = barCode.scan(id)
-  return pairExpression.key
-}
-
-var ghost
-
-
-var variableReference = element.template(
-  ".button.variable-reference",
-  function(expression) {
-    this.children.push(element.raw(
-      expression.variableName
-    ))
-  }
-)
-
-
-
-
-var arrayLiteral = element.template(
-  ".array-literal",
-  function(expression) {
-    this.children = expression.items.map(itemToElement)
-  }
-)
-
-function itemToElement(item) {
-  return element(
-    ".array-item",
-    expressionToElement(item)
-  )
-}
-
-
 // HUMAN WORDS
 
 function makeEditable(button, getValue, setValue, options) {
@@ -579,8 +587,6 @@ function stopEditing(id) {
   var el = document.querySelector(".editable-"+id)
   el.classList.remove("being-edited-by-human")
 }
-
-
 
 var humanInputListener
 var tapOutCallback
@@ -692,12 +698,12 @@ function drawProgram(expression) {
     },
     [
       element(".column", [
-        line(ghostExpression(true)),
-        line(ghostExpression(true)),
+        line(ghostExpression()),
+        line(ghostExpression()),
         line(program),
         element(".logo", "EZJS"),
-        line(ghostExpression(true)),
-        line(ghostExpression(true))
+        line(ghostExpression()),
+        line(ghostExpression())
       ]),
       element(".column", [
         element(".output")
@@ -850,11 +856,6 @@ function expressionToJavascript(expression) {
     codeGenerators
   )
 }
-
-
-
-
-
 
 var library = new Library()
 var using = library.using.bind(library)

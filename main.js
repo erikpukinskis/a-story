@@ -39,75 +39,64 @@ barCode.scan = function(id) {
 // OUR PROGRAM
 
 var program = {
-  kind: "function call",
-  functionName: "using",
-  arguments: [
-    {
-      kind: "array literal",
-      items: [
-        stringLiteralJson("element"),
-        stringLiteralJson("bridge-route")
-      ]
-    },
-    {
-      kind: "function literal",
-      argumentNames: ["element", "bridgeRoute"],
-      body: [
-        {//////////
-          kind: "variable assignment",
-          variableName: "page",
-          expression: {
+  kind: "function literal",
+  argumentNames: ["element", "bridgeRoute"],
+  body: [
+    {//////////
+      kind: "variable assignment",
+      variableName: "page",
+      expression: {
+        kind: "function call",
+        functionName: "element",
+        arguments: [
+          stringLiteralJson("sup family"),
+          // stringLiteralJson("body"),
+          {
             kind: "function call",
-            functionName: "element",
+            functionName: "element.style",
             arguments: [
-              stringLiteralJson("sup family"),
-              // stringLiteralJson("body"),
               {
-                kind: "function call",
-                functionName: "element.style",
-                arguments: [
+                kind: "object literal",
+                object:
                   {
-                    kind: "object literal",
-                    object:
-                      {
-                    "background": stringLiteralJson("lightgray"),
-                    "color": stringLiteralJson("burlywood"),
-                    "font-size": stringLiteralJson("30pt"),
-                    "font-family": stringLiteralJson("Georgia")
-                      }
+                "background": stringLiteralJson("lightgray"),
+                "color": stringLiteralJson("burlywood"),
+                "font-size": stringLiteralJson("30pt"),
+                "font-family": stringLiteralJson("Georgia")
                   }
-                ]
               }
             ]
           }
-        }, /////////////////
+        ]
+      }
+    }, /////////////////
+    {
+      kind: "function call",
+      functionName: "bridgeRoute",
+      arguments: [
+        stringLiteralJson("/"),
+        {
+          kind: "function literal",
+          argumentNames: ["bridge"],
+          body: [
         {
           kind: "function call",
-          functionName: "bridgeRoute",
+          functionName: "bridge.sendPage",
           arguments: [
-            stringLiteralJson("/"),
             {
-              kind: "function literal",
-              argumentNames: ["bridge"],
-              body: [
-            {
-              kind: "function call",
-              functionName: "bridge.sendPage",
-              arguments: [
-                {
-                  kind: "variable reference",
-                  variableName: "page"
-                }
-              ]
-            }
-              ]
+              kind: "variable reference",
+              variableName: "page"
             }
           ]
-        }//////////////////
+        }
+          ]
+        }
       ]
-    }
+    }//////////////////
   ]
 }
+
+
 
 function stringLiteralJson(string) {
   return {
@@ -793,12 +782,65 @@ var codeGenerators = {
   }
 }
 
-function runIt(program) {
-  var js = expressionToJavascript(program)
+function runIt(functionLiteral) {
+  var expression = packageAsModule(functionLiteral)
+
+  var js = expressionToJavascript(expression)
 
   js = js + "\n//# sourceURL=home-page.js"
 
   eval(js)
+}
+
+function packageAsModule(functionLiteral) {
+  
+  return {
+    kind: "function call",
+    functionName: "using",
+    arguments: [
+      {
+        kind: "array literal",
+        items: dependenciesFromArgumentNames(functionLiteral)
+      },
+      functionLiteral
+    ]
+  }
+
+}
+
+function dependenciesFromArgumentNames(functionLiteral) {
+
+  return functionLiteral
+    .argumentNames
+    .map(
+      function(camelCase) {
+        return stringLiteralJson(
+          dasherized(camelCase)
+        )
+      }
+    )
+
+}
+
+function dasherized(camelCase) {
+  var words = []
+  var wordStart = 0
+
+  for(var i=0; i<camelCase.length+1; i++) {
+
+    var letter = camelCase[i]
+    var isEnd = i == camelCase.length
+    var isUpperCase = letter && letter.toUpperCase() == letter
+
+    if (isUpperCase || isEnd) {
+      // new word!
+      var word = camelCase.slice(wordStart, i)
+      words.push(word.toLowerCase())
+      wordStart = i
+    }
+  }
+
+  return words.join("-")
 }
 
 function expressionToJavascript(expression) {
@@ -807,6 +849,11 @@ function expressionToJavascript(expression) {
     codeGenerators
   )
 }
+
+
+
+
+
 
 var library = new Library()
 var using = library.using.bind(library)

@@ -12,8 +12,12 @@ body, button {
   float: left;
 }
 
+.two-columns {
+  margin: 0 auto;
+  width: 700px;
+}
+
 .output {
-  width: 200px;
   height: 200px;
   background: #fafafa;
   padding: 10px;
@@ -75,7 +79,7 @@ body, button {
   padding-top: 8px;
   box-sizing: border-box;
 }
-  
+
 .call-in-call .function-call-name {
   border-bottom-width: 0;
   margin-bottom: -2px;
@@ -151,7 +155,7 @@ body, button {
 
 
 .variable-assignment, .variable-reference {
-  background: #a8f;  
+  background: #b488ff;
 }
 
 .variable-assignment {
@@ -221,7 +225,7 @@ body, button {
 
 div, button {
   background: none !important;
-  border: none !important;  
+  border: none !important;
   color: black;
 }
 

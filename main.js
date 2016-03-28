@@ -61,8 +61,8 @@ var program = {
                   {
                 "background": stringLiteralJson("cornsilk"),
                 "color": stringLiteralJson("orchid"),
-                "font-size": stringLiteralJson("30pt"),
-                "font-family": stringLiteralJson("Georgia")
+                "font-size": stringLiteralJson("60pt"),
+                "font-family": stringLiteralJson("georgia")
                   }
               }
             ]
@@ -686,6 +686,7 @@ function drawProgram(expression) {
   program.classes.push("program")
 
   var world = element(
+    ".two-columns",
     {
       onclick: "// click away"
     },

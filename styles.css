@@ -7,18 +7,15 @@ body, button {
 }
 
 .column {
-  max-width: 340px;
-  margin: 0 auto;
-  position: relative;
+  width: 340px;
+  margin-left: 10px;
+  float: left;
 }
 
 .output {
-  position: absolute;
-  left: 380px;
-  top: 598px;
   width: 200px;
   height: 200px;
-  background: #eee;
+  background: #fafafa;
   padding: 10px;
 }
 

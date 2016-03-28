@@ -59,8 +59,8 @@ var program = {
                 kind: "object literal",
                 object:
                   {
-                "background": stringLiteralJson("lightgray"),
-                "color": stringLiteralJson("burlywood"),
+                "background": stringLiteralJson("cornsilk"),
+                "color": stringLiteralJson("orchid"),
                 "font-size": stringLiteralJson("30pt"),
                 "font-family": stringLiteralJson("Georgia")
                   }
@@ -678,30 +678,30 @@ function traverseExpression(expression, handlers) {
   return handler(expression)
 }
 
+var line = element.template.container()
+
 function drawProgram(expression) {
-
-  var program = element(
-    [
-      element(".output"),
-      expressionToElement(
-  expression),
-      element(".logo", "EZJS")
-    ]
-  )
-
-  var line = element.template.container()
+  var program = expressionToElement(
+    expression)
+  program.classes.push("program")
 
   var world = element(
     {
       onclick: "// click away"
     },
-    element(".column", [
-      line(ghostExpression(true)),
-      line(ghostExpression(true)),
-      line(program),
-      line(ghostExpression(true)),
-      line(ghostExpression(true))
-    ])
+    [
+      element(".column", [
+        line(ghostExpression(true)),
+        line(ghostExpression(true)),
+        line(program),
+        element(".logo", "EZJS"),
+        line(ghostExpression(true)),
+        line(ghostExpression(true))
+      ]),
+      element(".column", [
+        element(".output")
+      ])
+    ]
   )
 
   var input = tapCatcher(
@@ -866,7 +866,18 @@ library.define("bridge-route", function() {
     var bridge = {
       sendPage: function(element) {
         var out = document.querySelector(".output")
+
+        var el = document.querySelector(".program")
+
         out.innerHTML = element.html()
+
+        setTimeout(function() {
+          var top = el.offsetTop
+          var parentTop = el.parentNode.parentNode.offsetTop
+
+          out.style.top = (top-parentTop)+"px"
+          out.style.position = "relative"
+        })
       }
     }
 

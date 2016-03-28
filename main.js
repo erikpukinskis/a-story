@@ -140,11 +140,17 @@ var renderFunctionCall = element.template(
 
     this.children.push(button)
 
-    var elements = argumentsToElements(
-      expression.arguments
-    )
+    this.attributes.onclick = functionCall(addGhostBabyArgument).withArgs(expressionId, functionCall.raw("event")).evalable()
 
-    this.children = this.children.concat(elements)
+     var container = element(
+      ".function-call-args.container-"+expressionId)
+
+    container.children =
+      argumentsToElements(
+        expression.arguments
+      )
+
+    this.children.push(container)
   }
 )
 
@@ -160,10 +166,8 @@ function setProperty(property, expressionId, newValue, oldValue) {
 }
 
 function argumentsToElements(args) {
-  var container = element(
-    ".function-call-args"
-  )
 
+  var elements = []
   for(var i=0; i<args.length; i++) {
 
     var expression = args[i]
@@ -177,11 +181,12 @@ function argumentsToElements(args) {
       arg.classes.push("call-in-call")
     }
 
-    container.children.push(arg)
+    elements.push(arg)
   }
 
-  return container
+  return elements
 }
+
 
 
 
@@ -340,18 +345,41 @@ function onKeyRename(pairId, newKey, oldKey) {
   runIt(program)
 }
 
-var expressionHasGhostPair = {}
 
-function addGhostBabyKeyPair(expressionId, el) {
-  // ghost = true
-  var expression = barCode.scan(expressionId)
-  var object = expression.object
 
-  if (expressionHasGhostPair[expressionId]) {
+
+
+
+
+
+// GHOST BABIES
+
+var expressionHasGhostBaby = {}
+
+function addGhost(expressionId, el) {
+  if (expressionHasGhostBaby[expressionId]) {
     return
   }
 
-  expressionHasGhostPair[expressionId] = true
+  expressionHasGhostBaby[expressionId] = true
+
+  var container = document.querySelector(".container-"+expressionId)
+
+  container.innerHTML = container.innerHTML + el.html()
+}
+
+// GHOST BABY MAKERS
+
+function addGhostBabyArgument(expressionId, event) {
+  console.log("arg-"+expressionId, event.target )
+  var el = element(".button.depth-2.ghost-baby-arg", " + ")
+
+  addGhost(expressionId, el)
+}
+
+function addGhostBabyKeyPair(expressionId, event) {
+
+  var expression = barCode.scan(expressionId)
 
   var pair = {
     kind: "key pair",
@@ -362,17 +390,17 @@ function addGhostBabyKeyPair(expressionId, el) {
 
   var pairId = barCode(pair)
 
-  var pairElement = keyPair(
+  var el = keyPair(
     pair,
     functionCall(onNewObjectKey).withArgs(barCode(pair))
   )
 
-  pairElement.classes.push("ghost-baby-key-pair")
-  pairElement.classes.push("ghost-baby-key-pair-"+pairId)
+  el.classes.push("ghost-baby-key-pair")
+  el.classes.push("ghost-baby-key-pair-"+pairId)
 
-  var container = document.querySelector(".container-"+expressionId)
 
-  container.innerHTML = container.innerHTML + pairElement.html()
+  addGhost(expressionId, el)
+
 }
 
 function onNewObjectKey(pairId, newKey, oldKey) {
@@ -381,11 +409,11 @@ function onNewObjectKey(pairId, newKey, oldKey) {
 
   var hasExistingValue = pairExpression.expression.object[oldKey]
 
-  if (hasExistingValue) {
-    onKeyRename(pairId, newKey, oldKey)
-  } else {
-    turnGhostPairIntoRegularPair(pairId, newKey)
-  }
+  turnGhostPairIntoRegularPair(pairId, newKey)
+
+  var keyElement = document.querySelector(".key-pair-"+pairId+"-key")
+
+  keyElement.onclick = functionCall(onKeyRename).withArgs(pairId)
 }
 
 function turnGhostPairIntoRegularPair(pairId, newKey) {
@@ -405,8 +433,16 @@ function turnGhostPairIntoRegularPair(pairId, newKey) {
 
   var expressionId = barCode(pairExpression.expression)
 
-  expressionHasGhostPair[expressionId] = false
+  expressionHasGhostBaby[expressionId] = false
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -427,15 +463,15 @@ var keyPair = element.template(
       element.raw(key)
     )
 
+    var pairId = barCode(pairExpression)
+
     var keyButton = element(
-      ".button.key.depth-2",
+      ".button.key.depth-2.key-pair-"+pairId+"-key",
       [
         textElement,
         element("span", ":")
       ]
     )
-
-    var pairId = barCode(pairExpression)
 
     makeEditable(
       keyButton,
@@ -450,7 +486,7 @@ var keyPair = element.template(
 
     var valueElement =
       expressionToElement(valueExpression)
-    if (ghost) { debugger }
+
     this.children.push(keyButton)
     this.children.push(valueElement)
   }

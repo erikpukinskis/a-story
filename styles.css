@@ -181,6 +181,12 @@ button.function-call-name {
   background: #bbf;
 }
 
+.ghost-baby-arg {
+  min-width: 70px;
+  background: #bbf;
+  text-align: center;
+}
+
 
 
 

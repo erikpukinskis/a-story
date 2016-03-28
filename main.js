@@ -121,6 +121,16 @@ function stringLiteralJson(string) {
 
 // RENDERERS
 
+var ghostExpression = element.template(
+  ".ghost-expression.ghost.button",
+  "&nbsp;",
+  function(onWhite) {
+    if (onWhite) {
+      this.classes.push("on-white")
+    }
+  }
+)
+
 var renderFunctionCall = element.template(
   ".function-call",
   function(expression) {
@@ -214,8 +224,6 @@ var stringLiteral = element.template(
 )
 
 
-
-
 var functionLiteral =
   element.template(
     ".function-literal.depth-2",
@@ -224,7 +232,7 @@ var functionLiteral =
 
       children.push(
         element(
-          ".button.depth-2",
+          ".button.depth-2.function-literal-label",
           "function"
         )
       )
@@ -371,9 +379,10 @@ function addGhost(expressionId, el) {
 // GHOST BABY MAKERS
 
 function addGhostBabyArgument(expressionId, event) {
-  console.log("arg-"+expressionId, event.target )
-  var el = element(".button.depth-2.ghost-baby-arg", " + ")
-
+  var el = ghostExpression()
+  el.classes.push("ghost-baby-arg")
+  el.classes.push("ghost")
+  el.classes.push("function-argument")
   addGhost(expressionId, el)
 }
 
@@ -395,7 +404,7 @@ function addGhostBabyKeyPair(expressionId, event) {
     functionCall(onNewObjectKey).withArgs(barCode(pair))
   )
 
-  el.classes.push("ghost-baby-key-pair")
+  el.classes.push("ghost")
   el.classes.push("ghost-baby-key-pair-"+pairId)
 
 
@@ -428,7 +437,7 @@ function turnGhostPairIntoRegularPair(pairId, newKey) {
 
   var pairElement = document.querySelector(".ghost-baby-key-pair-"+pairId)
 
-  pairElement.classList.remove("ghost-baby-key-pair")
+  pairElement.classList.remove("ghost")
   pairElement.classList.remove("ghost-baby-key-pair-"+pairId)
 
   var expressionId = barCode(pairExpression.expression)
@@ -683,13 +692,27 @@ function traverseExpression(expression, handlers) {
 function drawProgram(expression) {
 
   var program = element(
-    ".program",
     [
       element(".output"),
       expressionToElement(
   expression),
       element(".logo", "EZJS")
     ]
+  )
+
+  var line = element.template.container()
+
+  var world = element(
+    {
+      onclick: "// click away"
+    },
+    element(".column", [
+      line(ghostExpression(true)),
+      line(ghostExpression(true)),
+      line(program),
+      line(ghostExpression(true)),
+      line(ghostExpression(true))
+    ])
   )
 
   var input = tapCatcher(
@@ -699,7 +722,7 @@ function drawProgram(expression) {
     }
   )
 
-  var page = element([program, input])
+  var page = element([world, input])
 
   addToDom(page.html())
 }

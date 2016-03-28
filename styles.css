@@ -6,7 +6,7 @@ body, button {
   font-size: 11pt;
 }
 
-.program {
+.column {
   max-width: 340px;
   margin: 0 auto;
   position: relative;
@@ -84,10 +84,6 @@ body, button {
   margin-bottom: -2px;
 }
 
-button.function-call-name {
-  max-width: 70%;
-}
-
 .function-argument:last-child {
   margin-bottom: 0;
 }
@@ -96,6 +92,51 @@ button.function-call-name {
   background: #99f;
   padding: 12px;
 }
+
+.button.function-call-name,
+.ghost-expression,
+.variable-name,
+.function-literal-label,
+.logo {
+  min-width: 100px;
+  max-width: 70%;
+  text-align: center;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.ghost-expression,
+.logo {
+  margin-bottom: 10px;
+}
+
+.logo {
+  margin-top: 10px;
+  color: #eeffff;
+  font-size: 30pt;
+  line-height: 36px;
+  background: #e8e8ff;
+}
+
+.ghost-expression {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.ghost.button {
+  background: #bbf;
+}
+
+.ghost.button.on-white {
+  background: #eef;
+}
+
+.ghost .button.depth-2 {
+  background: #bbf;
+}
+
+
+
 
 
 
@@ -149,11 +190,7 @@ button.function-call-name {
   margin-bottom: 12px;
 }
 
-.logo {
-  margin-top: 0px;
-  color: #99f;
-  font-size: 22pt;
-}
+
 
 .human-words-and-stuff  {
   width: 80%;
@@ -177,15 +214,8 @@ button.function-call-name {
   opacity: 0.7 !important;
 }
 
-.ghost-baby-key-pair .button.depth-2 {
-  background: #bbf;
-}
 
-.ghost-baby-arg {
-  min-width: 70px;
-  background: #bbf;
-  text-align: center;
-}
+
 
 
 

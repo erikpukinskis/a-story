@@ -297,16 +297,26 @@ var functionLiteralBody = element.template(
 var variableAssignment = element.template(
   ".variable-assignment",
   function(expression) {
+    var nameSpan = element("span",
+      expression.variableName
+    )
+
     var lhs = element(
       ".button.variable-name",
       [
         element("span", "var&nbsp;"),
-        element("span",
-          expression.variableName
-        ),
+        nameSpan,
         element("span", "&nbsp;=")
       ]
     )
+
+    makeEditable(
+      lhs,
+      functionCall(getProperty).withArgs("variableName", barCode(expression)),
+      functionCall(setProperty).withArgs("variableName", barCode(expression)),
+      {updateElement: nameSpan}
+    )
+
 
     this.children.push(lhs)
     this.children.push(

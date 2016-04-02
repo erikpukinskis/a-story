@@ -26,7 +26,6 @@ body, button {
 }
 
 .button, .argument-name {
-  color: white;
   padding: 10px 12px;
 }
 
@@ -49,7 +48,7 @@ body, button {
 
 .argument-name {
   display: inline-block;
-  background: #8af;
+  background: #8bf;
   margin-right: 12px;
 }
 
@@ -115,9 +114,10 @@ body, button {
 
 .logo {
   margin-top: 10px;
-  color: #eeffff;
-  font-size: 30pt;
-  line-height: 36px;
+  color: #eff;
+  font-size: 39px;
+  line-height: 30px;
+  padding: 4px 0 2px 0;
   background: #e8e8ff;
 }
 

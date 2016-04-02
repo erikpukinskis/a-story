@@ -350,9 +350,10 @@ var objectLiteral = element.template(
   }
 )
 
-function onKeyRename(pairId, newKey, oldKey) {
+function onKeyRename(pairId, newKey) {
   var pairExpression = barCode.scan(pairId)
   var object = pairExpression.expression.object
+  var oldKey = pairExpression.key
 
   pairExpression.key = newKey
   object[newKey] = object[oldKey]
@@ -397,9 +398,6 @@ var keyPair = element.template(
       {updateElement: textElement}
     )
 
-    if (keyButton.attributes.onclick.match(/undefined/)) {
-      throw new Error("undefined in onclick")
-    }
 
     var valueElement =
       expressionToElement(valueExpression)
@@ -492,7 +490,6 @@ function addGhostBabyKeyPair(expressionId, event) {
   el.classes.push("ghost")
   el.classes.push("ghost-baby-key-pair-"+pairId)
 
-
   addGhost(expressionId, el)
 
 }
@@ -501,33 +498,46 @@ function onNewObjectKey(pairId, newKey, oldKey) {
 
   var pairExpression = barCode.scan(pairId)
 
-  var hasExistingValue = pairExpression.expression.object[oldKey]
-
-  turnGhostPairIntoRegularPair(pairId, newKey)
-
-  var keyElement = document.querySelector(".key-pair-"+pairId+"-key")
-
-  keyElement.onclick = functionCall(onKeyRename).withArgs(pairId)
-}
-
-function turnGhostPairIntoRegularPair(pairId, newKey) {
-
-  var pairExpression = barCode.scan(pairId)
+  pairExpression.key = newKey
 
   var object = pairExpression.expression.object
 
   object[newKey] = pairExpression.valueExpression
 
-  runIt(program)
+  pairExpression.key = newKey
+
+  // remove classes:
 
   var pairElement = document.querySelector(".ghost-baby-key-pair-"+pairId)
-
   pairElement.classList.remove("ghost")
   pairElement.classList.remove("ghost-baby-key-pair-"+pairId)
 
-  var expressionId = barCode(pairExpression.expression)
+  // mark the ghost baby as gone:
 
+  var expressionId = barCode(pairExpression.expression)
   expressionHasGhostBaby[expressionId] = false
+
+  // swap in the normal callbacks:
+
+  var keyElement = document.querySelector(".key-pair-"+pairId+"-key")
+  var getValue = functionCall(getKeyName).withArgs(pairId)
+
+  // this mabe needs to be more beefy, with the targetElement updater etc
+  var setValue = functionCall(onKeyRename).withArgs(pairId)
+
+  var startEditingScript = functionCall(startEditing).withArgs(keyElement.id, getValue, setValue).evalable()
+
+  keyElement.setAttribute(
+    "onclick",
+    startEditingScript
+  )
+
+  var setValue = onKeyRename.bind(null, pairId)
+
+  humanInputListener.callback = updateEditable.bind(null, setValue)
+
+  runIt(program)
+
 }
 
 
@@ -558,20 +568,22 @@ function startEditing(id, getValue, callback) {
 
   el.classList.add("being-edited-by-human")
 
-  var editable = {
+  editable = {
     id: id,
     oldValue: getValue()
   }
 
   streamHumanInput(
     editable.oldValue,
-    updateEditable.bind(null, editable, callback),
+    updateEditable.bind(null, callback),
     stopEditing.bind(null, editable.id)
   )
 
 }
 
-function updateEditable(editable, callback, value) {
+var editable
+
+function updateEditable(callback, value) {
 
   var toUpdate = document.querySelector(
       ".editable-"
@@ -588,16 +600,13 @@ function stopEditing(id) {
   el.classList.remove("being-edited-by-human")
 }
 
-var humanInputListener
+var humanInputListener = {}
 var tapOutCallback
 
 function streamHumanInput(startingText, callback, done) {
 
-  humanInputListener = notifyOnChange
-  .bind({
-    oldText: startingText,
-    callback: callback
-  })
+  humanInputListener.oldText = startingText
+  humanInputListener.callback = callback
 
   var input = getInputElement()
   var tapCatcher = document.getElementById("tap-catcher")
@@ -618,22 +627,21 @@ function onTapOut(event) {
 
   tapOutCallback()
 }
-function notifyOnChange(newText) {
-  if (newText == this.oldText) {return}
-  this.oldText = newText
-  this.callback(newText)
+
+function onFreshHumanData(newText) {
+  if (newText == humanInputListener.oldText) { return }
+  humanInputListener.oldText = newText
+  humanInputListener.callback(newText)
 }
 
 function getInputElement() {
   return document.querySelector(".human-words-and-stuff")
 }
 
-// These are the actual element generators that have to be included on the page:
-
 var humanWords = element.template(
   "input.human-words-and-stuff",
   {
-    onKeyUp: "humanInputListener(this.value)"
+    onKeyUp: "onFreshHumanData(this.value)"
   }
 )
 

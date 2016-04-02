@@ -248,9 +248,14 @@ var functionLiteral =
         )
       )
 
-      children.push(argumentNames(
-        expression.argumentNames
-      ))
+      var argumentNames = element(
+        ".function-argument-names",
+        expression.argumentNames.map(function(name, index) {
+          return argumentName(expression, name, index)
+        })
+      )
+
+      children.push(argumentNames)
 
       children.push(
         functionLiteralBody(
@@ -261,18 +266,35 @@ var functionLiteral =
     }
    )
 
-function argumentNames(names) {
-  return element(
-    ".function-argument-names",
-    names.map(argumentName)
-  )
+var argumentName = element.template(
+  ".button.argument-name",
+  function(expression, name, argumentIndex) {
+
+    this.children.push(
+      element.raw(name)
+    )
+    
+    makeEditable(
+      this,
+      functionCall(getArgumentName).withArgs(barCode(expression), argumentIndex),
+      functionCall(renameArgument).withArgs(barCode(expression), argumentIndex)
+    )
+
+  }
+)
+
+function getArgumentName(expressionId, index) {
+  var expression = barCode.scan(expressionId)
+
+  return expression.argumentNames[index]
 }
 
-function argumentName(name) {
-  return element(
-    ".button.argument-name",
-    element.raw(name)
-  )
+function renameArgument(expressionId, index, newName) {
+  var expression = barCode.scan(expressionId)
+
+  expression.argumentNames[index] = newName
+
+  runIt(program)
 }
 
 var functionLiteralBody = element.template(

@@ -126,7 +126,48 @@ var ghostExpression = element.template(
 
     var containerId = options && options.containerId
 
-    this.attributes.onclick = functionCall(openMenu).evalable()
+    makeMenu(
+      this,
+      expressionChoice(
+        "\" text \"",
+        {kind: "string literal"}
+      ),
+      expressionChoice(
+        "var _ =",
+        {kind: "variable assignment"}
+      ),
+      expressionChoice(
+        "page",
+        {kind: "variable reference", variableName: "page"}
+      ),
+      expressionChoice(
+        "options :",
+        {kind: "object literal"}
+      ),
+      expressionChoice(
+        "function",
+        {kind: "function literal"}
+      ),
+      expressionChoice(
+        "element",
+        {kind: "function call", functionName: "element"}
+      ),
+      expressionChoice(
+        "bridgeRoute",
+        {kind: "function call", functionName: "bridgeRoute"}
+      ),
+      expressionChoice(
+        "element.style",
+        {kind: "function call", functionName: "bridgeRoute"}
+      ),
+      expressionChoice(
+        "",
+        {kind: "empty"}
+      ),
+      function(choice) {
+        console.log("chose", JSON.stringify(choice))
+      }
+    )
 
     if (!containerId) {
       this.classes.push("on-white")
@@ -134,8 +175,8 @@ var ghostExpression = element.template(
   }
 )
 
-function openMenu() {
-  console.log("da!")
+function expressionChoice() {
+  return {a: "choice!"}
 }
 
 

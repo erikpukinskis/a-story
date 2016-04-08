@@ -123,62 +123,57 @@ var ghostExpression = element.template(
   ".ghost-expression.ghost.button",
   "&nbsp;",
   function(options) {
-
-    var containerId = options && options.containerId
-
-    makeMenu(
-      this,
-      expressionChoice(
-        "\" text \"",
-        {kind: "string literal"}
-      ),
-      expressionChoice(
-        "var _ =",
-        {kind: "variable assignment"}
-      ),
-      expressionChoice(
-        "page",
-        {kind: "variable reference", variableName: "page"}
-      ),
-      expressionChoice(
-        "options :",
-        {kind: "object literal"}
-      ),
-      expressionChoice(
-        "function",
-        {kind: "function literal"}
-      ),
-      expressionChoice(
-        "element",
-        {kind: "function call", functionName: "element"}
-      ),
-      expressionChoice(
-        "bridgeRoute",
-        {kind: "function call", functionName: "bridgeRoute"}
-      ),
-      expressionChoice(
-        "element.style",
-        {kind: "function call", functionName: "bridgeRoute"}
-      ),
-      expressionChoice(
-        "",
-        {kind: "empty"}
-      ),
-      function(choice) {
-        console.log("chose", JSON.stringify(choice))
-      }
-    )
-
-    if (!containerId) {
-      this.classes.push("on-white")
-    }
+    this.assignId()
+    // this.assignId()
+    // this.attributes.onclick = "addExpression(\""+this.id+"\")"
   }
 )
 
-function expressionChoice() {
-  return {a: "choice!"}
-}
+function addExpression(id) {
+  menu(
+    id,
+    menu.choice(
+      "\" text \"",
+      {kind: "string literal"}
+    ),
+    menu.choice(
+      "var _ =",
+      {kind: "variable assignment"}
+    ),
+    menu.choice(
+      "page",
+      {kind: "variable reference", variableName: "page"}
+    ),
+    menu.choice(
+      "options :",
+      {kind: "object literal"}
+    ),
+    menu.choice(
+      "function",
+      {kind: "function literal"}
+    ),
+    menu.choice(
+      "element",
+      {kind: "function call", functionName: "element"}
+    ),
+    menu.choice(
+      "bridgeRoute",
+      {kind: "function call", functionName: "bridgeRoute"}
+    ),
+    menu.choice(
+      "element.style",
+      {kind: "function call", functionName: "bridgeRoute"}
+    ),
+    menu.choice(
+      "",
+      {kind: "empty"}
+    ),
+    function(choice) {
+      console.log("chose", JSON.stringify(choice))
+    }
+  )
 
+}
 
 
 
@@ -187,7 +182,7 @@ var renderFunctionCall = element.template(
   function(expression) {
 
     var button = element(
-      ".button.depth-1.function-call-name",
+      ".button.function-call-name.indenter",
       expression.functionName
     )
 
@@ -252,7 +247,7 @@ function argumentsToElements(args) {
 
 
 var stringLiteral = element.template(
-  ".button.literal.depth-2",
+  ".button.literal",
   function(expression) {
 
     var stringElement = element("span", element.raw(expression.string))
@@ -278,13 +273,13 @@ var stringLiteral = element.template(
 
 var functionLiteral =
   element.template(
-    ".function-literal.depth-2",
+    ".function-literal",
     function(expression) {
       var children = this.children
 
       children.push(
         element(
-          ".button.depth-2.function-literal-label",
+          ".button.function-literal-label.indenter",
           "function"
         )
       )
@@ -342,12 +337,23 @@ var functionLiteralBody = element.template(
   ".function-literal-body",
   function(lines) {
 
+    var previous
+
     this.children = lines.map(
       function(line) {
-        return element(
+        var el = element(
           expressionToElement(line),
           ".function-literal-line"
         )
+
+        if (previous) {
+          previous.classes.push("leads-to-"+line.kind.replace(" ", "-"))
+
+        }
+
+        previous = el
+
+        return el
       }
     )
 
@@ -365,7 +371,7 @@ var variableAssignment = element.template(
     )
 
     var lhs = element(
-      ".button.variable-name",
+      ".button.variable-name.indenter",
       [
         element("span", "var&nbsp;"),
         nameSpan,
@@ -381,12 +387,13 @@ var variableAssignment = element.template(
     )
 
 
-    this.children.push(lhs)
-    this.children.push(
-      expressionToElement(
-        expression.expression
-      )
+    var rhs = expressionToElement(
+      expression.expression
     )
+
+    rhs.classes.push("rhs")
+    this.children.push(lhs)
+    this.children.push(rhs)
   }
 )
 
@@ -457,7 +464,7 @@ var keyPair = element.template(
     var pairId = barCode(pairExpression)
 
     var keyButton = element(
-      ".button.key.depth-2.key-pair-"+pairId+"-key",
+      ".button.key.key-pair-"+pairId+"-key",
       [
         textElement,
         element("span", ":")
@@ -498,7 +505,7 @@ var variableReference = element.template(
 
 
 var arrayLiteral = element.template(
-  ".array-literal",
+  ".array-literal.indenter",
   function(expression) {
     this.children = expression.items.map(itemToElement)
   }
@@ -720,7 +727,7 @@ var humanWords = element.template(
 
 function tapCatcher(child, callback) {
 
-  var style = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none;"
+  var style = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index:1000;"
 
   var catcher = element(
     {
@@ -782,7 +789,7 @@ function drawProgram(expression) {
         line(ghostExpression()),
         line(ghostExpression()),
         line(program),
-        element(".logo", "EZJS"),
+        // element(".logo", "EZJS"),
         line(ghostExpression()),
         line(ghostExpression())
       ]),
@@ -980,5 +987,6 @@ drawProgram(program)
 
 runIt(program)
 
+addExpression("el-7qb")
 
 

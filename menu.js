@@ -1,30 +1,35 @@
-var makeMenu = (function() {
+
+var menu = (function() {
+  var values = []
+  var menuCallback
 
   var menu = element.template(
     ".menu",
-    function(row, col, items) {
+    function(id) {
+      for(var i=1; i<arguments.length; i++) {
 
-      for(var i=0; i<items.length; i++) {
-        var item = items[i]
-        console.log("adding", item)
+        if (typeof arguments[i] == "function") {
+          menuCallback = arguments[i]
+          continue
+        }
+
+        var choice = arguments[i]
         var v = 9-i
         var style = "transform: "
-          +transform(row+i/1.86+.4, col+i/3.4+.22)
+          +transform((i-1)*18, (i-1)*28)
           +"; background: #"+v+v+"f"
 
-        var onclick = "setContent("
-          +row+", "
-          +col+", "
-          +JSON.stringify(item)
-          +")"
+        values[i] = choice.value
+
+        var onclick = "menu.choose(\""+i+"\", event)"
    
         this.children.push(element(
-          ".voxel.menu-item-voxel",
+          ".menu-item.button",
           {
             style: style,
             onclick: onclick
           },
-          item && element.raw(item)
+          choice.label && element.raw(choice.label) || []
         ))                  
       }
     }
@@ -47,11 +52,11 @@ var makeMenu = (function() {
     openMenu = null
   }
 
-  function transform(row, col) {
+  function transform(x, y) {
     return "translate("
-      +(col*110)
+      +(x)
       +"px,"
-      +(row*60)
+      +(y)
       +"px)"
   }
 
@@ -117,6 +122,25 @@ var makeMenu = (function() {
     el.classList.remove("menu-voxel")  
   }
 
-  return menu
+  function makeMenu(id)  {
+    var el = menu.apply(null, arguments)
+
+    var container = document.getElementById(id)
+
+    container.innerHTML = el.html()
+  }
+
+  makeMenu.choice = function (label, value) {
+    return {label: label, value: value}
+  }
+
+  makeMenu.choose = function(i, event) {
+    menuCallback(values[i])
+    var el = document.querySelector(".menu")
+    el.style.display = "none"
+    event.preventDefault()
+  }
+
+  return makeMenu
 
 })()

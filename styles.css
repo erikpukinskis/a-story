@@ -25,31 +25,59 @@ body, button {
   padding: 10px;
 }
 
-.button, .argument-name {
-  padding: 10px 12px;
+.button {
+  padding: 8px 4px 10px 12px;
+}
+
+.button.literal {
+  padding-right: 12px;
 }
 
 .button {
-  color: white;
   border-left-width: 0;
   border-right-width: 0;
-  background: transparent;
   display: inline-block;
   cursor: default;
 }
 
-.depth-1 {
-  background: #99f;
+
+
+.indenter {
+  position: relative;
+  z-index: 1;
 }
 
-.depth-2 {
-  background: #88f;
+.indenter::before {
+  z-index: 0;
+  content: " ";
+  display: block;
+  position: absolute;
+  border-left: 2px solid black;
+  height: 105%;
+  top: 98%;
+  left: 4px;
+  transform: rotate(-20deg);
 }
+
+.function-literal-label::before {
+  border-color: #666;
+}
+
+.variable-name::before {
+  border-color: #e8f;
+}
+
+.function-call-name::before {
+  border-color: #88f;
+}
+
+
+
+
 
 .argument-name {
   display: inline-block;
-  background: #8bf;
-  margin-right: 12px;
+  color: #8df;
 }
 
 .argument-name {
@@ -60,25 +88,18 @@ body, button {
   display: inline;
 }
 
-.variable-assignment .function-call {
-  display: inline;
-}
-
-.function-argument {
-  margin-bottom: 12px;
-}
-
 /* Yucky inheritance stuff that has to be updated when things change: */
 .variable-assignment .function-call.function-argument {
   display: block;
 }
 
+.function-call-name {
+  color: #88f;
+  border-left: 2px solid #88f;
+}
 
-.call-in-call .function-call-name,
-.call-in-call .function-call-args {
-  border: 2px solid #88f;
-  padding-top: 8px;
-  box-sizing: border-box;
+.function-call-args {
+  margin-left: 12px;
 }
 
 .call-in-call .function-call-name {
@@ -90,26 +111,19 @@ body, button {
   margin-bottom: 0;
 }
 
-.function-call-args {
-  background: #99f;
-  padding: 12px;
-}
-
 .button.function-call-name,
 .ghost-expression,
 .variable-name,
 .function-literal-label,
 .logo {
-  min-width: 100px;
   max-width: 70%;
-  text-align: center;
-  display: inline-block;
   box-sizing: border-box;
 }
 
 .ghost-expression,
-.logo {
-  margin-bottom: 10px;
+.logo,
+.program {
+  margin-bottom: 30px;
 }
 
 .logo {
@@ -121,63 +135,67 @@ body, button {
   background: #e8e8ff;
 }
 
+.ghost.button {
+  border: 2px solid #ddf;
+  padding: 6px;
+  min-width: 32px;
+}
+
 .ghost-expression {
   display: inline-block;
-  margin-right: 10px;
-}
-
-.ghost.button {
-  background: #bbf;
-}
-
-.ghost.button.on-white {
-  background: #eef;
-}
-
-.ghost .button.depth-2 {
-  background: #bbf;
+  margin-top: 8px;
 }
 
 
 
+.button.literal, .key {
+  background: #fafafa;
+}
+
+.button.literal, .key, .function-literal-label {
+  color: #666;
+}
 
 
+.function-literal-label {
+  border-left: 2px solid #666;
+}
 
 .function-literal-body {
-  padding: 12px;
+  padding-left: 12px;
 }
 
 .function-literal-line {
-  margin-bottom: 12px;
+  padding-bottom: 12px;
 }
+
 .function-literal-line:last-child {
   margin-bottom: 0;
 }
 
-
-
-.variable-assignment, .variable-reference {
-  background: #b488ff;
+.leads-to-function-call {
+  border-left: 2px dashed #88f;
 }
 
-.variable-assignment {
-  padding: 0 12px 12px 12px;
+.leads-to-function-call > div{
+  margin-left: -2px;
 }
 
 .variable-name {
-  margin-left: -10px;
+  color: #e8f;
+  border-left: 2px solid #e8f;
+}
+
+.variable-reference {
+  color: #e8f;
+}
+
+.rhs {
+  margin-left: 12px;
 }
 
 .key-pair .literal {
   display: inline-block;
-}
-
-.key-pair {
-  margin-bottom: 12px;
-}
-
-.key-pair:last-child {
-  margin-bottom: 0;
 }
 
 .key {
@@ -185,7 +203,7 @@ body, button {
 }
 
 .object-literal, .array-literal {
-  border-left: 2px solid #bbf;
+  border-left: 2px solid #bbb;
 }
 
 .array-item {
@@ -196,6 +214,7 @@ body, button {
 
 
 .human-words-and-stuff  {
+  z-index: 2;
   width: 80%;
   display: block;
   margin: 0 auto;
@@ -209,8 +228,8 @@ body, button {
 }
 
 .being-edited-by-human {
-  padding-top: 4px !important;
-  border-width: 0px !important;
+  padding-top: 2px !important;
+  border-color: 0px !important;
   border-top: 6px solid red !important;
   color: black !important;
   background: white !important;
@@ -218,6 +237,20 @@ body, button {
 }
 
 
+
+.menu-item {
+  position: absolute;
+  white-space: nowrap;
+  min-width: 70px;
+  min-height: 1em;
+  color: white;
+}
+
+.menu {
+  position: relative;
+  min-height: 1em;
+  z-index: 1000;
+}
 
 
 

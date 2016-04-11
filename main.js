@@ -656,7 +656,7 @@ function startEditing(id, getValue, callback) {
   streamHumanInput(
     editable.oldValue,
     updateEditable.bind(null, callback),
-    stopEditing.bind(null, editable.id)
+    functionCall(stopEditing).withArgs(editable.id)
   )
 
 }
@@ -681,41 +681,40 @@ function stopEditing(id) {
 }
 
 var humanInputListener = {}
-var tapOutCallback
+
+// It's pretty weird that callback is a function and done is a functionCall. Maybe they should both be functionCalls and we should actually modify the onChange
 
 function streamHumanInput(startingText, callback, done) {
 
   humanInputListener.oldText = startingText
   humanInputListener.callback = callback
 
-  var input = getInputElement()
-  var tapCatcher = document.getElementById("tap-catcher")
+  var catcher = humanInputListener.catcher
 
-  tapCatcher.style.display = "block"
-  input.value = startingText
-  input.focus()
+  if (catcher) {
+    console.log("setting tapOut to", done)
+    catcher.onTapOut(done)
+    catcher.show()
+  } else {
+    var input = humanWords()
 
-  tapOutCallback = done
-}
+    humanInputListener.inputId = input.assignId()
 
-function onTapOut(event) {
-  if (event.target.id != "tap-catcher") {
-    return
+    var catcher = humanInputListener.catcher = tapCatcher(input, done)
+
+    addToDom(catcher.html())
   }
 
-  event.target.style.display = "none"
+  var input = document.getElementById(humanInputListener.inputId)
 
-  tapOutCallback()
+  input.value = startingText
+  input.focus()
 }
 
 function onFreshHumanData(newText) {
   if (newText == humanInputListener.oldText) { return }
   humanInputListener.oldText = newText
   humanInputListener.callback(newText)
-}
-
-function getInputElement() {
-  return document.querySelector(".human-words-and-stuff")
 }
 
 var humanWords = element.template(
@@ -725,23 +724,57 @@ var humanWords = element.template(
   }
 )
 
+
+// CATCH DEM TAPS
+
 function tapCatcher(child, callback) {
 
-  var style = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; z-index:1000;"
-
   var catcher = element(
+    ".tap-catcher",
     {
-      id: "tap-catcher",
-      style: style,
-      onclick: functionCall(onTapOut).withArgs(functionCall.raw("event")).evalable()
+      onclick: tapOutScript(callback)
     },
+    element.style({
+      "position": "fixed",
+      "top": "0",
+      "left": "0",
+      "width": "100%",
+      "height": "100%",
+      "z-index": "1000"
+    }),
     child
   )
+
+  function tapOutScript(callback) {
+    return functionCall(onTapOut).withArgs(functionCall.raw("event"), callback).evalable()
+  }
+
+  catcher.assignId()
+
+  catcher.onTapOut =
+    function(callback) {
+      document.getElementById(this.id).setAttribute("onclick", tapOutScript(callback))
+    }
+
+  catcher.show =
+    function() {
+      document.getElementById(this.id).style.display = "block"
+    }
 
   return catcher
 }
 
+function onTapOut(event, callback) {
+  var catcherElement = event.target
+  
+  if (!catcherElement.classList.contains("tap-catcher")) {
+    return
+  }
 
+  catcherElement.style.display = "none"
+
+  callback && callback()
+}
 
 
 // DRAW THE PROGRAM
@@ -799,16 +832,7 @@ function drawProgram(expression) {
     ]
   )
 
-  var input = tapCatcher(
-    humanWords(),
-    function() {
-      console.log("done")
-    }
-  )
-
-  var page = element([world, input])
-
-  addToDom(page.html())
+  addToDom(world.html())
 }
 
 

@@ -114,6 +114,10 @@ function stringLiteralJson(string) {
   }
 }
 
+function emptyExpressionJson() {
+  return { kind: "empty expression" }
+}
+
 
 
 
@@ -123,22 +127,44 @@ var ghostExpression = element.template(
   ".ghost-expression.ghost.button",
   "&nbsp;",
   function(options) {
+    if (!options) {
+      console.log("noopt")
+    } else {
+      console.log("IN HUR", barCode.scan(options.parentId))
+    }
+
     this.assignId()
-    // this.assignId()
-    // this.attributes.onclick = "addExpression(\""+this.id+"\")"
+
+    if (!options) { options = {} }
+
+    var add = functionCall(addExpression).withArgs(this.id)
+
+    if (options.parentId) {
+      add = add.withArgs(options.parentId)
+    }
+
+    this.attributes.onclick = add.evalable()
   }
 )
 
-function addExpression(id) {
+function addExpression(ghostElementId, parentId) {
+
   menu(
-    id,
+    menu.choice(
+      "&nbsp;",
+      {kind: "empty"}
+    ),
     menu.choice(
       "\" text \"",
       {kind: "string literal"}
     ),
     menu.choice(
       "var _ =",
-      {kind: "variable assignment"}
+      {
+        kind: "variable assignment",
+        expression: emptyExpressionJson(),
+        variableName: "fraggleRock"
+      }
     ),
     menu.choice(
       "page",
@@ -154,7 +180,7 @@ function addExpression(id) {
     ),
     menu.choice(
       "element",
-      {kind: "function call", functionName: "element"}
+      {kind: "function call", functionName: "element", arguments: []}
     ),
     menu.choice(
       "bridgeRoute",
@@ -164,12 +190,40 @@ function addExpression(id) {
       "element.style",
       {kind: "function call", functionName: "bridgeRoute"}
     ),
-    menu.choice(
-      "",
-      {kind: "empty"}
-    ),
     function(choice) {
-      console.log("chose", JSON.stringify(choice))
+
+      var expression = barCode.scan(parentId)
+
+      expression.arguments.push(choice)
+
+      console.log("chose", choice, "to go in", expression)
+
+      var newEl = expressionToElement(choice)
+
+      var crucible = document.createElement('div')
+
+      crucible.innerHTML = newEl.html()
+
+      var newChild = crucible.firstChild
+
+      var oldChild = document.getElementById(ghostElementId)
+
+      var parent = oldChild.parentNode
+
+      // parent.removeChild(oldChild)
+      // parent.appendChild(newChild)
+
+
+
+      console.log("parent", parent)
+
+      console.log("html", newEl.html())
+      console.log("new", newChild)      
+
+      parent.replaceChild(newChild, oldChild)
+
+      runIt(program)
+
     }
   )
 
@@ -539,14 +593,16 @@ function addGhost(containerId, el) {
 
 // GHOST BABY MAKERS
 
-function addGhostBabyArgument(callId, event) {
+function addGhostBabyArgument(parentId, event) {
+  console.log("it is", parentId, ">",barCode.scan(parentId))
+
   var el = ghostExpression({
-    containerId: callId
+    parentId: parentId
   })
   el.classes.push("ghost-baby-arg")
   el.classes.push("ghost")
   el.classes.push("function-argument")
-  addGhost(callId, el)
+  addGhost(parentId, el)
 }
 
 function addGhostBabyKeyPair(expressionId, event) {
@@ -786,7 +842,8 @@ var renderers = {
   "variable assignment": variableAssignment,
   "object literal": objectLiteral,
   "array literal": arrayLiteral,
-  "string literal": stringLiteral
+  "string literal": stringLiteral,
+  "empty expression": ghostExpression
 }
 
 function expressionToElement(expression) {
@@ -876,6 +933,9 @@ var codeGenerators = {
   },
   "string literal": function(expression) {
     return JSON.stringify(expression.string)
+  },
+  "empty expression": function() {
+    return "null"
   },
   "variable assignment": function(expression) {
     return "var "
@@ -981,11 +1041,10 @@ library.define("bridge-route", function() {
       sendPage: function(element) {
         var out = document.querySelector(".output")
 
-        var el = document.querySelector(".program")
-
         out.innerHTML = element.html()
 
         setTimeout(function() {
+          var el = document.querySelector(".program")
           var top = el.offsetTop
           var parentTop = el.parentNode.parentNode.offsetTop
 
@@ -1011,6 +1070,5 @@ drawProgram(program)
 
 runIt(program)
 
-addExpression("el-7qb")
 
 

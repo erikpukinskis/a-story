@@ -3,9 +3,9 @@ var menu = (function() {
   var values = []
   var menuCallback
 
-  var menu = element.template(
+  var template = element.template(
     ".menu",
-    function(id) {
+    function() {
       for(var i=1; i<arguments.length; i++) {
 
         if (typeof arguments[i] == "function") {
@@ -14,10 +14,6 @@ var menu = (function() {
         }
 
         var choice = arguments[i]
-        var v = 9-i
-        var style = "transform: "
-          +transform((i-1)*18, (i-1)*28)
-          +"; background: #"+v+v+"f"
 
         values[i] = choice.value
 
@@ -26,7 +22,6 @@ var menu = (function() {
         this.children.push(element(
           ".menu-item.button",
           {
-            style: style,
             onclick: onclick
           },
           choice.label && element.raw(choice.label) || []
@@ -122,25 +117,33 @@ var menu = (function() {
     el.classList.remove("menu-voxel")  
   }
 
-  function makeMenu(id)  {
-    var el = menu.apply(null, arguments)
+  var container
 
-    var container = document.getElementById(id)
+  function showMenu()  {
+    var menuElement = template.apply(null, arguments)
 
-    container.innerHTML = el.html()
+    var wrapped = tapCatcher(
+      menuElement,
+      function() {
+        console.log("cancelled menu!")
+      }
+    )
+
+    wrapped.attributes.display = "block"
+    addToDom(wrapped.html())
   }
 
-  makeMenu.choice = function (label, value) {
+  showMenu.choice = function (label, value) {
     return {label: label, value: value}
   }
 
-  makeMenu.choose = function(i, event) {
+  showMenu.choose = function(i, event) {
     menuCallback(values[i])
     var el = document.querySelector(".menu")
     el.style.display = "none"
     event.preventDefault()
   }
 
-  return makeMenu
+  return showMenu
 
 })()

@@ -127,12 +127,6 @@ var ghostExpression = element.template(
   ".ghost-expression.ghost.button",
   "&nbsp;",
   function(options) {
-    if (!options) {
-      console.log("noopt")
-    } else {
-      console.log("IN HUR", barCode.scan(options.parentId))
-    }
-
     this.assignId()
 
     if (!options) { options = {} }
@@ -143,7 +137,7 @@ var ghostExpression = element.template(
       add = add.withArgs(options.parentId)
     }
 
-    this.attributes.onclick = add.evalable()
+    this.onclick(add)
   }
 )
 
@@ -196,8 +190,6 @@ function addExpression(ghostElementId, parentId) {
 
       expression.arguments.push(choice)
 
-      console.log("chose", choice, "to go in", expression)
-
       var newEl = expressionToElement(choice)
 
       var crucible = document.createElement('div')
@@ -209,16 +201,6 @@ function addExpression(ghostElementId, parentId) {
       var oldChild = document.getElementById(ghostElementId)
 
       var parent = oldChild.parentNode
-
-      // parent.removeChild(oldChild)
-      // parent.appendChild(newChild)
-
-
-
-      console.log("parent", parent)
-
-      console.log("html", newEl.html())
-      console.log("new", newChild)      
 
       parent.replaceChild(newChild, oldChild)
 
@@ -250,9 +232,23 @@ var renderFunctionCall = element.template(
 
     this.children.push(button)
 
-    this.attributes.onclick = functionCall(addGhostBabyArgument).withArgs(expressionId, functionCall.raw("event")).evalable()
+    this.onclick(
+      functionCall(handleAttention)
+      .withArgs(
+        this.assignId(),
+        functionCall.raw("event")
+      )
+    )
 
-     var container = element(
+    // this.onclick(
+    //   functionCall(addGhostBabyArgument)
+    //   .withArgs(
+    //     expressionId,
+    //     functionCall.raw("event")
+    //   )
+    // )
+
+    var container = element(
       ".function-call-args.container-"+expressionId)
 
     container.children =
@@ -325,36 +321,63 @@ var stringLiteral = element.template(
 
 
 
-var functionLiteral =
-  element.template(
-    ".function-literal",
-    function(expression) {
-      var children = this.children
+var functionLiteral = element.template(
+  ".function-literal",
+  function(expression) {
+    var children = this.children
 
-      children.push(
-        element(
-          ".button.function-literal-label.indenter",
-          "function"
-        )
+    children.push(
+      element(
+        ".button.function-literal-label.indenter",
+        "function"
       )
+    )
 
-      var argumentNames = element(
-        ".function-argument-names",
-        expression.argumentNames.map(function(name, index) {
-          return argumentName(expression, name, index)
-        })
+    var argumentNames = element(
+      ".function-argument-names",
+      expression.argumentNames.map(function(name, index) {
+        return argumentName(expression, name, index)
+      })
+    )
+
+    children.push(argumentNames)
+
+    children.push(
+      functionLiteralBody(
+        expression.body
       )
+    )
 
-      children.push(argumentNames)
+    this.assignId()
 
-      children.push(
-        functionLiteralBody(
-          expression.body
-        )
-      )
+    this.onclick(
+      functionCall(handleAttention)
+      .withArgs(this.id, functionCall.raw("event"))
+    )
 
+  }
+)
+
+
+var lastSelectedId
+
+function handleAttention(elementId, event) {
+
+  event.stopPropagation()
+
+  var el = document.getElementById(elementId)
+
+  if (elementId == lastSelectedId) {
+    el.classList.remove("selected")
+    lastSelectedId = null
+  } else {
+    if (lastSelectedId) {
+      document.getElementById(lastSelectedId).classList.remove("selected")
     }
-   )
+    el.classList.add("selected")
+    lastSelectedId = elementId
+  }
+}
 
 var argumentName = element.template(
   ".button.argument-name",
@@ -441,6 +464,11 @@ var variableAssignment = element.template(
     )
 
 
+    this.onclick(
+      functionCall(handleAttention)
+      .withArgs(this.assignId(), functionCall.raw("event"))
+    )
+
     var rhs = expressionToElement(
       expression.expression
     )
@@ -476,10 +504,22 @@ var objectLiteral = element.template(
 
     this.classes.push("container-"+barCode(expression))
 
-    this.attributes.onclick =functionCall(addGhostBabyKeyPair).withArgs(
-        barCode(expression),
+    this.onclick(
+      functionCall(handleAttention)
+      .withArgs(
+        this.assignId(),
         functionCall.raw("event")
-      ).evalable()
+      )
+    )
+
+
+    // this.onclick(
+    //   functionCall(addGhostBabyKeyPair)
+    //   .withArgs(
+    //     barCode(expression),
+    //     functionCall.raw("event")
+    //   )
+    // )
 
   }
 )
@@ -594,8 +634,6 @@ function addGhost(containerId, el) {
 // GHOST BABY MAKERS
 
 function addGhostBabyArgument(parentId, event) {
-  console.log("it is", parentId, ">",barCode.scan(parentId))
-
   var el = ghostExpression({
     parentId: parentId
   })
@@ -694,7 +732,14 @@ function makeEditable(button, getValue, setValue, options) {
 
   button.classes.push("editable-"+button.id)
 
-  button.attributes.onclick = functionCall(startEditing).withArgs(button.id, getValue, setValue).evalable()
+  button.onclick(
+    functionCall(startEditing)
+    .withArgs(
+      button.id,
+      getValue,
+      setValue
+    )
+  )
 }
 
 function startEditing(id, getValue, callback) {
@@ -748,7 +793,6 @@ function streamHumanInput(startingText, callback, done) {
   var catcher = humanInputListener.catcher
 
   if (catcher) {
-    console.log("setting tapOut to", done)
     catcher.onTapOut(done)
     catcher.show()
   } else {

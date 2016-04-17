@@ -213,6 +213,7 @@ function addExpression(ghostElementId, parentId) {
 
 
 
+
 var renderFunctionCall = element.template(
   ".function-call",
   function(expression) {
@@ -315,6 +316,7 @@ var stringLiteral = element.template(
       {updateElement: stringElement}
     )
 
+    makeIndicable(this)
   }
 )
 
@@ -348,16 +350,20 @@ var functionLiteral = element.template(
       )
     )
 
-    this.assignId()
-
-    this.onclick(
-      functionCall(handleAttention)
-      .withArgs(this.id, functionCall.raw("event"))
-    )
+    makeIndicable(this)
 
   }
 )
 
+function makeIndicable(el) {
+  el.onclick(
+    functionCall(handleAttention)
+    .withArgs(
+      el.assignId(),
+      functionCall.raw("event")
+    )
+  )
+}
 
 var lastSelectedId
 
@@ -464,10 +470,7 @@ var variableAssignment = element.template(
     )
 
 
-    this.onclick(
-      functionCall(handleAttention)
-      .withArgs(this.assignId(), functionCall.raw("event"))
-    )
+    makeIndicable(this)
 
     var rhs = expressionToElement(
       expression.expression
@@ -592,6 +595,7 @@ var variableReference = element.template(
     this.children.push(element.raw(
       expression.variableName
     ))
+    makeIndicable(this)
   }
 )
 
@@ -720,6 +724,7 @@ function onNewObjectKey(pairId, newKey, oldKey) {
 // HUMAN WORDS
 
 function makeEditable(button, getValue, setValue, options) {
+  return  
   button.assignId()
 
   if (options) {
@@ -920,12 +925,8 @@ function drawProgram(expression) {
     },
     [
       element(".column", [
-        line(ghostExpression()),
-        line(ghostExpression()),
-        line(program),
+        line(program)
         // element(".logo", "EZJS"),
-        line(ghostExpression()),
-        line(ghostExpression())
       ]),
       element(".column", [
         element(".output")

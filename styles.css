@@ -150,8 +150,8 @@ body, button {
 
 .ghost.button {
   background: #ccf;
-  padding: 2px;
-  min-width: 20px;
+  padding: 1px;
+  min-width: 18px;
 }
 
 
@@ -173,16 +173,8 @@ body, button {
   padding-left: 12px;
 }
 
-.function-literal-line {
-  padding-bottom: 12px;
-}
-
-.function-literal-line:last-child {
-  margin-bottom: 0;
-}
-
 .leads-to-function-call {
-  border-left: 2px dashed #88f;
+  border-left: 2px dashed #eee;
 }
 
 .leads-to-function-call > div{
@@ -216,7 +208,6 @@ body, button {
 
 .array-item {
   display: block;
-  margin-bottom: 12px;
 }
 
 

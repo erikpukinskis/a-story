@@ -37,7 +37,6 @@ body, button {
   border-left-width: 0;
   border-right-width: 0;
   display: inline-block;
-  cursor: default;
 }
 
 
@@ -64,7 +63,7 @@ body, button {
 }
 
 .variable-name::before {
-  border-color: #e8f;
+  border-color: #f8e;
 }
 
 .function-call-name::before {
@@ -77,7 +76,7 @@ body, button {
 
 .argument-name {
   display: inline-block;
-  color: #8df;
+  color: #5de;
 }
 
 .argument-name {
@@ -164,12 +163,12 @@ body, button {
 }
 
 .variable-name {
-  color: #e8f;
-  border-left: 2px solid #e8f;
+  color: #f8e;
+  border-left: 2px solid #f8e;
 }
 
 .variable-reference {
-  color: #e8f;
+  color: #f8e;
 }
 
 .rhs {
@@ -247,11 +246,7 @@ body, button {
 }
 
 .selected .key, .selected .literal {
-  background: #bee;
-}
-
-.selected .argument-name {
-  color: #1cf;
+  background: #e6fcfc;
 }
 
 .selector {
@@ -269,7 +264,7 @@ body, button {
   border: 10px solid #f5ffff;
   left: 50%;
   margin-left: -45%;
-  top: 140px;
+  top: 110px; /* SELECTOR_TOP - border width */
 }
 
 

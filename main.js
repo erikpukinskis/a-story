@@ -898,7 +898,7 @@ function expressionToElement(expression) {
 }
 
 var currentSelection
-var SELECTOR_TOP = 140
+var SELECTOR_TOP = 120
 var SELECTOR_HEIGHT = 32
 
 function firstElementInside() {
@@ -942,8 +942,22 @@ function firstElementInside() {
   return foundOne
 }
 
+var alreadyHidden
+
 window.onscroll = function() {
   var newSelection = firstElementInside()
+  var shouldBeHidden = !newSelection
+  var shouldBeVisible = !shouldBeHidden
+
+  if (shouldBeHidden && alreadyHidden !== true) {
+    document.querySelector(".selector").style.display = "none"
+    alreadyHidden = true    
+  }
+
+  if (shouldBeVisible && alreadyHidden) {
+    document.querySelector(".selector").style.display = "block"
+    alreadyHidden = false
+  }
 
   if (newSelection == currentSelection) {
     return

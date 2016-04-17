@@ -123,7 +123,8 @@ body, button {
 .ghost-expression,
 .logo,
 .program {
-  margin-bottom: 30px;
+  margin-top: 150px;
+  margin-bottom: 150%;
 }
 
 .logo {
@@ -138,14 +139,6 @@ body, button {
 .ghost-expression {
   display: inline-block;
   margin-top: 8px;
-}
-
-.selected {
-  background: white;
-}
-
-.selected, .ghost-expression {
-  box-shadow: 0px 0px 3px 6px #ccf;
 }
 
 .ghost.button {
@@ -251,6 +244,40 @@ body, button {
   opacity: 0.7 !important;
 }
 
+
+
+
+
+
+/* Bottom */
+
+.selected, .button.selected {
+  background: #aff;
+  position: relative;
+  z-index: 1;
+}
+
+.selected .key, .selected .literal {
+  background: #cff;
+}
+
+.selected .argument-name {
+  color: #1cf;
+}
+
+
+.selector {
+  position: fixed;
+  z-index: -1;
+  content: " ";
+  width: 90%;
+  height: 32px;
+  background: #cff;
+  border: 10px solid #eff;
+  left: 50%;
+  margin-left: -45%;
+  top: 140px;
+}
 
 
 

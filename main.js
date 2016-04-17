@@ -233,14 +233,6 @@ var renderFunctionCall = element.template(
 
     this.children.push(button)
 
-    this.onclick(
-      functionCall(handleAttention)
-      .withArgs(
-        this.assignId(),
-        functionCall.raw("event")
-      )
-    )
-
     // this.onclick(
     //   functionCall(addGhostBabyArgument)
     //   .withArgs(
@@ -315,8 +307,6 @@ var stringLiteral = element.template(
       functionCall(setProperty).withArgs("string", barCode(expression)),
       {updateElement: stringElement}
     )
-
-    makeIndicable(this)
   }
 )
 
@@ -350,40 +340,10 @@ var functionLiteral = element.template(
       )
     )
 
-    makeIndicable(this)
-
   }
 )
 
-function makeIndicable(el) {
-  el.onclick(
-    functionCall(handleAttention)
-    .withArgs(
-      el.assignId(),
-      functionCall.raw("event")
-    )
-  )
-}
 
-var lastSelectedId
-
-function handleAttention(elementId, event) {
-
-  event.stopPropagation()
-
-  var el = document.getElementById(elementId)
-
-  if (elementId == lastSelectedId) {
-    el.classList.remove("selected")
-    lastSelectedId = null
-  } else {
-    if (lastSelectedId) {
-      document.getElementById(lastSelectedId).classList.remove("selected")
-    }
-    el.classList.add("selected")
-    lastSelectedId = elementId
-  }
-}
 
 var argumentName = element.template(
   ".button.argument-name",
@@ -469,9 +429,6 @@ var variableAssignment = element.template(
       {updateElement: nameSpan}
     )
 
-
-    makeIndicable(this)
-
     var rhs = expressionToElement(
       expression.expression
     )
@@ -507,13 +464,6 @@ var objectLiteral = element.template(
 
     this.classes.push("container-"+barCode(expression))
 
-    this.onclick(
-      functionCall(handleAttention)
-      .withArgs(
-        this.assignId(),
-        functionCall.raw("event")
-      )
-    )
 
 
     // this.onclick(
@@ -595,7 +545,6 @@ var variableReference = element.template(
     this.children.push(element.raw(
       expression.variableName
     ))
-    makeIndicable(this)
   }
 )
 
@@ -895,10 +844,6 @@ var renderers = {
   "empty expression": ghostExpression
 }
 
-function expressionToElement(expression) {
-  return traverseExpression(expression, renderers)
-}
-
 function traverseExpression(expression, handlers) {
 
   var kind = expression.kind
@@ -935,7 +880,85 @@ function drawProgram(expression) {
   )
 
   addToDom(world.html())
+  addToDom(element(".selector").html())
 }
+
+
+
+
+
+
+// RENDERING AND SELECTING EXPRESSIONS
+
+var elementIds = []
+function expressionToElement(expression) {
+  var el = traverseExpression(expression, renderers)
+  elementIds.push(el.assignId())
+  return el
+}
+
+var currentSelection
+var SELECTOR_TOP = 140
+var SELECTOR_HEIGHT = 32
+
+function firstElementInside() {
+  var foundOne
+  var bestDistance
+  var firstFound
+
+  function found(el, top, i) {
+    var nothingElse = !foundOne
+    var distance = Math.abs(top - (SELECTOR_TOP+SELECTOR_HEIGHT/2))
+    var thisIsBetter = distance < bestDistance
+
+    if (nothingElse || thisIsBetter) {
+      foundOne = el
+      bestDistance = distance
+    }
+
+    if (!firstFound) {
+      firstFound = i
+    } 
+  }
+
+  for(var i=0; i<elementIds.length; i++) {
+    if (firstFound && i > (firstFound + 10)) {
+      break;
+    }
+
+    var el = document.getElementById(elementIds[i])
+
+    var rect = el.getBoundingClientRect()
+
+    var startsAboveLine = rect.top < SELECTOR_TOP+SELECTOR_HEIGHT
+
+    var endsAboveLine = rect.bottom < SELECTOR_TOP
+
+    if (startsAboveLine && !endsAboveLine) {
+      found(el, rect.top, i)
+    }
+  }
+
+  return foundOne
+}
+
+window.onscroll = function() {
+  var newSelection = firstElementInside()
+
+  if (newSelection == currentSelection) {
+    return
+  } else if (newSelection) {
+    newSelection.classList.add("selected")
+  }
+
+  if (currentSelection) {
+    currentSelection.classList.remove("selected")
+  }
+
+  currentSelection = newSelection
+
+}
+
 
 
 

@@ -673,7 +673,6 @@ function onNewObjectKey(pairId, newKey, oldKey) {
 // HUMAN WORDS
 
 function makeEditable(button, getValue, setValue, options) {
-  return  
   button.assignId()
 
   if (options) {
@@ -871,7 +870,6 @@ function drawProgram(expression) {
     [
       element(".column", [
         line(program)
-        // element(".logo", "EZJS"),
       ]),
       element(".column", [
         element(".output")
@@ -880,7 +878,7 @@ function drawProgram(expression) {
   )
 
   addToDom(world.html())
-  addToDom(element(".selector").html())
+  addToDom(element(".selector", "EZJS").html())
 }
 
 

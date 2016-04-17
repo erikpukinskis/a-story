@@ -114,26 +114,15 @@ body, button {
 .button.function-call-name,
 .ghost-expression,
 .variable-name,
-.function-literal-label,
-.logo {
+.function-literal-label {
   max-width: 70%;
   box-sizing: border-box;
 }
 
 .ghost-expression,
-.logo,
 .program {
   margin-top: 150px;
   margin-bottom: 150%;
-}
-
-.logo {
-  margin-top: 10px;
-  color: #eff;
-  font-size: 39px;
-  line-height: 30px;
-  padding: 4px 0 2px 0;
-  background: #e8e8ff;
 }
 
 .ghost-expression {
@@ -249,31 +238,35 @@ body, button {
 
 
 
-/* Bottom */
+/* This stuff shold stay at the bottom of the file */
 
 .selected, .button.selected {
-  background: #aff;
+  background: #cff;
   position: relative;
   z-index: 1;
 }
 
 .selected .key, .selected .literal {
-  background: #cff;
+  background: #bee;
 }
 
 .selected .argument-name {
   color: #1cf;
 }
 
-
 .selector {
+  color: white;
+  text-align: right;
+  font-size: 32px;
+  line-height: 32px;
+  padding-right: 50px; 
   position: fixed;
   z-index: -1;
   content: " ";
   width: 90%;
   height: 32px;
-  background: #cff;
-  border: 10px solid #eff;
+  background: #dff;
+  border: 10px solid #f5ffff;
   left: 50%;
   margin-left: -45%;
   top: 140px;

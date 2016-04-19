@@ -255,11 +255,12 @@ body, button {
   font-size: 32px;
   line-height: 32px;
   padding-right: 50px; 
+  box-sizing: border-box;
   position: fixed;
   z-index: -1;
   content: " ";
   width: 90%;
-  height: 32px;
+  height: 52px;
   background: #dff;
   border: 10px solid #f5ffff;
   left: 50%;

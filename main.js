@@ -41,8 +41,32 @@ barCode.scan = function(id) {
   return indexedById[id]
 }
 
+var timeOfLastCall = {}
+var pendingCalls = {}
 
+function callFunc(func) {
+  func()
+  pendingCalls[func] = false
+  timeOfLastCall[func] = new Date()
+}
 
+var THROTTLE = 1000
+
+function throttle(func) {
+  var sinceLastCall = new Date() - timeOfLastCall[func]
+  var slowDown = sinceLastCall < THROTTLE
+  var alreadyWaiting = !!pendingCalls[func]
+
+  if (!slowDown) {
+    callFunc(func)
+  } else if (slowDown && !alreadyWaiting) {
+    setTimeout(
+      callFunc.bind(null, func),
+      THROTTLE
+    )
+    pendingCalls[func] = true
+  }
+}
 
 
 // OUR PROGRAM
@@ -899,28 +923,41 @@ var currentSelection
 var SELECTOR_TOP = 120
 var SELECTOR_HEIGHT = 32
 
-function firstElementInside() {
-  var foundOne
-  var bestDistance
-  var firstFound
+var bestElementByLine = []
+var bestElementScoreByLine = []
 
-  function found(el, top, i) {
-    var nothingElse = !foundOne
+function elementOverSelector() {
+
+  var line = parseInt(window.scrollY / 32)
+
+  if (line < 1) { return }
+
+  if (bestElementByLine[line]) {
+    return bestElementByLine[line]
+  }
+
+  var indexOfFirstMatch
+
+  function checkIfBetter(el, top, i) {
+    var nothingElse = !bestElementByLine[line]
     var distance = Math.abs(top - (SELECTOR_TOP+SELECTOR_HEIGHT/2))
-    var thisIsBetter = distance < bestDistance
+    var thisIsBetter = distance < bestElementScoreByLine[line]
 
     if (nothingElse || thisIsBetter) {
-      foundOne = el
-      bestDistance = distance
+      bestElementByLine[line] = el
+      bestElementScoreByLine[line] = distance
     }
 
-    if (!firstFound) {
-      firstFound = i
+    if (!indexOfFirstMatch) {
+      indexOfFirstMatch = i
     } 
   }
 
   for(var i=0; i<elementIds.length; i++) {
-    if (firstFound && i > (firstFound + 10)) {
+
+    // After we find a match, we'll check the next ~10 elements to see if there's a better one
+
+    if (indexOfFirstMatch && i > (indexOfFirstMatch + 10)) {
       break;
     }
 
@@ -933,17 +970,23 @@ function firstElementInside() {
     var endsAboveLine = rect.bottom < SELECTOR_TOP
 
     if (startsAboveLine && !endsAboveLine) {
-      found(el, rect.top, i)
+      checkIfBetter(el, rect.top, i)
     }
   }
 
-  return foundOne
+  return bestElementByLine[line]
 }
 
 var alreadyHidden
 
-window.onscroll = function() {
-  var newSelection = firstElementInside()
+window.onscroll = updateSelection
+
+// Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
+
+var selectedAt = {}
+
+function updateSelection() {
+  var newSelection = elementOverSelector()
   var shouldBeHidden = !newSelection
   var shouldBeVisible = !shouldBeHidden
 

@@ -9,7 +9,7 @@ function body() {
 }
 
 function addToDom(html) {
-  body().innerHTML = body().innerHTML + html
+  addHtml(body(), html)
 }
 
 var indexedById = {}
@@ -41,31 +41,27 @@ barCode.scan = function(id) {
   return indexedById[id]
 }
 
-var timeOfLastCall = {}
-var pendingCalls = {}
+function replaceNodeWithHtml(oldChild, newHtml) {
+  var crucible = document.createElement('div')
 
-function callFunc(func) {
-  func()
-  pendingCalls[func] = false
-  timeOfLastCall[func] = new Date()
+  crucible.innerHTML = newHtml
+
+  var newChild = crucible.firstChild
+
+  var parent = oldChild.parentNode
+
+  parent.replaceChild(newChild, oldChild)
 }
 
-var THROTTLE = 1000
+function addHtml(container, newHtml) {
+  var crucible = document.createElement('div')
 
-function throttle(func) {
-  var sinceLastCall = new Date() - timeOfLastCall[func]
-  var slowDown = sinceLastCall < THROTTLE
-  var alreadyWaiting = !!pendingCalls[func]
+  crucible.innerHTML = newHtml
 
-  if (!slowDown) {
-    callFunc(func)
-  } else if (slowDown && !alreadyWaiting) {
-    setTimeout(
-      callFunc.bind(null, func),
-      THROTTLE
-    )
-    pendingCalls[func] = true
+  for(var i=0; crucible.children.length; i++) {
+    container.appendChild(crucible.children[i])
   }
+
 }
 
 
@@ -166,7 +162,6 @@ var ghostExpression = element.template(
 )
 
 function addExpression(ghostElementId, parentId) {
-
   menu(
     menu.choice(
       "&nbsp;",
@@ -216,17 +211,9 @@ function addExpression(ghostElementId, parentId) {
 
       var newEl = expressionToElement(choice)
 
-      var crucible = document.createElement('div')
-
-      crucible.innerHTML = newEl.html()
-
-      var newChild = crucible.firstChild
-
       var oldChild = document.getElementById(ghostElementId)
 
-      var parent = oldChild.parentNode
-
-      parent.replaceChild(newChild, oldChild)
+      replaceNodeWithHtml(oldChild, newEl.html())
 
       runIt(program)
 

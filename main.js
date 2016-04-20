@@ -900,27 +900,25 @@ function drawProgram(expression) {
 // RENDERING AND SELECTING EXPRESSIONS
 
 var elementIds = []
+var currentSelection
+var SELECTOR_TOP = 120
+var SELECTOR_HEIGHT = 32
+var bestElementByLine = []
+var bestElementScoreByLine = []
+
 function expressionToElement(expression) {
   var el = traverseExpression(expression, renderers)
   elementIds.push(el.assignId())
   return el
 }
 
-var currentSelection
-var SELECTOR_TOP = 120
-var SELECTOR_HEIGHT = 32
-
-var bestElementByLine = []
-var bestElementScoreByLine = []
-
 function elementOverSelector() {
 
-  var line = parseInt(window.scrollY / 32)
+  var line = parseInt(window.scrollY / 10)
 
-  if (line < 1) { return }
-
-  if (bestElementByLine[line]) {
-    return bestElementByLine[line]
+  var cached = bestElementByLine[line]
+  if (cached || cached === false) {
+    return cached
   }
 
   var indexOfFirstMatch
@@ -931,7 +929,7 @@ function elementOverSelector() {
     var thisIsBetter = distance < bestElementScoreByLine[line]
 
     if (nothingElse || thisIsBetter) {
-      bestElementByLine[line] = el
+      bestElementByLine[line] = el || false
       bestElementScoreByLine[line] = distance
     }
 
@@ -964,27 +962,33 @@ function elementOverSelector() {
   return bestElementByLine[line]
 }
 
-var alreadyHidden
 
 window.onscroll = updateSelection
 
 // Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
 
 var selectedAt = {}
+var lastScroll
+var controlsAreVisible
+var selectionIsHidden
 
 function updateSelection() {
+  if (controlsAreVisible) {
+    hideSelectionControls()
+  }
+
   var newSelection = elementOverSelector()
   var shouldBeHidden = !newSelection
   var shouldBeVisible = !shouldBeHidden
 
-  if (shouldBeHidden && alreadyHidden !== true) {
+  if (shouldBeHidden && selectionIsHidden !== true) {
     document.querySelector(".selector").style.display = "none"
-    alreadyHidden = true    
+    selectionIsHidden = true    
   }
 
-  if (shouldBeVisible && alreadyHidden) {
+  if (shouldBeVisible && selectionIsHidden) {
     document.querySelector(".selector").style.display = "block"
-    alreadyHidden = false
+    selectionIsHidden = false
   }
 
   if (newSelection == currentSelection) {
@@ -999,9 +1003,46 @@ function updateSelection() {
 
   currentSelection = newSelection
 
+  if (!currentSelection) { return }
+
+  afterASecond(showSelectionControls)
+}
+
+function afterASecond(func) {
+  if (!func.waitingToTry) {
+    func.waitingToTry = setTimeout(tryToRun.bind(null, func), 1500)
+  }
+
+  func.lastTry = new Date()
+}
+
+function tryToRun(func) {
+  var sinceLastTry = new Date() - func.lastTry
+
+  if (sinceLastTry < 1000) {
+    func.waitingToTry = setTimeout(tryToRun.bind(null, func), 1500)
+  } else {
+    func.waitingToTry = null
+    func()
+  }
 }
 
 
+
+
+// SELECTION CONTROLS
+
+var controlsAreVisible
+
+function showSelectionControls() {
+  console.log("op!")
+  controlsAreVisible = true
+}
+
+function hideSelectionControls() {
+  console.log("unop!")
+  controlsAreVisible = false
+}
 
 
 

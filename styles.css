@@ -135,6 +135,16 @@ body, button {
   min-width: 18px;
 }
 
+.ghost-baby-line {
+  height: 32px;
+  line-height: 32px;
+  width: 32px;
+  color: white;
+  background: #88f;
+  text-align:  center;
+  display: block;
+}
+
 
 
 .button.literal, .key {
@@ -158,7 +168,7 @@ body, button {
   border-left: 2px dashed #eee;
 }
 
-.leads-to-function-call > div{
+.leads-to-function-call > div {
   margin-left: -2px;
 }
 

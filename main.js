@@ -1,16 +1,7 @@
 // GLOBAL API SHIT
 
-var cachedBody
-function body() {
-  if (!cachedBody) {
-    cachedBody = document.querySelector("body")
-  }
-  return cachedBody
-}
 
-function addToDom(html) {
-  addHtml(body(), html)
-}
+// BAR CODE
 
 var indexedById = {}
 var lastInteger = 1999
@@ -20,7 +11,7 @@ function barCode(expression) {
 
   if (!id) {
     lastInteger += 1
-    id = "BC"+lastInteger.toString(36)
+    id = "|||"+lastInteger.toString(36)+"|"
     expression.__barCode = id
     indexedById[id] = expression
     checkSize()
@@ -41,16 +32,20 @@ barCode.scan = function(id) {
   return indexedById[id]
 }
 
-function replaceNodeWithHtml(oldChild, newHtml) {
-  var crucible = document.createElement('div')
 
-  crucible.innerHTML = newHtml
+// DOM STUFF
 
-  var newChild = crucible.firstChild
+var cachedBody
 
-  var parent = oldChild.parentNode
+function body() {
+  if (!cachedBody) {
+    cachedBody = document.querySelector("body")
+  }
+  return cachedBody
+}
 
-  parent.replaceChild(newChild, oldChild)
+function addToDom(html) {
+  addHtml(body(), html)
 }
 
 function addHtml(container, newHtml) {
@@ -62,6 +57,62 @@ function addHtml(container, newHtml) {
     container.appendChild(crucible.children[i])
   }
 
+}
+
+function replaceNodeWithHtml(oldChild, newHtml) {
+
+  var newChild = htmlToNode(newHtml)
+
+  var parent = oldChild.parentNode
+
+  parent.replaceChild(newChild, oldChild)
+}
+
+function htmlToNode(html) {
+  var crucible = document.createElement('div')
+  crucible.innerHTML = html
+  return crucible.firstChild
+}
+
+function insertHtmlBefore(sibling, newHtml) {
+  var parent = sibling.parentNode
+  var newNode = htmlToNode(newHtml)
+  parent.insertBefore(newNode, sibling)
+}
+
+function insertHtmlAfter(sibling, newHtml) {
+  var newNode = htmlToNode(newHtml)
+
+  if (sibling.nextSibling) {
+    insertHtmlBefore(sibling.nextSibling)
+  } else {
+    var parent = sibling.parentNode
+    parent.appendChild(newNode)
+  }
+}
+
+
+// TIME TRAVEL
+
+var MINIMUM_PAUSE = 750
+
+function afterASecond(func) {
+  if (!func.waitingToTry) {
+    func.waitingToTry = setTimeout(tryToRun.bind(null, func), MINIMUM_PAUSE)
+  }
+
+  func.lastTry = new Date()
+}
+
+function tryToRun(func) {
+  var sinceLastTry = new Date() - func.lastTry
+
+  if (sinceLastTry < MINIMUM_PAUSE) {
+    func.waitingToTry = setTimeout(tryToRun.bind(null, func), MINIMUM_PAUSE - sinceLastTry + 100)
+  } else {
+    func.waitingToTry = null
+    func()
+  }
 }
 
 
@@ -899,8 +950,8 @@ function drawProgram(expression) {
 
 // RENDERING AND SELECTING EXPRESSIONS
 
-var elementIds = []
-var currentSelection
+var expressionElementIds = []
+var expressionsByElementId = {}
 var SELECTOR_TOP = 120
 var SELECTOR_HEIGHT = 32
 var bestElementByLine = []
@@ -908,7 +959,9 @@ var bestElementScoreByLine = []
 
 function expressionToElement(expression) {
   var el = traverseExpression(expression, renderers)
-  elementIds.push(el.assignId())
+  var id = el.assignId()
+  expressionElementIds.push(id)
+  expressionsByElementId[id] = expression
   return el
 }
 
@@ -938,7 +991,7 @@ function elementOverSelector() {
     } 
   }
 
-  for(var i=0; i<elementIds.length; i++) {
+  for(var i=0; i<expressionElementIds.length; i++) {
 
     // After we find a match, we'll check the next ~10 elements to see if there's a better one
 
@@ -946,7 +999,7 @@ function elementOverSelector() {
       break;
     }
 
-    var el = document.getElementById(elementIds[i])
+    var el = document.getElementById(expressionElementIds[i])
 
     var rect = el.getBoundingClientRect()
 
@@ -967,10 +1020,9 @@ window.onscroll = updateSelection
 
 // Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
 
-var selectedAt = {}
-var lastScroll
-var controlsAreVisible
 var selectionIsHidden
+var controlsAreVisible
+var currentSelection
 
 function updateSelection() {
   if (controlsAreVisible) {
@@ -1008,42 +1060,65 @@ function updateSelection() {
   afterASecond(showSelectionControls)
 }
 
-function afterASecond(func) {
-  if (!func.waitingToTry) {
-    func.waitingToTry = setTimeout(tryToRun.bind(null, func), 1500)
-  }
-
-  func.lastTry = new Date()
-}
-
-function tryToRun(func) {
-  var sinceLastTry = new Date() - func.lastTry
-
-  if (sinceLastTry < 1000) {
-    func.waitingToTry = setTimeout(tryToRun.bind(null, func), 1500)
-  } else {
-    func.waitingToTry = null
-    func()
-  }
-}
-
-
-
-
-// SELECTION CONTROLS
-
-var controlsAreVisible
+var controlsSelector
 
 function showSelectionControls() {
-  console.log("op!")
+  var id = currentSelection.id
+
+  var expression = expressionsByElementId[id]
+
+  if (expression.kind == "variable assignment") {
+
+    controlsSelector = ".ghost-baby-line.ghost-baby-line-"+id
+
+    var controls = document.querySelectorAll(".ghost-baby-line-"+id)
+
+    if (controls.length > 0) {
+      setDisplay(controls, "block")
+    } else {
+      insertHtmlBefore(
+        currentSelection,
+        element(controlsSelector, "+").html()
+      )
+
+      insertHtmlAfter(
+        currentSelection,
+        element(controlsSelector, "+").html()
+      )
+    }
+
+    offsetCameraUp(1)
+
+  }
+
   controlsAreVisible = true
 }
 
 function hideSelectionControls() {
-  console.log("unop!")
   controlsAreVisible = false
+
+  if (!controlsSelector) { return }
+
+  var controls = document.querySelectorAll(controlsSelector)
+
+  setDisplay(controls, "none")
+
+  offsetCameraUp(0)
 }
 
+function setDisplay(elements, value) {
+  for(var i=0; i<elements.length; i++) {
+    elements[i].style.display = value
+  }
+}
+
+function offsetCameraUp(lines) {
+  var containerElement = document.querySelector(".program")
+
+  var transform = "translateY("+(lines*-32)+"px)"
+
+  containerElement.style.transform = transform
+}
 
 
 

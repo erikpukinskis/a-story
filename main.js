@@ -1,95 +1,8 @@
 // GLOBAL API SHIT //////////
 
 
-// BAR CODE
-
-var indexedById = {}
-var lastInteger = 1999
-
-function barCode(expression) {
-  var id = expression.__barCode
-
-  if (!id) {
-    lastInteger += 1
-    id = "|||"+lastInteger.toString(36)+"|"
-    expression.__barCode = id
-    indexedById[id] = expression
-    checkSize()
-  }
-
-  return id
-}
-
-function checkSize() {
-  if (lastInteger == 2999) {
-    console.log("Whoa! 1000 items in the index! Getting fancy.")
-  } else if (lastInteger == 11999) {
-    console.log("Um, 10,000 indexed items is a lot. Are there even 10,000 perceptible features on the page?")
-  }
-}
-
-barCode.scan = function(id) {
-  return indexedById[id]
-}
-
 
 // DOM STUFF
-
-var cachedBody
-
-function body() {
-  if (!cachedBody) {
-    cachedBody = document.querySelector("body")
-  }
-  return cachedBody
-}
-
-function addToDom(html) {
-  addHtml(body(), html)
-}
-
-function addHtml(container, newHtml) {
-  var crucible = document.createElement('div')
-
-  crucible.innerHTML = newHtml
-
-  for(var i=0; crucible.children.length; i++) {
-    container.appendChild(crucible.children[i])
-  }
-
-}
-
-function replaceNodeWithHtml(oldChild, newHtml) {
-
-  var newChild = htmlToNode(newHtml)
-
-  var parent = oldChild.parentNode
-
-  parent.replaceChild(newChild, oldChild)
-}
-
-function htmlToNode(html) {
-  var crucible = document.createElement('div')
-  crucible.innerHTML = html
-  return crucible.firstChild
-}
-
-function insertHtmlBefore(sibling, newHtml) {
-  var parent = sibling.parentNode
-  var newNode = htmlToNode(newHtml)
-  parent.insertBefore(newNode, sibling)
-}
-
-function insertHtmlAfter(sibling, newHtml) {
-  var newNode = htmlToNode(newHtml)
-
-  if (sibling.nextSibling) {
-    insertHtmlBefore(sibling.nextSibling)
-  } else {
-    var parent = sibling.parentNode
-    parent.appendChild(newNode)
-  }
-}
 
 
 // TIME TRAVEL
@@ -264,7 +177,7 @@ function addExpression(ghostElementId, parentId) {
 
       var oldChild = document.getElementById(ghostElementId)
 
-      replaceNodeWithHtml(oldChild, newEl.html())
+      addHtml.inPlaceOf(oldChild, newEl.html())
 
       runIt(program)
 
@@ -817,7 +730,7 @@ function streamHumanInput(startingText, callback, done) {
 
     var catcher = humanInputListener.catcher = tapCatcher(input, done)
 
-    addToDom(catcher.html())
+    addHtml(catcher.html())
   }
 
   var input = document.getElementById(humanInputListener.inputId)
@@ -939,8 +852,8 @@ function drawProgram(expression) {
     ]
   )
 
-  addToDom(world.html())
-  addToDom(element(".selector", "EZJS").html())
+  addHtml(world.html())
+  addHtml(element(".selector", "EZJS").html())
 }
 
 
@@ -1076,12 +989,12 @@ function showSelectionControls() {
     if (controls.length > 0) {
       setDisplay(controls, "block")
     } else {
-      insertHtmlBefore(
+      addHtml.before(
         currentSelection,
         element(controlsSelector, "+").html()
       )
 
-      insertHtmlAfter(
+      addHtml.after(
         currentSelection,
         element(controlsSelector, "+").html()
       )

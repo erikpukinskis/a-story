@@ -107,86 +107,16 @@ var program = {
 
 // RENDERERS 
 
-var ghostExpression = element.template(
-  ".ghost-expression.ghost.button",
-  "&nbsp;",
-  function(options) {
-    this.assignId()
+var ghostBabyLine = element.template(
+  "+",
+  function(selectedElementId) {
 
-    if (!options) { options = {} }
-
-    var add = functionCall(addExpression).withArgs(this.id)
-
-    if (options.parentId) {
-      add = add.withArgs(options.parentId)
-    }
-
-    this.onclick(add)
+    this.classes = [
+      "ghost-baby-line",
+      "ghost-baby-line-"+selectedElementId
+    ]
   }
 )
-
-function addExpression(ghostElementId, parentId) {
-  menu(
-    menu.choice(
-      "&nbsp;",
-      {kind: "empty"}
-    ),
-    menu.choice(
-      "\" text \"",
-      {kind: "string literal"}
-    ),
-    menu.choice(
-      "var _ =",
-      {
-        kind: "variable assignment",
-        expression: emptyExpressionJson(),
-        variableName: "fraggleRock"
-      }
-    ),
-    menu.choice(
-      "page",
-      {kind: "variable reference", variableName: "page"}
-    ),
-    menu.choice(
-      "options :",
-      {kind: "object literal"}
-    ),
-    menu.choice(
-      "function",
-      {kind: "function literal"}
-    ),
-    menu.choice(
-      "element",
-      {kind: "function call", functionName: "element", arguments: []}
-    ),
-    menu.choice(
-      "bridgeRoute",
-      {kind: "function call", functionName: "bridgeRoute"}
-    ),
-    menu.choice(
-      "element.style",
-      {kind: "function call", functionName: "bridgeRoute"}
-    ),
-    function(choice) {
-
-      var expression = barCode.scan(parentId)
-
-      expression.arguments.push(choice)
-
-      var newEl = expressionToElement(choice)
-
-      var oldChild = document.getElementById(ghostElementId)
-
-      addHtml.inPlaceOf(oldChild, newEl.html())
-
-      runIt(program)
-
-    }
-  )
-
-}
-
-
 
 
 var renderFunctionCall = element.template(
@@ -309,16 +239,9 @@ var functionLiteral = element.template(
 
     children.push(argumentNames)
 
-    children.push(
-      functionLiteralBody(
-        expression.body
-      )
-    )
-
+    children.push(functionLiteralBody(expression))
   }
 )
-
-
 
 var argumentName = element.template(
   ".button.argument-name",
@@ -351,29 +274,33 @@ function renameArgument(expressionId, index, newName) {
   runIt(program)
 }
 
+var parentExpressionsByChildId = {}
+
 var functionLiteralBody = element.template(
   ".function-literal-body",
-  function(lines) {
+  function(parent) {
 
     var previous
 
-    this.children = lines.map(
-      function(line) {
-        var el = element(
-          expressionToElement(line),
-          ".function-literal-line"
-        )
+    this.children = parent.body.map(toChild)
 
-        if (previous) {
-          previous.classes.push("leads-to-"+line.kind.replace(" ", "-"))
+    function toChild(child) {
+      parentExpressionsByChildId[barCode(child)] = parent
 
-        }
+      var el = element(
+        expressionToElement(child),
+        ".function-literal-line"
+      )
 
-        previous = el
+      if (previous) {
+        previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
 
-        return el
       }
-    )
+
+      previous = el
+
+      return el
+    }
 
   }
 )
@@ -561,16 +488,6 @@ function addGhost(containerId, el) {
 
 // GHOST BABY MAKERS
 
-function addGhostBabyArgument(parentId, event) {
-  var el = ghostExpression({
-    parentId: parentId
-  })
-  el.classes.push("ghost-baby-arg")
-  el.classes.push("ghost")
-  el.classes.push("function-argument")
-  addGhost(parentId, el)
-}
-
 function addGhostBabyKeyPair(expressionId, event) {
 
   var expression = barCode.scan(expressionId)
@@ -655,8 +572,7 @@ var renderers = {
   "variable assignment": variableAssignment,
   "object literal": objectLiteral,
   "array literal": arrayLiteral,
-  "string literal": stringLiteral,
-  "empty expression": ghostExpression
+  "string literal": stringLiteral
 }
 
 function traverseExpression(expression, handlers) {
@@ -817,28 +733,20 @@ function updateSelection() {
 var controlsSelector
 
 function showSelectionControls() {
-  var id = currentSelection.id
+  var selectedElementId = currentSelection.id
 
-  var expression = expressionsByElementId[id]
+  var expression = expressionsByElementId[selectedElementId]
 
   if (expression.kind == "variable assignment") {
 
-    controlsSelector = ".ghost-baby-line.ghost-baby-line-"+id
+    controlsSelector = ".ghost-baby-line.ghost-baby-line-"+selectedElementId
 
-    var controls = document.querySelectorAll(".ghost-baby-line-"+id)
+    var controls = document.querySelectorAll(".ghost-baby-line-"+selectedElementId)
 
     if (controls.length > 0) {
       setDisplay(controls, "block")
     } else {
-      addHtml.before(
-        currentSelection,
-        element(controlsSelector, "+").html()
-      )
-
-      addHtml.after(
-        currentSelection,
-        element(controlsSelector, "+").html()
-      )
+      addControls(currentSelection, expression)
     }
 
     offsetCameraUp(1)
@@ -847,6 +755,121 @@ function showSelectionControls() {
 
   controlsAreVisible = true
 }
+
+
+function addControls(selectedNode, expression) {
+
+  ["before", "after"].forEach(
+    function(beforeOrAfter) {
+
+      var baby = ghostBabyLine(selectedNode.id)
+
+      var add = 
+        functionCall(showAddExpressionMenu)
+        .withArgs(
+          baby.assignId(),
+          barCode(expression),
+          beforeOrAfter
+        )
+
+      baby.onclick(add)
+
+      addHtml[beforeOrAfter](
+        selectedNode,
+        baby.html()
+      )
+
+
+    }
+  )
+
+}
+
+function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAfter) {
+
+  function addExpression(newExpression) {
+
+    var parentExpression = parentExpressionsByChildId[relativeExpressionId]
+
+    var lines = parentExpression.body
+
+    var newElement = expressionToElement(newExpression)
+
+    var ghostElement = document.getElementById(ghostElementId)
+
+    for(
+      var lineIndex = 0;
+      lineIndex < lines.length;
+      lineIndex++
+    ) {
+      var line = parentExpression.body[lineIndex]
+
+      if (barCode(line) == relativeExpressionId) {
+
+        var start = lineIndex
+
+        if (beforeOrAfter == "after") {
+          start++
+        }
+
+        lines.splice(start, 0, newExpression)
+
+        addHtml[beforeOrAfter](ghostElement, newElement.html())
+      }
+    }
+
+    runIt(program)
+
+  }
+
+
+  menu(
+    menu.choice(
+      "&nbsp;",
+      {kind: "empty"}
+    ),
+    menu.choice(
+      "\" text \"",
+      {kind: "string literal", string: ""}
+    ),
+    menu.choice(
+      "var _ =",
+      {
+        kind: "variable assignment",
+        expression: emptyExpressionJson(),
+        variableName: "fraggleRock"
+      }
+    ),
+    menu.choice(
+      "page",
+      {kind: "variable reference", variableName: "page"}
+    ),
+    menu.choice(
+      "options :",
+      {kind: "object literal"}
+    ),
+    menu.choice(
+      "function",
+      {kind: "function literal"}
+    ),
+    menu.choice(
+      "element",
+      {kind: "function call", functionName: "element", arguments: []}
+    ),
+    menu.choice(
+      "bridgeRoute",
+      {kind: "function call", functionName: "bridgeRoute"}
+    ),
+    menu.choice(
+      "element.style",
+      {kind: "function call", functionName: "bridgeRoute"}
+    ),
+    addExpression
+  )
+
+}
+
+
 
 function hideSelectionControls() {
   controlsAreVisible = false

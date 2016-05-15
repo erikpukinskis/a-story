@@ -199,19 +199,26 @@ body, button {
 
 
 
+/* MENU */
+
 .menu-item {
   white-space: nowrap;
   min-width: 90px;
   min-height: 1em;
   color: white;
-  border-bottom: 2px solid #ddf;
-  background: #ccf;
+  border-bottom: 2px solid #aaf;
+  background: #88f;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
 }
 
 .menu {
   margin: 0 auto;
   margin-top: 20%;
   max-width: 200px;
+  border-left: 2px solid #aaa;
 }
 
 

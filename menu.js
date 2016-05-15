@@ -122,7 +122,7 @@ var menu = (function() {
   function showMenu()  {
     var menuElement = template.apply(null, arguments)
 
-    var wrapped = tapCatcher(
+    var wrapped = tapOut.catcher(
       menuElement,
       function() {
         console.log("cancelled menu!")
@@ -130,7 +130,7 @@ var menu = (function() {
     )
 
     wrapped.attributes.display = "block"
-    addToDom(wrapped.html())
+    addHtml(wrapped.html())
   }
 
   showMenu.choice = function (label, value) {

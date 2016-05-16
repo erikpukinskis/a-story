@@ -166,7 +166,7 @@ function getProperty(property, expressionId) {
 function setProperty(property, expressionId, newValue, oldValue) {
   var expression = barCode.scan(expressionId)
   expression[property] = newValue
-  runIt(program)
+  programChanged()
 }
 
 function argumentsToElements(args) {
@@ -271,7 +271,7 @@ function renameArgument(expressionId, index, newName) {
 
   expression.argumentNames[index] = newName
 
-  runIt(program)
+  programChanged()
 }
 
 var parentExpressionsByChildId = {}
@@ -388,7 +388,7 @@ function onKeyRename(pairId, newKey) {
   object[newKey] = object[oldKey]
 
   delete object[oldKey]
-  runIt(program)
+  programChanged()
 }
 
 
@@ -555,7 +555,7 @@ function onNewObjectKey(pairId, newKey, oldKey) {
 
   humanInputListener.callback = updateEditable.bind(null, setValue)
 
-  runIt(program)
+  programChanged()
 
 }
 
@@ -635,6 +635,12 @@ function expressionToElement(expression) {
   return el
 }
 
+function forgetElementPositions() {
+  bestElementByLine = []
+  bestElementScoreByLine = []
+}
+
+
 function elementOverSelector() {
 
   var line = parseInt(window.scrollY / 10)
@@ -665,7 +671,7 @@ function elementOverSelector() {
 
     // After we find a match, we'll check the next ~10 elements to see if there's a better one
 
-    if (indexOfFirstMatch && i > (indexOfFirstMatch + 10)) {
+    if (indexOfFirstMatch && i > (indexOfFirstMatch + 20)) {
       break;
     }
 
@@ -733,6 +739,8 @@ function updateSelection() {
 var controlsSelector
 
 function showSelectionControls() {
+  if (!currentSelection) { return }
+
   var selectedElementId = currentSelection.id
 
   var expression = expressionsByElementId[selectedElementId]
@@ -818,7 +826,7 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAft
       }
     }
 
-    runIt(program)
+    programChanged()
 
   }
 
@@ -962,6 +970,11 @@ var codeGenerators = {
     }
     return "{\n"+keyPairs.join(",\n")+"\n}"
   }
+}
+
+function programChanged() {
+  forgetElementPositions()
+  runIt(program)
 }
 
 function runIt(functionLiteral) {

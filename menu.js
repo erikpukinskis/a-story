@@ -30,107 +30,27 @@ var menu = (function() {
     }
   )
 
-  var voxelContents = [
-    [],[],[],[]
-  ]
-
-  var voxelIds = [
-    [],[],[],[]
-  ]
-
-  function setContent(row, col, content) {
-    voxelContents[row][col] = content
-    var el = document.getElementById(voxelIds[row][col])
-    el.innerHTML = content
-    el.classList.add("occupied-voxel")
-    deleteMenu(row, col)
-    openMenu = null
-  }
-
-  function transform(x, y) {
-    return "translate("
-      +(x)
-      +"px,"
-      +(y)
-      +"px)"
-  }
-
   var openMenu
 
   var menuCache = [
     [],[],[],[]
   ]
 
-  function closeOpenMenu() {
-    if (openMenu) {
-      var el = document.getElementById(openMenu.id)
-      el.style.display = "none"
-      el.classList.remove("menu-voxel")
-      openMenu = null
-    }
-  }
-
-  function deleteMenu(row, col) {
-    var id = menuCache[row][col].id
-    delete menuCache[row][col]
-    var menu = document.getElementById(id)
-    body().removeChild(menu)
-  }
-
-  function handleAttention(row, col) {
-    var cached = menuCache[row][col]
-    var wasAlreadyOpen = openMenu && openMenu == cached
-
-    closeOpenMenu()
-
-    addClassToVoxel(row, col, "menu-voxel")
-
-    if (wasAlreadyOpen) {
-      // leave it closed
-    } else if (cached) {
-      openMenu = cached
-      var el = document.getElementById(openMenu.id)
-      el.style.display = "block"
-    } else {
-      var content = voxelContents[row][col]
-      var choices = ["function", "var", "define"]
-      if (content) {
-        var i = choices.indexOf(content)
-        choices.splice(i, 1, null)
-      }
-      openMenu = menu(row, col, choices)
-      openMenu.assignId()
-      addToDom(openMenu.html())
-      menuCache[row][col] = openMenu
-    }
-  }
-
-  function addClassToVoxel(row, col) {
-    var id = ".voxel-0-0-"+row+"-"+col
-    var el = document.querySelector(id)
-    el.classList.add("menu-voxel")  
-  }
-
-  function removeClassFromVoxel(row, col) {
-    var id = ".voxel-0-0-"+row+"-"+col
-    var el = document.querySelector(id)
-    el.classList.remove("menu-voxel")  
-  }
-
   var container
 
   function showMenu()  {
     var menuElement = template.apply(null, arguments)
 
-    var wrapped = tapOut.catcher(
+    container = tapOut.catcher(
       menuElement,
       function() {
         console.log("cancelled menu!")
       }
     )
 
-    wrapped.attributes.display = "block"
-    addHtml(wrapped.html())
+    container.attributes.display = "block"
+
+    addHtml(container.html())
   }
 
   showMenu.choice = function (label, value) {
@@ -139,8 +59,7 @@ var menu = (function() {
 
   showMenu.choose = function(i, event) {
     menuCallback(values[i])
-    var el = document.querySelector(".menu")
-    el.style.display = "none"
+    container.hide()
     event.preventDefault()
   }
 

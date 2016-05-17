@@ -621,74 +621,55 @@ function drawProgram(expression) {
 // RENDERING AND SELECTING EXPRESSIONS
 
 var expressionElementIds = []
+var lastInsertedExpressionIndex = -1
 var expressionsByElementId = {}
 var SELECTOR_TOP = 120
 var SELECTOR_HEIGHT = 32
-var bestElementByLine = []
-var bestElementScoreByLine = []
+var SELECTOR_BOTTOM = SELECTOR_TOP+SELECTOR_HEIGHT
 
-function expressionToElement(expression) {
+
+function expressionToElement(expression, splicePosition) {
+
+  var i = ++lastInsertedExpressionIndex
+
   var el = traverseExpression(expression, renderers)
   var id = el.assignId()
-  expressionElementIds.push(id)
+
+  if (splicePosition) {
+    expressionElementIds.splice(splicePosition, 0, el)
+  } else {
+    expressionElementIds[i] = id
+  }
+
+
+  // expressionElementIds.splice(start, 0, newExpression)
+
   expressionsByElementId[id] = expression
   return el
 }
 
 function forgetElementPositions() {
-  bestElementByLine = []
-  bestElementScoreByLine = []
 }
-
 
 function elementOverSelector() {
 
-  var line = parseInt(window.scrollY / 10)
-
-  var cached = bestElementByLine[line]
-  if (cached || cached === false) {
-    return cached
-  }
-
-  var indexOfFirstMatch
-
-  function checkIfBetter(el, top, i) {
-    var nothingElse = !bestElementByLine[line]
-    var distance = Math.abs(top - (SELECTOR_TOP+SELECTOR_HEIGHT/2))
-    var thisIsBetter = distance < bestElementScoreByLine[line]
-
-    if (nothingElse || thisIsBetter) {
-      bestElementByLine[line] = el || false
-      bestElementScoreByLine[line] = distance
-    }
-
-    if (!indexOfFirstMatch) {
-      indexOfFirstMatch = i
-    } 
-  }
-
-  for(var i=0; i<expressionElementIds.length; i++) {
-
-    // After we find a match, we'll check the next ~10 elements to see if there's a better one
-
-    if (indexOfFirstMatch && i > (indexOfFirstMatch + 20)) {
-      break;
-    }
+  for(var i=expressionElementIds.length-1; i>=0; i--) {
 
     var el = document.getElementById(expressionElementIds[i])
 
     var rect = el.getBoundingClientRect()
 
-    var startsAboveLine = rect.top < SELECTOR_TOP+SELECTOR_HEIGHT
+    var startsAboveLine = rect.top < SELECTOR_BOTTOM
 
     var endsAboveLine = rect.bottom < SELECTOR_TOP
 
-    if (startsAboveLine && !endsAboveLine) {
-      checkIfBetter(el, rect.top, i)
+    var elementOverlapsSelector = startsAboveLine && !endsAboveLine
+
+    if (elementOverlapsSelector) {
+      return el
     }
   }
 
-  return bestElementByLine[line]
 }
 
 
@@ -801,9 +782,24 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAft
 
     var lines = parentExpression.body
 
-    var newElement = expressionToElement(newExpression)
-
     var ghostElement = document.getElementById(ghostElementId)
+
+    var expressionIndex
+
+    for(var i = 0; i < expressionElementIds.length; i++) {
+      if (expressionElementIds[i] == relativeExpressionId) {
+
+        expressionIndex = i
+
+        if (beforeOrAfter == "after") {
+          expressionIndex++
+        }
+
+        expressionElementIds.splice(expressionIndex, 0, newExpression)
+      }
+    }
+
+    var newElement = expressionToElement(newExpression, expressionIndex)
 
     for(
       var lineIndex = 0;
@@ -821,10 +817,10 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAft
         }
 
         lines.splice(start, 0, newExpression)
-
-        addHtml[beforeOrAfter](ghostElement, newElement.html())
       }
     }
+
+    addHtml[beforeOrAfter](ghostElement, newElement.html())
 
     programChanged()
 

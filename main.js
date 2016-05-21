@@ -784,48 +784,25 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
 
     var parentExpression = parentExpressionsByChildId[relativeExpressionElementId]
 
-    var lines = parentExpression.body
+    addLineToFunctionLiteral(newExpression, parentExpression, beforeOrAfter, relativeExpressionElementId)
 
     var ghostElement = document.getElementById(ghostElementId)
 
     var indexOfElementId
-    var lineIndex
 
     for(var i = 0; i < expressionElementIds.length; i++) {
       var testId = expressionElementIds[i]
+
       if (testId == relativeExpressionElementId) {
 
         indexOfElementId = i
 
-        if (beforeOrAfter == "after") {
-          indexOfElementId++
-        }
-
-        break
       }
     }
 
     var newElement = expressionToElement(newExpression, indexOfElementId)
 
-
-    for(var i = 0; i < lines.length; i++) {
-      var line = parentExpression.body[i]
-
-      if (line.elementId == relativeExpressionElementId) {
-
-        lineIndex = i
-
-        if (beforeOrAfter == "after") {
-          lineIndex++
-        }
-
-        break
-      }
-    }
-
     expressionElementIds.splice(indexOfElementId, 0, newElement.assignId())
-
-    lines.splice(lineIndex, 0, newExpression)
 
     addHtml[beforeOrAfter](ghostElement, newElement.html())
 
@@ -882,7 +859,27 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
 
 }
 
+function addLineToFunctionLiteral(newExpression, literal, beforeOrAfter, relativeExpressionElementId) {
 
+  var lines = literal.body
+  
+  for(var i = 0; i < lines.length; i++) {
+    var line = lines[i]
+
+    if (line.elementId == relativeExpressionElementId) {
+
+      lineIndex = i
+
+      if (beforeOrAfter == "after") {
+        lineIndex++
+      }
+
+      break
+    }
+  }
+
+  lines.splice(lineIndex, 0,  newExpression)
+}
 
 function hideSelectionControls() {
   controlsAreVisible = false

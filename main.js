@@ -609,7 +609,7 @@ function drawProgram(expression) {
   )
 
   addHtml(world.html())
-  addHtml(element(".selector", "EZJS").html())
+  addHtml(element(".selector", {style: "display: none"}, "EZJS").html())
 }
 
 
@@ -741,9 +741,9 @@ function showSelectionControls() {
 
     offsetCameraUp(1)
 
+    controlsAreVisible = true
   }
 
-  controlsAreVisible = true
 }
 
 
@@ -829,6 +829,7 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
     programChanged()
     hideSelectionControls()
     updateSelection()
+    offsetCameraUp(1)
   }
 
 
@@ -882,14 +883,14 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
 
 function hideSelectionControls() {
   controlsAreVisible = false
-
+  
   if (!controlsSelector) { return }
 
   var controls = document.querySelectorAll(controlsSelector)
 
   setDisplay(controls, "none")
 
-  offsetCameraUp(0)
+  offsetCameraUp(-1)
 }
 
 function setDisplay(elements, value) {
@@ -898,10 +899,16 @@ function setDisplay(elements, value) {
   }
 }
 
+var verticalCameraOffset = 0
+
 function offsetCameraUp(lines) {
+  var orig = verticalCameraOffset
+
+  verticalCameraOffset += lines
+
   var containerElement = document.querySelector(".program")
 
-  var transform = "translateY("+(lines*-32)+"px)"
+  var transform = "translateY("+(verticalCameraOffset*-32)+"px)"
 
   containerElement.style.transform = transform
 }

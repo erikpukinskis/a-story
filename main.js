@@ -609,7 +609,7 @@ function drawProgram(expression) {
   )
 
   addHtml(world.html())
-  addHtml(element(".selector", {style: "display: none"}, "EZJS").html())
+  addHtml(element(".selector", "EZJS").html())
 }
 
 
@@ -635,17 +635,16 @@ function expressionToElement(expression, splicePosition) {
   var id = expression.elementId = el.assignId()
 
   if (splicePosition) {
-    expressionElementIds.splice(splicePosition, 0, el)
+    expressionElementIds.splice(splicePosition, 0, id)
   } else {
     expressionElementIds[i] = id
   }
 
-
-  // expressionElementIds.splice(start, 0, newExpression)
-
   expressionsByElementId[id] = expression
   return el
 }
+
+
 
 function forgetElementPositions() {
 }
@@ -654,9 +653,12 @@ function elementOverSelector() {
 
   for(var i=expressionElementIds.length-1; i>=0; i--) {
 
-    var el = document.getElementById(expressionElementIds[i])
+    var id = expressionElementIds[i]
+    var el = document.getElementById(id)
 
-    if (!el) { continue }
+    if (!el) {
+      continue
+    }
 
     var rect = el.getBoundingClientRect()
 
@@ -678,7 +680,7 @@ window.onscroll = updateSelection
 
 // Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
 
-var selectionIsHidden
+var selectionIsHidden = true
 var controlsAreVisible
 var currentSelection
 
@@ -691,7 +693,8 @@ function updateSelection() {
   var shouldBeHidden = !newSelection
   var shouldBeVisible = !shouldBeHidden
 
-  if (shouldBeHidden && selectionIsHidden !== true) {
+  if (shouldBeHidden &&
+    !selectionIsHidden) {
     document.querySelector(".selector").style.display = "none"
     selectionIsHidden = true    
   }
@@ -785,27 +788,25 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
 
     var ghostElement = document.getElementById(ghostElementId)
 
-    var expressionIndex
+    var indexOfElementId
+    var lineIndex
 
     for(var i = 0; i < expressionElementIds.length; i++) {
       var testId = expressionElementIds[i]
       if (testId == relativeExpressionElementId) {
 
-        expressionIndex = i
+        indexOfElementId = i
 
         if (beforeOrAfter == "after") {
-          expressionIndex++
+          indexOfElementId++
         }
 
         break
       }
     }
 
-    var newElement = expressionToElement(newExpression, expressionIndex)
+    var newElement = expressionToElement(newExpression, indexOfElementId)
 
-    expressionElementIds.splice(expressionIndex, 0, newExpression)
-
-    var lineIndex
 
     for(var i = 0; i < lines.length; i++) {
       var line = parentExpression.body[i]
@@ -821,6 +822,8 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
         break
       }
     }
+
+    expressionElementIds.splice(indexOfElementId, 0, newElement.assignId())
 
     lines.splice(lineIndex, 0, newExpression)
 

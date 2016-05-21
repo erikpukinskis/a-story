@@ -151,7 +151,8 @@ var renderFunctionCall = element.template(
 
     container.children =
       argumentsToElements(
-        expression.arguments
+        expression.arguments,
+        expression
       )
 
     this.children.push(container)
@@ -169,14 +170,14 @@ function setProperty(property, expressionId, newValue, oldValue) {
   programChanged()
 }
 
-function argumentsToElements(args) {
+function argumentsToElements(args, parent) {
 
   var elements = []
   for(var i=0; i<args.length; i++) {
 
     var expression = args[i]
     var isFunctionCall = expression.kind == "function call"
-    var arg = expressionToElement(expression)
+    var arg = expressionToElement(expression, {parent: parent})
 
     arg.classes.push(
       "function-argument")
@@ -285,11 +286,9 @@ var functionLiteralBody = element.template(
     this.children = parent.body.map(toChild)
 
     function toChild(child) {
-      var el = expressionToElement(child)
+      var el = expressionToElement(child, {parent: parent})
 
       el.classes.push("function-literal-line")
-
-      parentExpressionsByChildId[el.assignId()] = parent
 
       if (previous) {
         previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
@@ -331,8 +330,7 @@ var variableAssignment = element.template(
     )
 
     var rhs = expressionToElement(
-      expression.expression
-    )
+      expression.expression, {parent: expression})
 
     rhs.classes.push("rhs")
     this.children.push(lhs)
@@ -357,7 +355,8 @@ var objectLiteral = element.template(
 
       var el = keyPair(
         pairExpression,
-        functionCall(onKeyRename).withArgs(barCode(pairExpression))
+        functionCall(onKeyRename).withArgs(barCode(pairExpression)),
+        expression
       )
 
       this.children.push(el)
@@ -395,7 +394,7 @@ function onKeyRename(pairId, newKey) {
 
 var keyPair = element.template(
   ".key-pair",
-  function keyPair(pairExpression, keyRenameHandler) {
+  function keyPair(pairExpression, keyRenameHandler, objectExpression) {
 
     pairExpression.kind = "key pair"
 
@@ -428,7 +427,10 @@ var keyPair = element.template(
 
 
     var valueElement =
-      expressionToElement(valueExpression)
+      expressionToElement(
+        valueExpression,
+        {parent: objectExpression}
+      )
 
     this.children.push(keyButton)
     this.children.push(valueElement)
@@ -455,15 +457,22 @@ var variableReference = element.template(
 var arrayLiteral = element.template(
   ".array-literal.indenter",
   function(expression) {
-    this.children = expression.items.map(itemToElement)
+    var items = expression.items
+
+    this.children = items.map(
+      function(item) {
+        return element(
+          ".array-item",
+          expressionToElement(item, {parent: expression})
+        )
+      }
+    )
+
   }
 )
 
 function itemToElement(item) {
-  return element(
-    ".array-item",
-    expressionToElement(item)
-  )
+  return 
 }
 
 
@@ -487,76 +496,76 @@ function addGhost(containerId, el) {
 
 // GHOST BABY MAKERS
 
-function addGhostBabyKeyPair(expressionId, event) {
+// function addGhostBabyKeyPair(expressionId, event) {
 
-  var expression = barCode.scan(expressionId)
+//   var expression = barCode.scan(expressionId)
 
-  var pair = {
-    kind: "key pair",
-    key: "",
-    expression: expression,
-    valueExpression: stringLiteralJson("")
-  }
+//   var pair = {
+//     kind: "key pair",
+//     key: "",
+//     expression: expression,
+//     valueExpression: stringLiteralJson("")
+//   }
 
-  var pairId = barCode(pair)
+//   var pairId = barCode(pair)
 
-  var el = keyPair(
-    pair,
-    functionCall(onNewObjectKey).withArgs(barCode(pair))
-  )
+//   var el = keyPair(
+//     pair,
+//     functionCall(onNewObjectKey).withArgs(barCode(pair))
+//   )
 
-  el.classes.push("ghost")
-  el.classes.push("ghost-baby-key-pair-"+pairId)
+//   el.classes.push("ghost")
+//   el.classes.push("ghost-baby-key-pair-"+pairId)
 
-  addGhost(expressionId, el)
+//   addGhost(expressionId, el)
 
-}
+// }
 
-function onNewObjectKey(pairId, newKey, oldKey) {
+// function onNewObjectKey(pairId, newKey, oldKey) {
 
-  var pairExpression = barCode.scan(pairId)
+//   var pairExpression = barCode.scan(pairId)
 
-  pairExpression.key = newKey
+//   pairExpression.key = newKey
 
-  var object = pairExpression.expression.object
+//   var object = pairExpression.expression.object
 
-  object[newKey] = pairExpression.valueExpression
+//   object[newKey] = pairExpression.valueExpression
 
-  pairExpression.key = newKey
+//   pairExpression.key = newKey
 
-  // remove classes:
+//   // remove classes:
 
-  var pairElement = document.querySelector(".ghost-baby-key-pair-"+pairId)
-  pairElement.classList.remove("ghost")
-  pairElement.classList.remove("ghost-baby-key-pair-"+pairId)
+//   var pairElement = document.querySelector(".ghost-baby-key-pair-"+pairId)
+//   pairElement.classList.remove("ghost")
+//   pairElement.classList.remove("ghost-baby-key-pair-"+pairId)
 
-  // mark the ghost baby as gone:
+//   // mark the ghost baby as gone:
 
-  var expressionId = barCode(pairExpression.expression)
-  expressionHasGhostBaby[expressionId] = false
+//   var expressionId = barCode(pairExpression.expression)
+//   expressionHasGhostBaby[expressionId] = false
 
-  // swap in the normal callbacks:
+//   // swap in the normal callbacks:
 
-  var keyElement = document.querySelector(".key-pair-"+pairId+"-key")
-  var getValue = functionCall(getKeyName).withArgs(pairId)
+//   var keyElement = document.querySelector(".key-pair-"+pairId+"-key")
+//   var getValue = functionCall(getKeyName).withArgs(pairId)
 
-  // this mabe needs to be more beefy, with the targetElement updater etc
-  var setValue = functionCall(onKeyRename).withArgs(pairId)
+//   // this mabe needs to be more beefy, with the targetElement updater etc
+//   var setValue = functionCall(onKeyRename).withArgs(pairId)
 
-  var startEditingScript = functionCall(startEditing).withArgs(keyElement.id, getValue, setValue).evalable()
+//   var startEditingScript = functionCall(startEditing).withArgs(keyElement.id, getValue, setValue).evalable()
 
-  keyElement.setAttribute(
-    "onclick",
-    startEditingScript
-  )
+//   keyElement.setAttribute(
+//     "onclick",
+//     startEditingScript
+//   )
 
-  var setValue = onKeyRename.bind(null, pairId)
+//   var setValue = onKeyRename.bind(null, pairId)
 
-  humanInputListener.callback = updateEditable.bind(null, setValue)
+//   humanInputListener.callback = updateEditable.bind(null, setValue)
 
-  programChanged()
+//   programChanged()
 
-}
+// }
 
 
 
@@ -627,12 +636,20 @@ var SELECTOR_HEIGHT = 32
 var SELECTOR_BOTTOM = SELECTOR_TOP+SELECTOR_HEIGHT
 
 
-function expressionToElement(expression, splicePosition) {
+function expressionToElement(expression, options) {
 
   var i = ++lastInsertedExpressionIndex
 
+  var splicePosition = options &&options.splicePosition
+
+  var parent = options && options.parent
+
   var el = traverseExpression(expression, renderers)
   var id = expression.elementId = el.assignId()
+
+  if (parent) {
+    parentExpressionsByChildId[id] = parent
+  }
 
   if (splicePosition) {
     expressionElementIds.splice(splicePosition, 0, id)
@@ -641,6 +658,7 @@ function expressionToElement(expression, splicePosition) {
   }
 
   expressionsByElementId[id] = expression
+
   return el
 }
 
@@ -786,23 +804,21 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
 
     addLineToFunctionLiteral(newExpression, parentExpression, beforeOrAfter, relativeExpressionElementId)
 
-    var ghostElement = document.getElementById(ghostElementId)
-
-    var indexOfElementId
-
-    for(var i = 0; i < expressionElementIds.length; i++) {
-      var testId = expressionElementIds[i]
-
-      if (testId == relativeExpressionElementId) {
-
-        indexOfElementId = i
-
-      }
+    if (beforeOrAfter == "before") {
+      var splicePosition = indexBefore(expressionElementIds, relativeExpressionElementId)
+    } else {
+      var splicePosition = indexAfter(expressionElementIds, relativeExpressionElementId)
     }
 
-    var newElement = expressionToElement(newExpression, indexOfElementId)
+    var newElement = expressionToElement(
+        newExpression,
+        {
+          parent: parentExpression,
+          splicePosition: splicePosition
+        }
+      )
 
-    expressionElementIds.splice(indexOfElementId, 0, newElement.assignId())
+    var ghostElement = document.getElementById(ghostElementId)
 
     addHtml[beforeOrAfter](ghostElement, newElement.html())
 
@@ -857,6 +873,79 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
     addExpression
   )
 
+}
+
+function indexBefore(list, value) {
+
+  for(var i = 0; i < list.length; i++) {
+    if (list[i] == value) {
+      return i
+    }
+  }
+
+  throw new Error("can't find "+value+" to insert before it")
+
+}
+
+function contains(array, value) {
+  if (!Array.isArray(array)) {
+    throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+  }
+  var index = -1;
+  var length = array.length;
+  while (++index < length) {
+    if (array[index] == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+function lastDescendantAfter(elementIds, startIndex) {
+
+  var possibleParentIds = [elementIds[startIndex]]
+  var lastDescendant = startIndex
+
+  for(var i = startIndex+1; i<elementIds.length; i++) {
+
+    var testId = elementIds[i]
+    var testExpr = expressionsByElementId[testId]
+
+    var testParent = parentExpressionsByChildId[testId]
+
+    if (!testParent) {
+      var isDescendant = false
+    } else {
+      var testParentId = testParent.elementId
+      var isDescendant = contains(possibleParentIds, testParent.elementId)
+    }
+
+    if (isDescendant) {
+      possibleParentIds.push(testId)
+      lastDescendant = i
+    } else {
+      return lastDescendant
+    }      
+  }
+
+  return lastDescendant
+}
+
+function indexAfter(elementIds, relativeId) {
+
+  var splicePosition
+  var parentIdStack = []
+
+  for(var i = 0; i < elementIds.length; i++) {
+    var testId = elementIds[i]
+
+    if (testId == relativeId) {
+      return lastDescendantAfter(elementIds, i)+1
+    }
+  }
+
+  throw new Error("can't find "+relativeId+" to insert after it")
 }
 
 function addLineToFunctionLiteral(newExpression, literal, beforeOrAfter, relativeExpressionElementId) {

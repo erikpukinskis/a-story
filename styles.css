@@ -139,6 +139,7 @@ body, button {
   background: #88f;
   text-align:  center;
   display: block;
+  cursor: default;
 }
 
 
@@ -164,7 +165,9 @@ body, button {
   border-left: 2px dashed #eee;
 }
 
-.leads-to-function-call > div {
+/* Is this really supposed to be .indenter? Just guessing. This should be refactored without the descendant selector anyway. */
+
+.leads-to-function-call > .indenter {
   margin-left: -2px;
 }
 
@@ -177,8 +180,13 @@ body, button {
   color: #f8e;
 }
 
+
 .rhs {
   margin-left: 12px;
+}
+
+.leads-to-function-call > .rhs {
+  margin-left: 10px;
 }
 
 .key-pair .literal {
@@ -208,6 +216,7 @@ body, button {
   color: white;
   border-bottom: 2px solid #aaf;
   background: #88f;
+  cursor: default;
 }
 
 .menu-item:last-child {

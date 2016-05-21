@@ -285,12 +285,11 @@ var functionLiteralBody = element.template(
     this.children = parent.body.map(toChild)
 
     function toChild(child) {
-      parentExpressionsByChildId[barCode(child)] = parent
+      var el = expressionToElement(child)
 
-      var el = element(
-        expressionToElement(child),
-        ".function-literal-line"
-      )
+      el.classes.push("function-literal-line")
+
+      parentExpressionsByChildId[el.assignId()] = parent
 
       if (previous) {
         previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
@@ -633,7 +632,7 @@ function expressionToElement(expression, splicePosition) {
   var i = ++lastInsertedExpressionIndex
 
   var el = traverseExpression(expression, renderers)
-  var id = el.assignId()
+  var id = expression.elementId = el.assignId()
 
   if (splicePosition) {
     expressionElementIds.splice(splicePosition, 0, el)
@@ -656,6 +655,8 @@ function elementOverSelector() {
   for(var i=expressionElementIds.length-1; i>=0; i--) {
 
     var el = document.getElementById(expressionElementIds[i])
+
+    if (!el) { continue }
 
     var rect = el.getBoundingClientRect()
 
@@ -757,7 +758,7 @@ function addControls(selectedNode, expression) {
         functionCall(showAddExpressionMenu)
         .withArgs(
           baby.assignId(),
-          barCode(expression),
+          selectedNode.id,
           beforeOrAfter
         )
 
@@ -774,11 +775,11 @@ function addControls(selectedNode, expression) {
 
 }
 
-function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAfter) {
+function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, beforeOrAfter) {
 
   function addExpression(newExpression) {
 
-    var parentExpression = parentExpressionsByChildId[relativeExpressionId]
+    var parentExpression = parentExpressionsByChildId[relativeExpressionElementId]
 
     var lines = parentExpression.body
 
@@ -787,7 +788,8 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAft
     var expressionIndex
 
     for(var i = 0; i < expressionElementIds.length; i++) {
-      if (expressionElementIds[i] == relativeExpressionId) {
+      var testId = expressionElementIds[i]
+      if (testId == relativeExpressionElementId) {
 
         expressionIndex = i
 
@@ -795,79 +797,82 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionId, beforeOrAft
           expressionIndex++
         }
 
-        expressionElementIds.splice(expressionIndex, 0, newExpression)
+        break
       }
     }
 
     var newElement = expressionToElement(newExpression, expressionIndex)
 
-    for(
-      var lineIndex = 0;
-      lineIndex < lines.length;
-      lineIndex++
-    ) {
-      var line = parentExpression.body[lineIndex]
+    expressionElementIds.splice(expressionIndex, 0, newExpression)
 
-      if (barCode(line) == relativeExpressionId) {
+    var lineIndex
 
-        var start = lineIndex
+    for(var i = 0; i < lines.length; i++) {
+      var line = parentExpression.body[i]
+
+      if (line.elementId == relativeExpressionElementId) {
+
+        lineIndex = i
 
         if (beforeOrAfter == "after") {
-          start++
+          lineIndex++
         }
 
-        lines.splice(start, 0, newExpression)
+        break
       }
     }
+
+    lines.splice(lineIndex, 0, newExpression)
 
     addHtml[beforeOrAfter](ghostElement, newElement.html())
 
     programChanged()
-
+    hideSelectionControls()
+    updateSelection()
   }
 
 
   menu(
-    menu.choice(
-      "&nbsp;",
-      {kind: "empty"}
-    ),
+    // menu.choice(
+    //   "&nbsp;",
+    //   {kind: "empty"}
+    // ),
     menu.choice(
       "\" text \"",
       {kind: "string literal", string: ""}
     ),
-    menu.choice(
-      "var _ =",
-      {
-        kind: "variable assignment",
-        expression: emptyExpressionJson(),
-        variableName: "fraggleRock"
-      }
-    ),
-    menu.choice(
-      "page",
-      {kind: "variable reference", variableName: "page"}
-    ),
-    menu.choice(
-      "options :",
-      {kind: "object literal"}
-    ),
-    menu.choice(
-      "function",
-      {kind: "function literal"}
-    ),
-    menu.choice(
-      "element",
-      {kind: "function call", functionName: "element", arguments: []}
-    ),
-    menu.choice(
-      "bridgeRoute",
-      {kind: "function call", functionName: "bridgeRoute"}
-    ),
-    menu.choice(
-      "element.style",
-      {kind: "function call", functionName: "bridgeRoute"}
-    ),
+    // menu.choice(
+    //   "var _ =",
+    //   {
+    //     kind: "variable assignment",
+    //     expression: emptyExpressionJson(),
+    //     variableName: "fraggleRock"
+    //   }
+    // ),
+    // menu.choice(
+    //   "page",
+    //   {kind: "variable reference", variableName: "page"}
+    // ),
+    // menu.choice(
+    //   "options :",
+    //   {kind: "object literal"}
+    // ),
+    // menu.choice(
+    //   "function",
+    //   {kind: "function literal"}
+    // ),
+    // menu.choice(
+    //   "element",
+    //   {kind: "function call", functionName: "element", arguments: []}
+    // ),
+    // menu.choice(
+    //   "bridgeRoute",
+    //   {kind: "function call", functionName: "bridgeRoute"}
+    // ),
+    // menu.choice(
+    //   "element.style",
+    //   {kind: "function call", functionName: "bridgeRoute"}
+    // ),
     addExpression
   )
 

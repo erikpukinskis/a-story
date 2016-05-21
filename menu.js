@@ -6,7 +6,7 @@ var menu = (function() {
   var template = element.template(
     ".menu",
     function() {
-      for(var i=1; i<arguments.length; i++) {
+      for(var i=0; i<arguments.length; i++) {
 
         if (typeof arguments[i] == "function") {
           menuCallback = arguments[i]
@@ -29,12 +29,6 @@ var menu = (function() {
       }
     }
   )
-
-  var openMenu
-
-  var menuCache = [
-    [],[],[],[]
-  ]
 
   var container
 

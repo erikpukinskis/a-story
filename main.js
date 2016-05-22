@@ -118,6 +118,10 @@ var ghostBabyLine = element.template(
   }
 )
 
+var emptyExpression = element.template(
+  ".empty-expression.button",
+  "empty"
+)
 
 var renderFunctionCall = element.template(
   ".function-call",
@@ -580,7 +584,8 @@ var renderers = {
   "variable assignment": variableAssignment,
   "object literal": objectLiteral,
   "array literal": arrayLiteral,
-  "string literal": stringLiteral
+  "string literal": stringLiteral,
+  "empty expression": emptyExpression
 }
 
 function traverseExpression(expression, handlers) {
@@ -589,7 +594,7 @@ function traverseExpression(expression, handlers) {
   var handler = handlers[kind]
 
   if (typeof handler != "function") {
-    throw new Error("The object you provided had no "+kind+" handler, which is the kind of your expression: "+JSON.stringify(expression))
+    throw new Error("The expression handlers you provided have no "+kind+" handler. But we are trying to deal with an expression of that sort: "+JSON.stringify(expression))
   }
 
   return handler(expression)
@@ -667,7 +672,17 @@ function expressionToElement(expression, options) {
 function forgetElementPositions() {
 }
 
-function elementOverSelector() {
+function elementOverlapsSelector(el) {
+  var rect = el.getBoundingClientRect()
+
+  var startsAboveLine = rect.top < SELECTOR_BOTTOM
+
+  var endsAboveLine = rect.bottom < SELECTOR_TOP
+
+  return startsAboveLine && !endsAboveLine
+}
+
+function getSelectedElement() {
 
   for(var i=expressionElementIds.length-1; i>=0; i--) {
 
@@ -678,15 +693,7 @@ function elementOverSelector() {
       continue
     }
 
-    var rect = el.getBoundingClientRect()
-
-    var startsAboveLine = rect.top < SELECTOR_BOTTOM
-
-    var endsAboveLine = rect.bottom < SELECTOR_TOP
-
-    var elementOverlapsSelector = startsAboveLine && !endsAboveLine
-
-    if (elementOverlapsSelector) {
+    if (elementOverlapsSelector(el)) {
       return el
     }
   }
@@ -707,7 +714,8 @@ function updateSelection() {
     hideSelectionControls()
   }
 
-  var newSelection = elementOverSelector()
+  var newSelection = getSelectedElement()
+
   var shouldBeHidden = !newSelection
   var shouldBeVisible = !shouldBeHidden
 
@@ -802,7 +810,11 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
 
     var parentExpression = parentExpressionsByChildId[relativeExpressionElementId]
 
-    addLineToFunctionLiteral(newExpression, parentExpression, beforeOrAfter, relativeExpressionElementId)
+    addLineToFunctionLiteral(newExpression,
+      parentExpression,
+      beforeOrAfter,
+      relativeExpressionElementId
+    )
 
     if (beforeOrAfter == "before") {
       var splicePosition = indexBefore(expressionElementIds, relativeExpressionElementId)
@@ -817,6 +829,8 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
           splicePosition: splicePosition
         }
       )
+
+    previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
 
     var ghostElement = document.getElementById(ghostElementId)
 
@@ -838,14 +852,14 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
       "\" text \"",
       {kind: "string literal", string: ""}
     ),
-    // menu.choice(
-    //   "var _ =",
-    //   {
-    //     kind: "variable assignment",
-    //     expression: emptyExpressionJson(),
-    //     variableName: "fraggleRock"
-    //   }
-    // ),
+    menu.choice(
+      "var _ =",
+      {
+        kind: "variable assignment",
+        expression: emptyExpressionJson(),
+        variableName: "fraggleRock"
+      }
+    ),
     // menu.choice(
     //   "page",
     //   {kind: "variable reference", variableName: "page"}

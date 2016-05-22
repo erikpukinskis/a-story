@@ -172,6 +172,7 @@ body, button {
 }
 
 .variable-name {
+  display: block;
   color: #f8e;
   border-left: 2px solid #f8e;
 }
@@ -205,6 +206,17 @@ body, button {
   display: block;
 }
 
+.empty-expression {
+  display: inline-block;
+  color: #ccc;
+  border: 2px solid #ddd;
+  padding: 6px 10px 7px 10px;
+}
+
+.empty-expression.selected {
+  color: #9cc;
+  border-color: #add;
+}
 
 
 /* MENU */

@@ -804,22 +804,23 @@ function addControls(selectedNode, expression) {
 
 }
 
-function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, beforeOrAfter) {
+function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) {
 
   function addExpression(newExpression) {
 
-    var parentExpression = parentExpressionsByChildId[relativeExpressionElementId]
+    var parentExpression = parentExpressionsByChildId[relativeToThisId]
 
-    addLineToFunctionLiteral(newExpression,
-      parentExpression,
+    addExpressionToNeighbors(
+      newExpression,
+      parentExpression.body,
       beforeOrAfter,
-      relativeExpressionElementId
+      relativeToThisId
     )
 
     if (beforeOrAfter == "before") {
-      var splicePosition = indexBefore(expressionElementIds, relativeExpressionElementId)
+      var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
     } else {
-      var splicePosition = indexAfter(expressionElementIds, relativeExpressionElementId)
+      var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
     }
 
     var newElement = expressionToElement(
@@ -830,7 +831,7 @@ function showAddExpressionMenu(ghostElementId, relativeExpressionElementId, befo
         }
       )
 
-    previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
+    // previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
 
     var ghostElement = document.getElementById(ghostElementId)
 
@@ -962,14 +963,13 @@ function indexAfter(elementIds, relativeId) {
   throw new Error("can't find "+relativeId+" to insert after it")
 }
 
-function addLineToFunctionLiteral(newExpression, literal, beforeOrAfter, relativeExpressionElementId) {
 
-  var lines = literal.body
+function addExpressionToNeighbors(newExpression, neighbors, beforeOrAfter, relativeToThisId) {
   
-  for(var i = 0; i < lines.length; i++) {
-    var line = lines[i]
+  for(var i = 0; i < neighbors.length; i++) {
+    var neighborExpression = neighbors[i]
 
-    if (line.elementId == relativeExpressionElementId) {
+    if (neighborExpression.elementId == relativeToThisId) {
 
       lineIndex = i
 
@@ -981,7 +981,7 @@ function addLineToFunctionLiteral(newExpression, literal, beforeOrAfter, relativ
     }
   }
 
-  lines.splice(lineIndex, 0,  newExpression)
+  neighbors.splice(lineIndex, 0,  newExpression)
 }
 
 function hideSelectionControls() {

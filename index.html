@@ -1,6 +1,22 @@
-
 <html>
-<body></body>
+
+
+<!-- LAYOUT -->
+
+<body>
+  <div class="two-columns">
+    <div class="column">
+      <div class="output"></div>
+    </div>
+    <div class="column">
+      <div class="program"></div>
+    </div>
+  </div>
+</body>
+
+
+<!-- DEPENDENCIES -->
+
 <script src="../build/he.js"></script>
 <script src="../build/element.js"></script>
 <script src="../build/tree.js"></script>
@@ -11,6 +27,28 @@
 <script src="../build/bar-code.js"></script>
 <script src="../build/tap-out.js"></script>
 <script src="menu.js"></script>
-<script src="main.js"></script>
+<script src="editor.js"></script>
+<script src="run-program.js"></script>
+
+
+<!-- DATA -->
+
+<script src="load-sample-home-page.js"></script>
+<!-- <script src="load-empty-program.js"></script>
+ -->
+
+
+<!-- STARTUP -->
+
+<script type="text/javascript">
+  drawProgram()
+  runProgram()
+</script>
+
+
+<!-- STYLES -->
+
 <link rel="stylesheet" href="styles.css">
+
+
 </html>

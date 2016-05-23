@@ -614,10 +614,10 @@ function drawProgram(expression) {
     },
     [
       element(".column", [
-        line(program)
+        element(".output")
       ]),
       element(".column", [
-        element(".output")
+        line(program)
       ])
     ]
   )

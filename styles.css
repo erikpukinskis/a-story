@@ -7,16 +7,25 @@ body, button {
   font-size: 11pt;
 }
 
+.two-columns {
+  margin: 150px auto 200% auto;
+  width: 700px;
+}
+
 .column {
   width: 340px;
   margin-left: 10px;
-  float: left;
-  margin-bottom: 200px;
+  float: right;
 }
 
-.two-columns {
-  margin: 0 auto;
-  width: 700px;
+@media (max-width: 700px) {
+  .two-columns {
+    margin-top: 10px;
+  }
+
+  .column {
+    float: none;
+  }
 }
 
 .output {
@@ -114,11 +123,12 @@ body, button {
   box-sizing: border-box;
 }
 
-.ghost-expression,
-.program {
-  margin-top: 150px;
-  margin-bottom: 150%;
+@media (max-width: 700px) {
+  .program {
+    margin-top: 50px;
+  }
 }
+
 
 .ghost-expression {
   display: inline-block;
@@ -264,11 +274,12 @@ body, button {
 
 .selector {
   display: none;
-  color: white;
+  color: #fcffff;
   text-align: right;
   font-size: 32px;
   line-height: 32px;
-  padding-right: 50px; 
+  padding-right: 50px;
+  padding-top: 1px; 
   box-sizing: border-box;
   position: fixed;
   z-index: -1;
@@ -277,11 +288,20 @@ body, button {
   height: 52px;
   background: #dff;
   border: 10px solid #f5ffff;
+  text-shadow:
+    3px -3px 0px #eff,
+    -2px 2px 0px #ceffff;
   left: 50%;
   margin-left: -45%;
   top: 110px; /* SELECTOR_TOP - border width */
 }
 
+@media (max-width: 700px) {
+  .selector {
+    width: 95%;
+    border-right-width: 0;
+  }
+}
 
 
 

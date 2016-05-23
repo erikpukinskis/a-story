@@ -8,6 +8,36 @@ function pad(str) {
   }).join("\n")
 }
 
+var program
+
+function thisExpressionExists(json) {
+  program = json
+}
+
+function stringLiteralJson(string) {
+  return {
+    kind: "string literal",
+    string: string
+  }
+}
+
+function emptyExpressionJson() {
+  return { kind: "empty expression" }
+}
+
+function traverseExpression(expression, handlers) {
+
+  var kind = expression.kind
+  var handler = handlers[kind]
+
+  if (typeof handler != "function") {
+    throw new Error("The expression handlers you provided have no "+kind+" handler. But we are trying to deal with an expression of that sort: "+JSON.stringify(expression))
+  }
+
+  return handler(expression)
+}
+
+
 
 // RUN
 

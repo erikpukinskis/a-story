@@ -28,7 +28,7 @@
 <script src="../build/tap-out.js"></script>
 <script src="menu.js"></script>
 <script src="editor.js"></script>
-<script src="run-program.js"></script>
+<script src="a-program.js"></script>
 
 
 <!-- DATA -->
@@ -41,8 +41,13 @@
 <!-- STARTUP -->
 
 <script type="text/javascript">
-  drawProgram()
-  runProgram()
+
+  var el = drawExpression(
+      loadedProgram.expression)
+
+  document.querySelector(".program").innerHTML = el.html()
+
+  loadedProgram.run()
 </script>
 
 

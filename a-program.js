@@ -8,40 +8,34 @@ function pad(str) {
   }).join("\n")
 }
 
-var program
 
-function thisExpressionExists(json) {
-  program = json
-}
+var aProgramAppeared = (function() {
 
-function stringLiteralJson(string) {
-  return {
-    kind: "string literal",
-    string: string
-  }
-}
-
-function emptyExpressionJson() {
-  return { kind: "empty expression" }
-}
-
-function traverseExpression(expression, handlers) {
-
-  var kind = expression.kind
-  var handler = handlers[kind]
-
-  if (typeof handler != "function") {
-    throw new Error("The expression handlers you provided have no "+kind+" handler. But we are trying to deal with an expression of that sort: "+JSON.stringify(expression))
+  function aProgramAppeared(json) {
+    return new Program(json)
   }
 
-  return handler(expression)
-}
+  function Program(expression) {
+    this.expression = expression
+  }
+
+  aProgramAppeared.stringLiteral =
+    function(string) {
+      return {
+        kind: "string literal",
+        string: string
+      }
+    }
+
+  aProgramAppeared.emptyExpression =
+    function() {
+      return {
+        kind: "empty expression" 
+      }
+    }
 
 
-
-// RUN
-
-var runProgram = (function() {
+  // CODE GENERATORS
 
   var codeGenerators = {
     "function call": function(expression) {
@@ -102,12 +96,8 @@ var runProgram = (function() {
 
   // RUN
 
-  function runProgram() {
-    runIt(program)
-  }
-
-  function runIt(functionLiteral) {
-    var expression = packageAsModule(functionLiteral)
+  Program.prototype.run = function () {
+    var expression = packageAsModule(this.expression)
 
     var js = expressionToJavascript(expression)
 
@@ -138,7 +128,7 @@ var runProgram = (function() {
       .argumentNames
       .map(
         function(camelCase) {
-          return stringLiteralJson(
+          return aProgramAppeared.stringLiteral(
             dasherized(camelCase)
           )
         }
@@ -168,15 +158,20 @@ var runProgram = (function() {
   }
 
   function expressionToJavascript(expression) {
-    return traverseExpression(
-      expression,
-      codeGenerators
-    )
+
+    var kind = expression.kind
+    var makeCode = codeGenerators[kind]
+
+    if (typeof makeCode != "function") {
+      throw new Error("No code generator called "+kind)
+    }
+
+    return makeCode(expression)
   }
 
-  return runProgram
-
+  return aProgramAppeared
 })()
+
 
 
 // RUNTIME REQUIREMENTS

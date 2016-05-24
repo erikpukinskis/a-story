@@ -1,5 +1,7 @@
 
-thisExpressionExists({
+var expressions = aProgramAppeared
+
+var loadedProgram = aProgramAppeared({
   kind: "function literal",
   argumentNames: ["element", "bridgeRoute"],
   body: [
@@ -10,8 +12,8 @@ thisExpressionExists({
     kind: "function call",
     functionName: "element",
     arguments: [
-      stringLiteralJson("sup family"),
-      // stringLiteralJson("body"),
+      expressions.stringLiteral("sup family"),
+      // expressions.stringLiteral("body"),
 {
   kind: "function call",
   functionName: "element.style",
@@ -20,10 +22,10 @@ thisExpressionExists({
       kind: "object literal",
       object:
         {
-      "background": stringLiteralJson("cornsilk"),
-      "color": stringLiteralJson("orchid"),
-      "font-size": stringLiteralJson("60pt"),
-      "font-family": stringLiteralJson("georgia")
+      "background": expressions.stringLiteral("cornsilk"),
+      "color": expressions.stringLiteral("orchid"),
+      "font-size": expressions.stringLiteral("60pt"),
+      "font-family": expressions.stringLiteral("georgia")
         }
     }
   ]
@@ -35,7 +37,7 @@ thisExpressionExists({
   kind: "function call",
   functionName: "bridgeRoute",
   arguments: [
-    stringLiteralJson("/"),
+    expressions.stringLiteral("/"),
     {
       kind: "function literal",
       argumentNames: ["bridge"],

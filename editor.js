@@ -22,23 +22,376 @@ function tryToRun(func) {
   }
 }
 
+function getProperty(property, expressionId) {
+  var expression = barCode.scan(expressionId)
+  return expression[property]
+}
+
+function setProperty(property, expressionId, newValue, oldValue) {
+  var expression = barCode.scan(expressionId)
+  expression[property] = newValue
+  programChanged()
+}
+
+
+
+// WHO RUN THE WORLD? GLOBALS
+
+var lastInsertedExpressionIndex = -1
+var parentExpressionsByChildId = {}
+var expressionElementIds = []
+var expressionsByElementId = {}
+
+
+var SELECTOR_TOP = 120
+var SELECTOR_HEIGHT = 32
+var SELECTOR_BOTTOM = SELECTOR_TOP+SELECTOR_HEIGHT
+var selectorDrawn = false
+
+window.onscroll = updateSelection
+
+addHtml(element(".selector", "EZJS").html())
+
+function programChanged() {
+  loadedProgram.run()
+}
+
+function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) {
+
+  function addExpression(newExpression) {
+
+    var parentExpression = parentExpressionsByChildId[relativeToThisId]
+ 
+    var relativeExpression = expressionsByElementId[relativeToThisId]
+
+    addExpressionToNeighbors(
+      newExpression,
+      parentExpression.body,
+      beforeOrAfter,
+      relativeExpression
+    )
+
+    if (beforeOrAfter == "before") {
+      var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
+    } else {
+      var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
+    }
+
+    var newElement = drawExpression(
+        newExpression,
+        {
+          parent: parentExpression,
+          splicePosition: splicePosition
+        }
+      )
+
+    // previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
+
+    var ghostElement = document.getElementById(ghostElementId)
+
+    addHtml[beforeOrAfter](ghostElement, newElement.html())
+
+    programChanged()
+    hideSelectionControls()
+    updateSelection()
+    offsetCameraUp(1)
+  }
+
+
+  menu(
+    menu.choice(
+      "\" text \"",
+      {kind: "string literal", string: ""}
+    ),
+    menu.choice(
+      "var _ =",
+      {
+        kind: "variable assignment",
+        expression: aProgramAppeared.emptyExpression(),
+        variableName: "fraggleRock"
+      }
+    ),
+    addExpression
+  )
+
+}
+
+function indexBefore(list, value) {
+
+  for(var i = 0; i < list.length; i++) {
+    if (list[i] == value) {
+      return i
+    }
+  }
+
+  throw new Error("can't find "+value+" to insert before it")
+
+}
+
+function contains(array, value) {
+  if (!Array.isArray(array)) {
+    throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+  }
+  var index = -1;
+  var length = array.length;
+  while (++index < length) {
+    if (array[index] == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+function lastDescendantAfter(elementIds, startIndex) {
+
+  var possibleParentIds = [elementIds[startIndex]]
+  var lastDescendant = startIndex
+
+  for(var i = startIndex+1; i<elementIds.length; i++) {
+
+    var testId = elementIds[i]
+    var testExpr = expressionsByElementId[testId]
+
+    var testParent = parentExpressionsByChildId[testId]
+
+    if (!testParent) {
+      var isDescendant = false
+    } else {
+      var testParentId = testParent.elementId
+      var isDescendant = contains(possibleParentIds, testParent.elementId)
+    }
+
+    if (isDescendant) {
+      possibleParentIds.push(testId)
+      lastDescendant = i
+    } else {
+      return lastDescendant
+    }      
+  }
+
+  return lastDescendant
+}
+
+function indexAfter(elementIds, relativeId) {
+
+  var splicePosition
+  var parentIdStack = []
+
+  for(var i = 0; i < elementIds.length; i++) {
+    var testId = elementIds[i]
+
+    if (testId == relativeId) {
+      return lastDescendantAfter(elementIds, i)+1
+    }
+  }
+
+  throw new Error("can't find "+relativeId+" to insert after it")
+}
+
+
+function addExpressionToNeighbors(newExpression, neighbors, beforeOrAfter, relativeExpression) {
+  
+  for(var i = 0; i < neighbors.length; i++) {
+    var neighborExpression = neighbors[i]
+
+    if (neighborExpression == relativeExpression) {
+
+      lineIndex = i
+
+      if (beforeOrAfter == "after") {
+        lineIndex++
+      }
+
+      break
+    }
+  }
+
+  neighbors.splice(lineIndex, 0,  newExpression)
+}
+
+
+
+// SELECTION CONTROLS
+
+function hideSelectionControls() {
+  controlsAreVisible = false
+  
+  if (!controlsSelector) { return }
+
+  var controls = document.querySelectorAll(controlsSelector)
+
+  setDisplay(controls, "none")
+
+  offsetCameraUp(-1)
+}
+
+function setDisplay(elements, value) {
+  for(var i=0; i<elements.length; i++) {
+    elements[i].style.display = value
+  }
+}
+
+var verticalCameraOffset = 0
+
+function offsetCameraUp(lines) {
+  var orig = verticalCameraOffset
+
+  verticalCameraOffset += lines
+
+  var containerElement = document.querySelector(".program")
+
+  var transform = "translateY("+(verticalCameraOffset*-32)+"px)"
+
+  containerElement.style.transform = transform
+}
+
+
+function elementOverlapsSelector(el) {
+  var rect = el.getBoundingClientRect()
+
+  var startsAboveLine = rect.top < SELECTOR_BOTTOM
+
+  var endsAboveLine = rect.bottom < SELECTOR_TOP
+
+  return startsAboveLine && !endsAboveLine
+}
+
+function getSelectedElement() {
+
+  for(var i=expressionElementIds.length-1; i>=0; i--) {
+
+    var id = expressionElementIds[i]
+    var el = document.getElementById(id)
+
+    if (!el) {
+      continue
+    }
+
+    if (elementOverlapsSelector(el)) {
+      return el
+    }
+  }
+
+}
+
+// Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
+
+var selectionIsHidden = true
+var controlsAreVisible
+var currentSelection
+
+function updateSelection() {
+  if (controlsAreVisible) {
+    hideSelectionControls()
+  }
+
+  var newSelection = getSelectedElement()
+
+  var shouldBeHidden = !newSelection
+  var shouldBeVisible = !shouldBeHidden
+
+  if (shouldBeHidden &&
+    !selectionIsHidden) {
+    document.querySelector(".selector").style.display = "none"
+    selectionIsHidden = true    
+  }
+
+  if (shouldBeVisible && selectionIsHidden) {
+    document.querySelector(".selector").style.display = "block"
+    selectionIsHidden = false
+  }
+
+  if (newSelection == currentSelection) {
+    return
+  } else if (newSelection) {
+    newSelection.classList.add("selected")
+  }
+
+  if (currentSelection) {
+    currentSelection.classList.remove("selected")
+  }
+
+  currentSelection = newSelection
+
+  if (!currentSelection) { return }
+
+  afterASecond(showSelectionControls)
+}
+
+var controlsSelector
+
+function showSelectionControls() {
+  if (!currentSelection) { return }
+
+  var selectedElementId = currentSelection.id
+
+  var expression = expressionsByElementId[selectedElementId]
+
+  if (expression.kind == "variable assignment") {
+
+    controlsSelector = ".ghost-baby-line.ghost-baby-line-"+selectedElementId
+
+    var controls = document.querySelectorAll(".ghost-baby-line-"+selectedElementId)
+
+    if (controls.length > 0) {
+      setDisplay(controls, "block")
+    } else {
+      addControls(currentSelection, expression)
+    }
+
+    offsetCameraUp(1)
+
+    controlsAreVisible = true
+  }
+
+}
+
+var ghostBabyLine = element.template(
+  "+",
+  function(selectedElementId) {
+
+    this.classes = [
+      "ghost-baby-line",
+      "ghost-baby-line-"+selectedElementId
+    ]
+  }
+)
+
+function addControls(selectedNode, expression) {
+
+  ["before", "after"].forEach(
+    function(beforeOrAfter) {
+
+      var baby = ghostBabyLine(selectedNode.id)
+
+      var add = 
+        functionCall(showAddExpressionMenu)
+        .withArgs(
+          baby.assignId(),
+          selectedNode.id,
+          beforeOrAfter
+        )
+
+      baby.onclick(add)
+
+      addHtml[beforeOrAfter](
+        selectedNode,
+        baby.html()
+      )
+
+    }
+  )
+
+}
+
+
 
 // EDITOR
 
-var drawProgram = (function() {
+var drawExpression = (function() {
 
   // RENDERERS 
-
-  var ghostBabyLine = element.template(
-    "+",
-    function(selectedElementId) {
-
-      this.classes = [
-        "ghost-baby-line",
-        "ghost-baby-line-"+selectedElementId
-      ]
-    }
-  )
 
   var emptyExpression = element.template(
     ".empty-expression.button",
@@ -84,17 +437,6 @@ var drawProgram = (function() {
       this.children.push(container)
     }
   )
-
-  function getProperty(property, expressionId) {
-    var expression = barCode.scan(expressionId)
-    return expression[property]
-  }
-
-  function setProperty(property, expressionId, newValue, oldValue) {
-    var expression = barCode.scan(expressionId)
-    expression[property] = newValue
-    programChanged()
-  }
 
   function argumentsToElements(args, parent) {
 
@@ -200,8 +542,6 @@ var drawProgram = (function() {
 
     programChanged()
   }
-
-  var parentExpressionsByChildId = {}
 
   var functionLiteralBody = element.template(
     ".function-literal-body",
@@ -420,7 +760,6 @@ var drawProgram = (function() {
     container.innerHTML = container.innerHTML + el.html()
   }
 
-  // GHOST BABY MAKERS
 
   // function addGhostBabyKeyPair(expressionId, event) {
 
@@ -510,29 +849,6 @@ var drawProgram = (function() {
     "empty expression": emptyExpression
   }
 
-  var line = element.template.container()
-
-  function drawProgram() {
-
-    var el = expressionToElement(
-      program)
-
-    document.querySelector(".program").innerHTML = el.html()
-
-    addHtml(element(".selector", "EZJS").html())
-  }
-
-
-  // RENDERING AND SELECTING EXPRESSIONS
-
-  var expressionElementIds = []
-  var lastInsertedExpressionIndex = -1
-  var expressionsByElementId = {}
-  var SELECTOR_TOP = 120
-  var SELECTOR_HEIGHT = 32
-  var SELECTOR_BOTTOM = SELECTOR_TOP+SELECTOR_HEIGHT
-
-
   function expressionToElement(expression, options) {
 
     var i = ++lastInsertedExpressionIndex
@@ -541,7 +857,15 @@ var drawProgram = (function() {
 
     var parent = options && options.parent
 
-    var el = traverseExpression(expression, renderers)
+    var kind = expression.kind
+    var render = renderers[kind]
+
+    if (typeof render != "function") {
+      throw new Error("No renderer for "+kind)
+    }
+
+    var el = render(expression)
+
     var id = expression.elementId = el.assignId()
 
     if (parent) {
@@ -560,360 +884,6 @@ var drawProgram = (function() {
   }
 
 
-
-  function forgetElementPositions() {
-  }
-
-  function elementOverlapsSelector(el) {
-    var rect = el.getBoundingClientRect()
-
-    var startsAboveLine = rect.top < SELECTOR_BOTTOM
-
-    var endsAboveLine = rect.bottom < SELECTOR_TOP
-
-    return startsAboveLine && !endsAboveLine
-  }
-
-  function getSelectedElement() {
-
-    for(var i=expressionElementIds.length-1; i>=0; i--) {
-
-      var id = expressionElementIds[i]
-      var el = document.getElementById(id)
-
-      if (!el) {
-        continue
-      }
-
-      if (elementOverlapsSelector(el)) {
-        return el
-      }
-    }
-
-  }
-
-
-  window.onscroll = updateSelection
-
-  // Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
-
-  var selectionIsHidden = true
-  var controlsAreVisible
-  var currentSelection
-
-  function updateSelection() {
-    if (controlsAreVisible) {
-      hideSelectionControls()
-    }
-
-    var newSelection = getSelectedElement()
-
-    var shouldBeHidden = !newSelection
-    var shouldBeVisible = !shouldBeHidden
-
-    if (shouldBeHidden &&
-      !selectionIsHidden) {
-      document.querySelector(".selector").style.display = "none"
-      selectionIsHidden = true    
-    }
-
-    if (shouldBeVisible && selectionIsHidden) {
-      document.querySelector(".selector").style.display = "block"
-      selectionIsHidden = false
-    }
-
-    if (newSelection == currentSelection) {
-      return
-    } else if (newSelection) {
-      newSelection.classList.add("selected")
-    }
-
-    if (currentSelection) {
-      currentSelection.classList.remove("selected")
-    }
-
-    currentSelection = newSelection
-
-    if (!currentSelection) { return }
-
-    afterASecond(showSelectionControls)
-  }
-
-  var controlsSelector
-
-  function showSelectionControls() {
-    if (!currentSelection) { return }
-
-    var selectedElementId = currentSelection.id
-
-    var expression = expressionsByElementId[selectedElementId]
-
-    if (expression.kind == "variable assignment") {
-
-      controlsSelector = ".ghost-baby-line.ghost-baby-line-"+selectedElementId
-
-      var controls = document.querySelectorAll(".ghost-baby-line-"+selectedElementId)
-
-      if (controls.length > 0) {
-        setDisplay(controls, "block")
-      } else {
-        addControls(currentSelection, expression)
-      }
-
-      offsetCameraUp(1)
-
-      controlsAreVisible = true
-    }
-
-  }
-
-
-  function addControls(selectedNode, expression) {
-
-    ["before", "after"].forEach(
-      function(beforeOrAfter) {
-
-        var baby = ghostBabyLine(selectedNode.id)
-
-        var add = 
-          functionCall(showAddExpressionMenu)
-          .withArgs(
-            baby.assignId(),
-            selectedNode.id,
-            beforeOrAfter
-          )
-
-        baby.onclick(add)
-
-        addHtml[beforeOrAfter](
-          selectedNode,
-          baby.html()
-        )
-
-
-      }
-    )
-
-  }
-
-  function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) {
-
-    function addExpression(newExpression) {
-
-      var parentExpression = parentExpressionsByChildId[relativeToThisId]
-
-      addExpressionToNeighbors(
-        newExpression,
-        parentExpression.body,
-        beforeOrAfter,
-        relativeToThisId
-      )
-
-      if (beforeOrAfter == "before") {
-        var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
-      } else {
-        var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
-      }
-
-      var newElement = expressionToElement(
-          newExpression,
-          {
-            parent: parentExpression,
-            splicePosition: splicePosition
-          }
-        )
-
-      // previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
-
-      var ghostElement = document.getElementById(ghostElementId)
-
-      addHtml[beforeOrAfter](ghostElement, newElement.html())
-
-      programChanged()
-      hideSelectionControls()
-      updateSelection()
-      offsetCameraUp(1)
-    }
-
-
-    menu(
-      // menu.choice(
-      //   "&nbsp;",
-      //   {kind: "empty"}
-      // ),
-      menu.choice(
-        "\" text \"",
-        {kind: "string literal", string: ""}
-      ),
-      menu.choice(
-        "var _ =",
-        {
-          kind: "variable assignment",
-          expression: emptyExpressionJson(),
-          variableName: "fraggleRock"
-        }
-      ),
-      // menu.choice(
-      //   "page",
-      //   {kind: "variable reference", variableName: "page"}
-      // ),
-      // menu.choice(
-      //   "options :",
-      //   {kind: "object literal"}
-      // ),
-      // menu.choice(
-      //   "function",
-      //   {kind: "function literal"}
-      // ),
-      // menu.choice(
-      //   "element",
-      //   {kind: "function call", functionName: "element", arguments: []}
-      // ),
-      // menu.choice(
-      //   "bridgeRoute",
-      //   {kind: "function call", functionName: "bridgeRoute"}
-      // ),
-      // menu.choice(
-      //   "element.style",
-      //   {kind: "function call", functionName: "bridgeRoute"}
-      // ),
-      addExpression
-    )
-
-  }
-
-  function indexBefore(list, value) {
-
-    for(var i = 0; i < list.length; i++) {
-      if (list[i] == value) {
-        return i
-      }
-    }
-
-    throw new Error("can't find "+value+" to insert before it")
-
-  }
-
-  function contains(array, value) {
-    if (!Array.isArray(array)) {
-      throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
-    }
-    var index = -1;
-    var length = array.length;
-    while (++index < length) {
-      if (array[index] == value) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-
-  function lastDescendantAfter(elementIds, startIndex) {
-
-    var possibleParentIds = [elementIds[startIndex]]
-    var lastDescendant = startIndex
-
-    for(var i = startIndex+1; i<elementIds.length; i++) {
-
-      var testId = elementIds[i]
-      var testExpr = expressionsByElementId[testId]
-
-      var testParent = parentExpressionsByChildId[testId]
-
-      if (!testParent) {
-        var isDescendant = false
-      } else {
-        var testParentId = testParent.elementId
-        var isDescendant = contains(possibleParentIds, testParent.elementId)
-      }
-
-      if (isDescendant) {
-        possibleParentIds.push(testId)
-        lastDescendant = i
-      } else {
-        return lastDescendant
-      }      
-    }
-
-    return lastDescendant
-  }
-
-  function indexAfter(elementIds, relativeId) {
-
-    var splicePosition
-    var parentIdStack = []
-
-    for(var i = 0; i < elementIds.length; i++) {
-      var testId = elementIds[i]
-
-      if (testId == relativeId) {
-        return lastDescendantAfter(elementIds, i)+1
-      }
-    }
-
-    throw new Error("can't find "+relativeId+" to insert after it")
-  }
-
-
-  function addExpressionToNeighbors(newExpression, neighbors, beforeOrAfter, relativeToThisId) {
-    
-    for(var i = 0; i < neighbors.length; i++) {
-      var neighborExpression = neighbors[i]
-
-      if (neighborExpression.elementId == relativeToThisId) {
-
-        lineIndex = i
-
-        if (beforeOrAfter == "after") {
-          lineIndex++
-        }
-
-        break
-      }
-    }
-
-    neighbors.splice(lineIndex, 0,  newExpression)
-  }
-
-  function hideSelectionControls() {
-    controlsAreVisible = false
-    
-    if (!controlsSelector) { return }
-
-    var controls = document.querySelectorAll(controlsSelector)
-
-    setDisplay(controls, "none")
-
-    offsetCameraUp(-1)
-  }
-
-  function setDisplay(elements, value) {
-    for(var i=0; i<elements.length; i++) {
-      elements[i].style.display = value
-    }
-  }
-
-  var verticalCameraOffset = 0
-
-  function offsetCameraUp(lines) {
-    var orig = verticalCameraOffset
-
-    verticalCameraOffset += lines
-
-    var containerElement = document.querySelector(".program")
-
-    var transform = "translateY("+(verticalCameraOffset*-32)+"px)"
-
-    containerElement.style.transform = transform
-  }
-
-  function programChanged() {
-    forgetElementPositions()
-    runProgram()
-  }
-
-  return drawProgram
+  return expressionToElement
 
 })()
-

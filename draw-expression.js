@@ -35,7 +35,8 @@ function setProperty(property, expressionId, newValue, oldValue) {
 
 
 
-// WHO RUN THE WORLD? GLOBALS
+
+// WHO RUNS THE WORLD? GLOBALS
 
 var lastInsertedExpressionIndex = -1
 var parentExpressionsByChildId = {}
@@ -58,46 +59,6 @@ function programChanged() {
 
 function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) {
 
-  function addExpression(newExpression) {
-
-    var parentExpression = parentExpressionsByChildId[relativeToThisId]
- 
-    var relativeExpression = expressionsByElementId[relativeToThisId]
-
-    addExpressionToNeighbors(
-      newExpression,
-      parentExpression.body,
-      beforeOrAfter,
-      relativeExpression
-    )
-
-    if (beforeOrAfter == "before") {
-      var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
-    } else {
-      var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
-    }
-
-    var newElement = drawExpression(
-        newExpression,
-        {
-          parent: parentExpression,
-          splicePosition: splicePosition
-        }
-      )
-
-    // previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
-
-    var ghostElement = document.getElementById(ghostElementId)
-
-    addHtml[beforeOrAfter](ghostElement, newElement.html())
-
-    programChanged()
-    hideSelectionControls()
-    updateSelection()
-    offsetCameraUp(1)
-  }
-
-
   menu(
     menu.choice(
       "\" text \"",
@@ -111,7 +72,7 @@ function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) 
         variableName: "fraggleRock"
       }
     ),
-    addExpression
+    drawExpression.new.bind(null, ghostElementId, relativeToThisId, beforeOrAfter)
   )
 
 }
@@ -190,28 +151,6 @@ function indexAfter(elementIds, relativeId) {
 }
 
 
-function addExpressionToNeighbors(newExpression, neighbors, beforeOrAfter, relativeExpression) {
-  
-  for(var i = 0; i < neighbors.length; i++) {
-    var neighborExpression = neighbors[i]
-
-    if (neighborExpression == relativeExpression) {
-
-      lineIndex = i
-
-      if (beforeOrAfter == "after") {
-        lineIndex++
-      }
-
-      break
-    }
-  }
-
-  neighbors.splice(lineIndex, 0,  newExpression)
-}
-
-
-
 // SELECTION CONTROLS
 
 function hideSelectionControls() {
@@ -274,8 +213,6 @@ function getSelectedElement() {
   }
 
 }
-
-// Throttling doesn't really solve our problem, since we really want fast performance at transitions. So what we should do is only poll for an element when we cross transitions, and cache the answers.
 
 var selectionIsHidden = true
 var controlsAreVisible
@@ -387,7 +324,10 @@ function addControls(selectedNode, expression) {
 
 
 
-// EDITOR
+
+
+// EDITOR ///////////////////////
+
 
 var drawExpression = (function() {
 
@@ -882,6 +822,68 @@ var drawExpression = (function() {
 
     return el
   }
+
+
+  function addExpression(ghostElementId, relativeToThisId, beforeOrAfter, newExpression) {
+
+    var parentExpression = parentExpressionsByChildId[relativeToThisId]
+ 
+    var relativeExpression = expressionsByElementId[relativeToThisId]
+
+    addExpressionToNeighbors(
+      newExpression,
+      parentExpression.body,
+      beforeOrAfter,
+      relativeExpression
+    )
+
+    if (beforeOrAfter == "before") {
+      var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
+    } else {
+      var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
+    }
+
+    var newElement = drawExpression(
+        newExpression,
+        {
+          parent: parentExpression,
+          splicePosition: splicePosition
+        }
+      )
+
+    // previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
+
+    var ghostElement = document.getElementById(ghostElementId)
+
+    addHtml[beforeOrAfter](ghostElement, newElement.html())
+
+    programChanged()
+    hideSelectionControls()
+    updateSelection()
+    offsetCameraUp(1)
+  }
+
+  function addExpressionToNeighbors(newExpression, neighbors, beforeOrAfter, relativeExpression) {
+    
+    for(var i = 0; i < neighbors.length; i++) {
+      var neighborExpression = neighbors[i]
+
+      if (neighborExpression == relativeExpression) {
+
+        lineIndex = i
+
+        if (beforeOrAfter == "after") {
+          lineIndex++
+        }
+
+        break
+      }
+    }
+
+    neighbors.splice(lineIndex, 0,  newExpression)
+  }
+
+  expressionToElement.new = addExpression
 
 
   return expressionToElement

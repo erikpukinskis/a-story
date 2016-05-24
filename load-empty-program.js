@@ -1,7 +1,9 @@
-thisExpressionExists({
+var expressions = aProgramAppeared
+
+var loadedProgram = aProgramAppeared({
   kind: "function literal",
   argumentNames: ["element"],
   body: [
-    emptyExpressionJson()
+    expressions.emptyExpression()
   ]
 })

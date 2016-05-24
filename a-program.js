@@ -96,7 +96,7 @@ var aProgramAppeared = (function() {
 
   // RUN
 
-  Program.prototype.run = function () {
+  Program.prototype.run = function() {
     var expression = packageAsModule(this.expression)
 
     var js = expressionToJavascript(expression)

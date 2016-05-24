@@ -192,14 +192,6 @@ library.define("bridge-route", function() {
 
         out.innerHTML = element.html()
 
-        setTimeout(function() {
-          var el = document.querySelector(".program")
-          var top = el.offsetTop
-          var parentTop = el.parentNode.parentNode.offsetTop
-
-          out.style.top = (top-parentTop)+"px"
-          out.style.position = "relative"
-        })
       }
     }
 

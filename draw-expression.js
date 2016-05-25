@@ -22,18 +22,6 @@ function tryToRun(func) {
   }
 }
 
-function getProperty(property, expressionId) {
-  var expression = barCode.scan(expressionId)
-  return expression[property]
-}
-
-function setProperty(property, expressionId, newValue, oldValue) {
-  var expression = barCode.scan(expressionId)
-  expression[property] = newValue
-  programChanged()
-}
-
-
 
 
 // WHO RUNS THE WORLD? GLOBALS
@@ -57,7 +45,35 @@ function programChanged() {
   loadedProgram.run()
 }
 
-function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) {
+function getProperty(property, expressionId) {
+  var expression = barCode.scan(expressionId)
+  return expression[property]
+}
+
+function setProperty(property, expressionId, newValue, oldValue) {
+  var expression = barCode.scan(expressionId)
+  expression[property] = newValue
+  programChanged()
+}
+
+function getKeyName(id) {
+  var pairExpression = barCode.scan(id)
+  return pairExpression.key
+}
+
+function onKeyRename(pairId, newKey) {
+  var pairExpression = barCode.scan(pairId)
+  var object = pairExpression.expression.object
+  var oldKey = pairExpression.key
+
+  pairExpression.key = newKey
+  object[newKey] = object[oldKey]
+
+  delete object[oldKey]
+  programChanged()
+}
+
+function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
 
   menu(
     menu.choice(
@@ -72,7 +88,7 @@ function showAddExpressionMenu(ghostElementId, relativeToThisId, beforeOrAfter) 
         variableName: "fraggleRock"
       }
     ),
-    drawExpression.new.bind(null, ghostElementId, relativeToThisId, beforeOrAfter)
+    drawExpression.new.bind(null, ghostElementId, relativeToThisId, relationship)
   )
 
 }
@@ -335,7 +351,21 @@ var drawExpression = (function() {
 
   var emptyExpression = element.template(
     ".empty-expression.button",
-    "empty"
+    "empty",
+    function() {
+
+      this.assignId()
+
+      var add = 
+        functionCall(showAddExpressionMenu)
+        .withArgs(
+          this.id,
+          this.id,
+          "inPlaceOf"
+        )
+
+      this.onclick(add)
+    }
   )
 
   var renderFunctionCall = element.template(
@@ -583,20 +613,6 @@ var drawExpression = (function() {
     }
   )
 
-  function onKeyRename(pairId, newKey) {
-    var pairExpression = barCode.scan(pairId)
-    var object = pairExpression.expression.object
-    var oldKey = pairExpression.key
-
-    pairExpression.key = newKey
-    object[newKey] = object[oldKey]
-
-    delete object[oldKey]
-    programChanged()
-  }
-
-
-
 
   var keyPair = element.template(
     ".key-pair",
@@ -642,11 +658,6 @@ var drawExpression = (function() {
       this.children.push(valueElement)
     }
   )
-
-  function getKeyName(id) {
-    var pairExpression = barCode.scan(id)
-    return pairExpression.key
-  }
 
   var variableReference = element.template(
     ".button.variable-reference",
@@ -794,6 +805,7 @@ var drawExpression = (function() {
     var i = ++lastInsertedExpressionIndex
 
     var splicePosition = options &&options.splicePosition
+    var deleteThisMany = splicePosition && (options.deleteThisMany || 0)
 
     var parent = options && options.parent
 
@@ -813,7 +825,7 @@ var drawExpression = (function() {
     }
 
     if (splicePosition) {
-      expressionElementIds.splice(splicePosition, 0, id)
+      expressionElementIds.splice(splicePosition, deleteThisMany, id)
     } else {
       expressionElementIds[i] = id
     }
@@ -824,38 +836,49 @@ var drawExpression = (function() {
   }
 
 
-  function addExpression(ghostElementId, relativeToThisId, beforeOrAfter, newExpression) {
+  function addExpression(ghostElementId, relativeToThisId, relationship, newExpression) {
 
     var parentExpression = parentExpressionsByChildId[relativeToThisId]
- 
+
+
     var relativeExpression = expressionsByElementId[relativeToThisId]
 
     addExpressionToNeighbors(
       newExpression,
       parentExpression.body,
-      beforeOrAfter,
+      relationship,
       relativeExpression
     )
 
-    if (beforeOrAfter == "before") {
+    if (relationship == "before") {
+
       var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
-    } else {
+      var deleteThisMany = 0
+
+    } else if (relationship == "after") {
+
       var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
-    }
+      var deleteThisMany = 0
+
+    } else if (relationship == "inPlaceOf") {
+
+      var splicePosition = 0
+      var deleteThisMany = 1
+
+    } else { throw new Error() }
 
     var newElement = drawExpression(
         newExpression,
         {
           parent: parentExpression,
-          splicePosition: splicePosition
+          splicePosition: splicePosition,
+          deleteThisMany: deleteThisMany
         }
       )
 
-    // previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
-
     var ghostElement = document.getElementById(ghostElementId)
 
-    addHtml[beforeOrAfter](ghostElement, newElement.html())
+    addHtml[relationship](ghostElement, newElement.html())
 
     programChanged()
     hideSelectionControls()
@@ -863,7 +886,7 @@ var drawExpression = (function() {
     offsetCameraUp(1)
   }
 
-  function addExpressionToNeighbors(newExpression, neighbors, beforeOrAfter, relativeExpression) {
+  function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
     
     for(var i = 0; i < neighbors.length; i++) {
       var neighborExpression = neighbors[i]
@@ -872,7 +895,7 @@ var drawExpression = (function() {
 
         lineIndex = i
 
-        if (beforeOrAfter == "after") {
+        if (relationship == "after") {
           lineIndex++
         }
 
@@ -880,7 +903,13 @@ var drawExpression = (function() {
       }
     }
 
-    neighbors.splice(lineIndex, 0,  newExpression)
+    if (relationship == "inPlaceOf") {
+      var deleteThisMany = 1
+    } else {
+      var deleteThisMany = 0
+    }
+
+    neighbors.splice(lineIndex, deleteThisMany,  newExpression)
   }
 
   expressionToElement.new = addExpression

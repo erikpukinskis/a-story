@@ -2,7 +2,7 @@ var expressions = aProgramAppeared
 
 var loadedProgram = aProgramAppeared({
   kind: "function literal",
-  argumentNames: ["element"],
+  argumentNames: [],
   body: [
     expressions.emptyExpression()
   ]

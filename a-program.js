@@ -101,7 +101,7 @@ var aProgramAppeared = (function() {
 
     var js = expressionToJavascript(expression)
 
-    js = js + "\n//# sourceURL=home-page.js"
+    js = js + "\n//# sourceURL=program-being-edited.js"
 
     eval(js)
   }

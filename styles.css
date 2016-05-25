@@ -2,6 +2,10 @@ body {
   padding: 30px 20px;
 }
 
+div[onclick] {
+  cursor: default;
+}
+
 body, button {
   font-family: sans-serif;
   font-size: 11pt;
@@ -149,7 +153,6 @@ body, button {
   background: #88f;
   text-align:  center;
   display: block;
-  cursor: default;
 }
 
 
@@ -223,6 +226,10 @@ body, button {
   padding: 6px 10px 7px 10px;
 }
 
+div[onclick] {
+  cursor: default;
+}
+
 .empty-expression.selected {
   color: #9cc;
   border-color: #add;
@@ -238,7 +245,6 @@ body, button {
   color: white;
   border-bottom: 1px solid #8af;
   background: #88f;
-  cursor: default;
   padding-bottom: 9px;
 }
 

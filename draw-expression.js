@@ -56,6 +56,12 @@ function setProperty(property, expressionId, newValue, oldValue) {
   programChanged()
 }
 
+function setFloatProperty(property, expressionId, newValue, oldValue) {
+  var expression = barCode.scan(expressionId)
+  expression[property] = parseFloat(newValue)
+  programChanged()
+}
+
 function getKeyName(id) {
   var pairExpression = barCode.scan(id)
   return pairExpression.key
@@ -73,15 +79,38 @@ function onKeyRename(pairId, newKey) {
   programChanged()
 }
 
+function triangle() {
+
+  var expression = {
+    kind: "array literal",
+    items: [
+      aProgramAppeared.objectLiteral({
+        name: "triangle",
+        position: [-1.5, 0.0, -7.0]
+      }),
+      aProgramAppeared.objectLiteral({
+        name: "other triangle",
+        position: [1.5, 0.0, -7.0]
+      })
+    ]
+  }
+
+  return expression
+}
+
+
 function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
 
   menu(
     menu.choice(
-      "\" text \"",
+      "drawScene(...)",
+      {kind: "function call", functionName: "drawScene", arguments: [triangle()]}),
+    menu.choice(
+      "\"some text\"",
       {kind: "string literal", string: ""}
     ),
     menu.choice(
-      "var _ =",
+      "var yourVariable =",
       {
         kind: "variable assignment",
         expression: aProgramAppeared.emptyExpression(),
@@ -251,6 +280,7 @@ function updateSelection() {
   }
 
   if (shouldBeVisible && selectionIsHidden) {
+    console.log("bing")
     document.querySelector(".selector").style.display = "block"
     selectionIsHidden = false
   }
@@ -455,6 +485,21 @@ var drawExpression = (function() {
   )
 
 
+  var numberLiteral = element.template(
+    ".button.literal",
+    function(expression) {
+
+      this.children.push(element.raw(expression.number.toString()))
+
+      makeItEditable(
+        this,
+        functionCall(getProperty).withArgs("number", barCode(expression)),
+        functionCall(setFloatProperty).withArgs("number", barCode(expression))
+      )
+    }
+  )
+
+
 
 
   var functionLiteral = element.template(
@@ -622,8 +667,13 @@ var drawExpression = (function() {
 
       var expression = pairExpression.expression
       var key = pairExpression.key
+      var value = expression.object[key]
 
-      var valueExpression = expression.object[key] || pairExpression.valueExpression
+      if (typeof value != "object" || !value.kind) {
+        throw new Error("Trying to draw object expression "+JSON.stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression?")
+      }
+
+      var valueExpression = value || pairExpression.valueExpression
 
       var textElement = element(
         "span",
@@ -672,18 +722,19 @@ var drawExpression = (function() {
 
 
   var arrayLiteral = element.template(
-    ".array-literal.indenter",
+    ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
+
     function(expression) {
       var items = expression.items
 
-      this.children = items.map(
-        function(item) {
-          return element(
-            ".array-item",
-            expressionToElement(item, {parent: expression})
-          )
-        }
-      )
+      this.children = items.map(itemToElement)
+
+      function itemToElement(item) {
+        return element(
+          ".array-item",
+          expressionToElement(item, {parent: expression})
+        )
+      }
 
     }
   )
@@ -797,6 +848,7 @@ var drawExpression = (function() {
     "object literal": objectLiteral,
     "array literal": arrayLiteral,
     "string literal": stringLiteral,
+    "number literal": numberLiteral,
     "empty expression": emptyExpression
   }
 

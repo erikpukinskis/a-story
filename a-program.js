@@ -27,12 +27,54 @@ var aProgramAppeared = (function() {
       }
     }
 
+  aProgramAppeared.numberLiteral =
+    function(number) {
+      return {
+        kind: "number literal",
+        number: number
+      }
+    }
+
   aProgramAppeared.emptyExpression =
     function() {
       return {
         kind: "empty expression" 
       }
     }
+
+  aProgramAppeared.objectLiteral =
+    function(object) {
+      var expression = {
+        kind: "object literal",
+        object: {}
+      }
+
+      for (var key in object) {
+        expression.object[key] = toExpression(object[key])
+      }
+
+      return expression
+    }
+
+  aProgramAppeared.arrayLiteral =
+    function(array) {
+      return {
+        kind: "array literal",
+        items: array.map(toExpression)
+      }
+    }
+
+  function toExpression(stuff) {
+    if (typeof stuff == "string") {
+      return aProgramAppeared.stringLiteral(stuff)
+    } else if (typeof stuff == "number") {
+      return aProgramAppeared.numberLiteral(stuff)
+    } else if (Array.isArray(stuff)) {
+      return aProgramAppeared.arrayLiteral(stuff)
+    } else if (typeof stuff == "object") {
+      return aProgramAppeared.objectLiteral(stuff)
+    }
+  }
 
 
   // CODE GENERATORS
@@ -65,6 +107,9 @@ var aProgramAppeared = (function() {
     },
     "string literal": function(expression) {
       return JSON.stringify(expression.string)
+    },
+    "number literal": function(expression) {
+      return expression.number.toString()
     },
     "empty expression": function() {
       return "null"

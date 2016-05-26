@@ -211,12 +211,23 @@ body, button {
   margin-right: 12px;
 }
 
-.object-literal, .array-literal {
+.object-literal {
   border-left: 2px solid #bbb;
 }
 
+.array-literal {
+  background: #eef;
+}
+
+.array-literal .key, .array-literal .literal {
+  background: #e9e9ef;
+}
+
 .array-item {
+  border-left: 2px solid #0cf;
+  padding-left: 12px;
   display: block;
+  margin-bottom: 4px;
 }
 
 .empty-expression {
@@ -240,7 +251,7 @@ div[onclick] {
 
 .menu-item {
   white-space: nowrap;
-  min-width: 90px;
+  min-width: 10em;
   min-height: 1em;
   color: white;
   border-bottom: 1px solid #8af;
@@ -277,6 +288,16 @@ div[onclick] {
 .selected .key, .selected .literal {
   background: #e6fcfc;
 }
+
+.selected .array-literal {
+  background: #C7F5F9;
+}
+
+.selected .array-literal .key,
+.selected .array-literal .literal {
+  background: #d6efef;
+}
+
 
 .selector {
   display: none;

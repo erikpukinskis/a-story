@@ -236,9 +236,13 @@ div[onclick] {
 }
 
 .array-item {
-  border-left: 2px solid #bff;
+  border-left: 3px solid #bff;
   display: block;
   margin-bottom: 10px;
+}
+
+.selected .array-item {
+  border-left-color: #8ff;
 }
 
 .array-literal {
@@ -248,18 +252,11 @@ div[onclick] {
 .object-literal .array-item {
   display: inline-block;
   margin-bottom: 0px;
-  /*background: #eef;*/
 }
 
 .object-literal .literal {
   margin-right: 10px;
 }
-
-.array-literal .key,
-.array-literal .literal {
-
-}
-
 
 
 /* MENU */
@@ -344,20 +341,4 @@ div[onclick] {
     border-right-width: 0;
   }
 }
-
-
-
-
-
-/* Hide everything but buttons
-
-div, button {
-  background: none !important;
-  border: none !important;
-  color: black;
-}
-
-button {
-  background: #ccc !important;
-} /**/
 

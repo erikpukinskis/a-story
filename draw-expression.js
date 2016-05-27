@@ -103,8 +103,22 @@ function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
 
   menu(
     menu.choice(
+      "bridgeTo.browser(...)",
+      {
+        kind: "function call",
+        functionName: "bridgeTo.browser",
+        arguments: [
+          {
+            kind: "function literal",
+            argumentNames: [],
+            body: [aProgramAppeared.emptyExpression()]}
+        ]}),
+
+    menu.choice(
       "drawScene(...)",
       {kind: "function call", functionName: "drawScene", arguments: [triangle()]}),
+
+
     menu.choice(
       "\"some text\"",
       {kind: "string literal", string: ""}
@@ -504,6 +518,7 @@ var drawExpression = (function() {
   var functionLiteral = element.template(
     ".function-literal",
     function(expression) {
+
       var children = this.children
 
       children.push(
@@ -513,12 +528,18 @@ var drawExpression = (function() {
         )
       )
 
+      if (!expression.argumentNames) {
+        throw new Error("Your function literal ("+stringify(expression)+") needs an argumentNames array. At least an empty one.")
+      }
+
       var argumentNames = element(
         ".function-argument-names",
-        expression.argumentNames.map(function(name, index) {
-          return argumentName(expression, name, index)
-        })
+        expression.argumentNames.map(toArgumentElement)
       )
+
+      function toArgumentElement(name, index) {
+        return argumentName(expression, name, index)
+      }
 
       children.push(argumentNames)
 
@@ -567,7 +588,7 @@ var drawExpression = (function() {
 
       function toChild(child) {
         child.role = "function literal line"
-
+        
         var el = expressionToElement(child, {parent: parent})
 
         el.classes.push("function-literal-line")
@@ -855,6 +876,10 @@ var drawExpression = (function() {
 
   function expressionToElement(expression, options) {
 
+    if (typeof expression != "object" || !expression || !expression.kind) {
+      throw new Error("Trying to turn "+stringify(expression)+" into an element, but it doesn't look like an expression")
+    }
+
     var i = ++lastInsertedExpressionIndex
 
     var splicePosition = options &&options.splicePosition
@@ -888,6 +913,13 @@ var drawExpression = (function() {
     return el
   }
 
+  function stringify(thing) {
+    if (typeof thing == "function") {
+      return thing.toString()
+    } else {
+      return JSON.stringify(thing)
+    }
+  }
 
   function addExpression(ghostElementId, relativeToThisId, relationship, newExpression) {
 

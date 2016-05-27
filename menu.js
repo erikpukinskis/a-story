@@ -52,9 +52,9 @@ var menu = (function() {
   }
 
   showMenu.choose = function(i, event) {
-    menuCallback(values[i])
-    container.hide()
     event.preventDefault()
+    container.hide()
+    menuCallback(values[i])
   }
 
   return showMenu

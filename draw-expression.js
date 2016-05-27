@@ -280,7 +280,6 @@ function updateSelection() {
   }
 
   if (shouldBeVisible && selectionIsHidden) {
-    console.log("bing")
     document.querySelector(".selector").style.display = "block"
     selectionIsHidden = false
   }
@@ -311,7 +310,7 @@ function showSelectionControls() {
 
   var expression = expressionsByElementId[selectedElementId]
 
-  if (expression.kind == "variable assignment") {
+  if (expression.role == "function literal line") {
 
     controlsSelector = ".ghost-baby-line.ghost-baby-line-"+selectedElementId
 
@@ -567,6 +566,8 @@ var drawExpression = (function() {
       this.children = parent.body.map(toChild)
 
       function toChild(child) {
+        child.role = "function literal line"
+
         var el = expressionToElement(child, {parent: parent})
 
         el.classes.push("function-literal-line")

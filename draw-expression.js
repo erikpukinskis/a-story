@@ -534,12 +534,12 @@ var drawExpression = (function() {
 
       var argumentNames = element(
         ".function-argument-names",
-        expression.argumentNames.map(toArgumentElement)
+        expression.argumentNames.map(
+          function(name, index) {
+            return argumentName(expression, name, index)
+          }
+        )
       )
-
-      function toArgumentElement(name, index) {
-        return argumentName(expression, name, index)
-      }
 
       children.push(argumentNames)
 
@@ -921,10 +921,36 @@ var drawExpression = (function() {
     }
   }
 
+  function getDeps(newExpression) {
+    var deps = []
+    var lines = newExpression.body
+    var name = newExpression.functionName
+
+    if (name) {
+      var parts = name.split(".")
+      deps.push(parts[0])
+    }
+
+    if (lines) {
+      for(var i=0; i<lines; i++) {
+        var moreDeps =
+          getDeps(lines[i])
+        deps = deps.concat(modeDeps)
+      }
+    }
+
+    return deps
+  }
+
+  function getPackageFunctionLiteral(expression) {
+    if (expression.kind == "function literal") {
+      return expression
+    }
+  }
+
   function addExpression(ghostElementId, relativeToThisId, relationship, newExpression) {
 
     var parentExpression = parentExpressionsByChildId[relativeToThisId]
-
 
     var relativeExpression = expressionsByElementId[relativeToThisId]
 
@@ -965,11 +991,36 @@ var drawExpression = (function() {
 
     addHtml[relationship](ghostElement, newElement.html())
 
+    updateDependencies(parentExpression, newExpression)
+
     programChanged()
     hideSelectionControls()
     updateSelection()
     offsetCameraUp(1)
   }
+
+  function updateDependencies(parent, line) {
+
+    if (line.kind == "function call") {
+
+      var deps = getDeps(line)
+
+      var package = getPackageFunctionLiteral(parent)
+
+      if (package && deps.length) {
+        deps.forEach(add)
+      }
+    }
+
+    function add(dep) {
+      if (package.argumentNames.indexOf(dep) == -1) {
+        addArgument(package, dep)
+      }
+    }
+
+  }
+
+
 
   function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
     
@@ -995,6 +1046,24 @@ var drawExpression = (function() {
     }
 
     neighbors.splice(lineIndex, deleteThisMany,  newExpression)
+  }
+
+
+  function addArgument(package, dep) {
+
+    var index = package.argumentNames.length
+
+    package.argumentNames.push(dep)
+    var el = argumentName(package, dep, index)
+
+    var selector = "#"+package.elementId+" .function-argument-names"
+
+    var container = document.querySelector(selector)
+
+    addHtml.inside(
+      container, el.html()
+    )
+
   }
 
   expressionToElement.new = addExpression

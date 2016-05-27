@@ -233,7 +233,12 @@ library.define("bridge-to",
   function() {
   
     return {
-      webPage: handlePage
+      webPage: handlePage,
+      browser: handleBrowser
+    }
+
+    function handleBrowser(handler) {
+      handler()
     }
 
     function handlePage(handler) {

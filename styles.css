@@ -218,7 +218,11 @@ div[onclick] {
 }
 
 .object-literal {
-  background: #eee;
+  background: #fafafa;
+}
+
+.object-literal .literal {
+  background: white;
 }
 
 .button.literal,
@@ -239,10 +243,6 @@ div[onclick] {
   border-left: 3px solid #bff;
   display: block;
   margin-bottom: 10px;
-}
-
-.selected .array-item {
-  border-left-color: #8ff;
 }
 
 .array-literal {
@@ -291,6 +291,10 @@ div[onclick] {
 
 /* This stuff shold stay at the bottom of the file */
 
+.selected .array-item {
+  border-left-color: #8ff;
+}
+
 .selected, .button.selected {
   background: #cff;
   position: relative;
@@ -302,7 +306,11 @@ div[onclick] {
 }
 
 .selected .object-literal {
-  background: #CAEFEF;
+  background: #D4F1F5;
+}
+
+.selected .object-literal .button.literal {
+  background: #E7FAFB;
 }
 
 .selected .array-literal .key,

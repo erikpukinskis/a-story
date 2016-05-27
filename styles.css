@@ -156,13 +156,20 @@ body, button {
 }
 
 
-
-.button.literal, .key {
-  background: #fafafa;
+.empty-expression {
+  display: inline-block;
+  color: #ccc;
+  border: 2px solid #ddd;
+  padding: 6px 10px 7px 10px;
 }
 
-.button.literal, .key, .function-literal-label {
-  color: #666;
+div[onclick] {
+  cursor: default;
+}
+
+.empty-expression.selected {
+  color: #9cc;
+  border-color: #add;
 }
 
 
@@ -203,6 +210,23 @@ body, button {
   margin-left: 10px;
 }
 
+
+/* LITERALS */
+
+.button.literal {
+  background: #fafafa;
+}
+
+.object-literal {
+  background: #eee;
+}
+
+.button.literal,
+.key,
+.function-literal-label {
+  color: #666;
+}
+
 .key-pair .literal {
   display: inline-block;
 }
@@ -211,40 +235,31 @@ body, button {
   margin-right: 12px;
 }
 
-.object-literal {
-  border-left: 2px solid #bbb;
+.array-item {
+  border-left: 2px solid #bff;
+  display: block;
+  margin-bottom: 10px;
 }
 
 .array-literal {
-  background: #eef;
+  display: inline;
 }
 
-.array-literal .key, .array-literal .literal {
-  background: #e9e9ef;
-}
-
-.array-item {
-  border-left: 2px solid #0cf;
-  padding-left: 12px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.empty-expression {
+.object-literal .array-item {
   display: inline-block;
-  color: #ccc;
-  border: 2px solid #ddd;
-  padding: 6px 10px 7px 10px;
+  margin-bottom: 0px;
+  /*background: #eef;*/
 }
 
-div[onclick] {
-  cursor: default;
+.object-literal .literal {
+  margin-right: 10px;
 }
 
-.empty-expression.selected {
-  color: #9cc;
-  border-color: #add;
+.array-literal .key,
+.array-literal .literal {
+
 }
+
 
 
 /* MENU */
@@ -285,12 +300,12 @@ div[onclick] {
   z-index: 1;
 }
 
-.selected .key, .selected .literal {
+.selected .literal {
   background: #e6fcfc;
 }
 
-.selected .array-literal {
-  background: #C7F5F9;
+.selected .object-literal {
+  background: #CAEFEF;
 }
 
 .selected .array-literal .key,

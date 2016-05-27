@@ -3,11 +3,11 @@ var expressions = aProgramAppeared
 
 var loadedProgram = aProgramAppeared({
   kind: "function literal",
-  argumentNames: ["element", "bridgeRoute"],
+  argumentNames: ["element", "bridgeTo"],
   body: [
 {
   kind: "variable assignment",
-  variableName: "page",
+  variableName: "sup",
   expression: {
     kind: "function call",
     functionName: "element",
@@ -22,8 +22,6 @@ var loadedProgram = aProgramAppeared({
       kind: "object literal",
       object:
         {
-      "background": expressions.stringLiteral("cornsilk"),
-      "color": expressions.stringLiteral("orchid"),
       "font-size": expressions.stringLiteral("60pt"),
       "font-family": expressions.stringLiteral("georgia")
         }
@@ -35,20 +33,19 @@ var loadedProgram = aProgramAppeared({
 },
 {
   kind: "function call",
-  functionName: "bridgeRoute",
+  functionName: "bridgeTo.webPage",
   arguments: [
-    expressions.stringLiteral("/"),
     {
       kind: "function literal",
-      argumentNames: ["bridge"],
+      argumentNames: ["page"],
       body: [
 {
   kind: "function call",
-  functionName: "bridge.sendPage",
+  functionName: "page.send",
   arguments: [
     {
       kind: "variable reference",
-      variableName: "page"
+      variableName: "sup"
     }
   ]
 }

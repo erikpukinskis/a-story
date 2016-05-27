@@ -229,18 +229,26 @@ library.define("element", function () {
   return element
 })
 
-library.define("bridge-route", function() {
-  return function(path, handler) {
-    var bridge = {
-      sendPage: function(element) {
-        var out = document.querySelector(".output")
-
-        out.innerHTML = element.html()
-
-      }
+library.define("bridge-to",
+  function() {
+  
+    return {
+      webPage: handlePage
     }
 
-    handler(bridge)
+    function handlePage(handler) {
+      var page = {
+        send: function(element) {
+          var out = document.querySelector(".output")
+
+          out.innerHTML = element.html()
+
+        }
+      }
+      handler(page)
+    }
+
   }
-})
+)
+
 

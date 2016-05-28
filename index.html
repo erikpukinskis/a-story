@@ -30,7 +30,20 @@
 <script src="a-program.js"></script>
 <script src="draw-expression.js"></script>
 
-<script src="../build/draw-scene.js"></script>
+
+<script>
+
+var library = new Library()
+
+var using = library.using.bind(library)
+
+</script>
+
+<script src="../build/bridge-to.library.js"></script>
+
+<script src="../build/draw-scene.library.js"></script>
+
+<script src="../build/add-html.library.js"></script>
 
 <!-- DATA -->
 
@@ -49,7 +62,7 @@
 
   document.querySelector(".program").innerHTML = el.html()
 
-  loadedProgram.run()
+  loadedProgram.run(".output")
 
 </script>
 

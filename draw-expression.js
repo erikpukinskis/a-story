@@ -103,6 +103,14 @@ function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
 
   menu(
     menu.choice(
+      "drawScene(...)",
+      {kind: "function call", functionName: "drawScene", arguments: [triangle()]}),
+
+    menu.choice(
+      "addHtml(\"<...>\")",
+      {kind: "function call", functionName: "addHtml", arguments: [aProgramAppeared.stringLiteral("")]}),
+
+    menu.choice(
       "bridgeTo.browser(...)",
       {
         kind: "function call",
@@ -113,11 +121,6 @@ function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
             argumentNames: [],
             body: [aProgramAppeared.emptyExpression()]}
         ]}),
-
-    menu.choice(
-      "drawScene(...)",
-      {kind: "function call", functionName: "drawScene", arguments: [triangle()]}),
-
 
     menu.choice(
       "\"some text\"",
@@ -1008,16 +1011,14 @@ var drawExpression = (function() {
       var package = getPackageFunctionLiteral(parent)
 
       if (package && deps.length) {
-        deps.forEach(add)
+        deps.forEach(function(dep) {
+          var isMissing = package.argumentNames.indexOf(dep) == -1
+          if (isMissing) {
+            addDependency(package, dep)
+          }
+        })
       }
     }
-
-    function add(dep) {
-      if (package.argumentNames.indexOf(dep) == -1) {
-        addArgument(package, dep)
-      }
-    }
-
   }
 
 
@@ -1049,7 +1050,7 @@ var drawExpression = (function() {
   }
 
 
-  function addArgument(package, dep) {
+  function addDependency(package, dep) {
 
     var index = package.argumentNames.length
 
@@ -1064,6 +1065,30 @@ var drawExpression = (function() {
       container, el.html()
     )
 
+    var scriptTag = element(
+      "script",
+      {
+        src: "../build/"+dasherize(dep)+".library.js"
+      }
+    )
+
+    addHtml(scriptTag.html())
+
+  }
+
+  function dasherize(camelCase) {
+    var parts = camelCase.match(/([^A-Z]*)([A-Z][^A-Z]+)/)
+
+    var dashed
+    for(var i=1; i<parts.length; i++) {
+      var part = parts[i].toLowerCase()
+      if (dashed) {
+        dashed = dashed+"-"+part
+      } else {
+        dashed = part
+      }
+    }
+    return dashed
   }
 
   expressionToElement.new = addExpression

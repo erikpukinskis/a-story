@@ -141,7 +141,14 @@ var aProgramAppeared = (function() {
 
   // RUN
 
-  Program.prototype.run = function() {
+  Program.prototype.run = function(outputSelector) {
+
+    if (outputSelector) {
+      window.__nrtvFocusSelector = outputSelector
+    }
+
+    document.querySelector(window.__nrtvFocusSelector).innerHTML = ""
+
     var expression = packageAsModule(this.expression)
 
     var js = expressionToJavascript(expression)
@@ -216,44 +223,3 @@ var aProgramAppeared = (function() {
 
   return aProgramAppeared
 })()
-
-
-
-// RUNTIME REQUIREMENTS
-
-var library = new Library()
-
-var using = library.using.bind(library)
-
-library.define("element", function () {
-  return element
-})
-
-library.define("bridge-to",
-  function() {
-  
-    return {
-      webPage: handlePage,
-      browser: handleBrowser
-    }
-
-    function handleBrowser(handler) {
-      handler()
-    }
-
-    function handlePage(handler) {
-      var page = {
-        send: function(element) {
-          var out = document.querySelector(".output")
-
-          out.innerHTML = element.html()
-
-        }
-      }
-      handler(page)
-    }
-
-  }
-)
-
-

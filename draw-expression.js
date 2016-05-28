@@ -964,6 +964,8 @@ var drawExpression = (function() {
       relativeExpression
     )
 
+    newExpression.role = "function literal line"
+
     if (relationship == "before") {
 
       var splicePosition = indexBefore(expressionElementIds, relativeToThisId)

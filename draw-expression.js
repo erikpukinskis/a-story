@@ -276,6 +276,27 @@ function getSelectedElement() {
 
 }
 
+var keyPairsByValueExpressionId = {}
+
+function getSelectedKeyValue(elementId) {
+  var expression = expressionsByElementId[elementId]
+
+  var nextId = elementId
+  var parent
+  var possibleValueExpression = expression
+
+  while(parent = parentExpressionsByChildId[nextId]) {
+    if (parent.kind == "object literal") {
+      var keyPair = keyPairsByValueExpressionId[possibleValueExpression.elementId]
+
+      return keyPair
+    }
+    possibleValueExpression = parent
+    nextId = parent.elementId
+  }
+}
+
+
 var selectionIsHidden = true
 var controlsAreVisible
 var currentSelection
@@ -339,41 +360,28 @@ function updateControls() {
 
   } else if (expression.role == "function literal line") {
 
-    showAddButtons(currentSelection, expression)
+    showControls(
+      currentSelection,
+      function(baby, relativeToThisId, relationship) {
+
+        var add = functionCall(showAddExpressionMenu)
+
+        add = add.withArgs(
+          baby.assignId(),
+          relativeToThisId,
+          relationship
+        )
+
+        baby.onclick(add)
+      }
+    )
 
   }
 
 }
 
-var keyPairsByValueExpressionId = {}
 
-function getSelectedKeyValue(elementId) {
-  var expression = expressionsByElementId[elementId]
-
-  var nextId = elementId
-  var parent
-  var possibleValueExpression = expression
-
-  while(parent = parentExpressionsByChildId[nextId]) {
-    if (parent.kind == "object literal") {
-      var keyPair = keyPairsByValueExpressionId[possibleValueExpression.elementId]
-
-      return keyPair
-    }
-    possibleValueExpression = parent
-    nextId = parent.elementId
-  }
-}
-
-var ghostBabyLine = element.template(
-  ".ghost-baby-line",
-  "+",
-  function(selectedElementId) {
-    this.classes.push("controls-for-"+selectedElementId)
-  }
-)
-
-function showAddButtons(selectedNode, action) {
+function showControls(selectedNode, handleBaby) {
 
   controlsSelector = ".controls-for-"+selectedNode.id
 
@@ -386,17 +394,16 @@ function showAddButtons(selectedNode, action) {
     ["before", "after"].forEach(
       function(beforeOrAfter) {
 
-        var baby = ghostBabyLine(selectedNode.id)
-
-        var action = 
-          functionCall(showAddExpressionMenu)
-          .withArgs(
-            baby.assignId(),
-            selectedNode.id,
-            beforeOrAfter
-          )
-
-        baby.onclick(action)
+        var baby = element(
+          ".ghost-baby-line"+controlsSelector,
+          "+"
+        )
+  
+        handleBaby(
+          baby,
+          selectedNode.id,
+          beforeOrAfter
+        )
 
         addHtml[beforeOrAfter](
           selectedNode,

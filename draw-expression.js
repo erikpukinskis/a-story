@@ -99,6 +99,15 @@ function triangle() {
 }
 
 
+/* Onclick Handlers */
+
+
+function addKeyPair(insertByThisId, relationship, objectElementId, relativeToKey) {
+
+  drawExpression.addKeyPair.apply(null, arguments)
+}
+
+
 function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
 
   menu(
@@ -301,7 +310,7 @@ var selectionIsHidden = true
 var controlsAreVisible
 var currentSelection
 
-function updateSelection() {
+function updateSelection(options) {
   if (controlsAreVisible) {
     hideSelectionControls()
   }
@@ -336,7 +345,11 @@ function updateSelection() {
 
   if (!currentSelection) { return }
 
-  afterASecond(updateControls)
+  if (options && options.controls == "none") {
+    // do nothing
+  } else {
+    afterASecond(updateControls)
+  }
 }
 
 var controlsSelector
@@ -358,21 +371,40 @@ function updateControls() {
 
     console.log("modifying", keyValue.expression)
 
+    var keyPairElement = document.getElementById(keyValue.elementId)
+
+    showControls(
+      keyPairElement,
+      function(baby, relativeToThisId, relationship) {
+
+        var add = 
+          functionCall(addKeyPair)
+          .withArgs(
+            baby.assignId(),
+            relationship,
+            keyValue.expression.elementId,
+            keyValue.key
+          )
+
+        baby.onclick(add)
+      }
+    )
+
   } else if (expression.role == "function literal line") {
 
     showControls(
       currentSelection,
       function(baby, relativeToThisId, relationship) {
 
-        var add = functionCall(showAddExpressionMenu)
+        var showMenu = 
+          functionCall(showAddExpressionMenu)
+          .withArgs(
+            baby.assignId(),
+            relativeToThisId,
+            relationship
+          )
 
-        add = add.withArgs(
-          baby.assignId(),
-          relativeToThisId,
-          relationship
-        )
-
-        baby.onclick(add)
+        baby.onclick(showMenu)
       }
     )
 
@@ -690,14 +722,18 @@ var drawExpression = (function() {
     function(expression) {
 
       var object = expression.object
+      expression.keys = []
 
       for(var key in object) {
+
+        expression.keys.push(key)
+
         var pairExpression = {
           key: key,
           expression: expression
         }
 
-        var el = keyPair(
+        var el = keyPairTemplate(
           pairExpression,
           functionCall(onKeyRename).withArgs(barCode(pairExpression)),
           expression
@@ -722,9 +758,9 @@ var drawExpression = (function() {
   )
 
 
-  var keyPair = element.template(
+  var keyPairTemplate = element.template(
     ".key-pair",
-    function keyPair(pairExpression, keyRenameHandler, objectExpression) {
+    function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression) {
 
       pairExpression.kind = "key pair"
       pairExpression.elementId = this.assignId()
@@ -733,11 +769,15 @@ var drawExpression = (function() {
       var key = pairExpression.key
       var value = expression.object[key]
 
-      if (typeof value != "object" || !value.kind) {
-        throw new Error("Trying to draw object expression "+JSON.stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression?")
+      var valueExpression = value || pairExpression.valueExpression
+
+      if (key == "") {
+        var valueExpression = aProgramAppeared.emptyExpression()
       }
 
-      var valueExpression = value || pairExpression.valueExpression
+     if (typeof valueExpression != "object" || !valueExpression.kind) {
+        throw new Error("Trying to draw object expression "+stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression? It's "+stringify(valueExpression))
+      }
 
       var textElement = element(
         "span",
@@ -1135,9 +1175,42 @@ var drawExpression = (function() {
     return dashed
   }
 
-  expressionToElement.new = addExpression
+  function addKeyPair(insertByThisId, relationship, objectElementId, relativeToKey) {
 
+    var objectExpression = expressionsByElementId[objectElementId]
 
-  return expressionToElement
+    var index = objectExpression.keys.indexOf(relativeToKey)
+
+    if (relationship == "after") {
+      index = index + 1
+    }
+
+    objectExpression.keys.splice(index, 0, "")
+
+    var neighbor = document.getElementById(insertByThisId)
+
+    var pairExpression = {
+      key: "",
+      expression: objectExpression
+    }
+
+    var el = keyPairTemplate(
+      pairExpression,
+      functionCall(onKeyRename).withArgs(barCode(pairExpression)),
+      objectExpression
+    )
+
+    addHtml[relationship](neighbor, el.html())
+
+    updateSelection({controls: "none"})
+  }
+
+  var drawExpression = expressionToElement
+
+  drawExpression.new = addExpression
+
+  drawExpression.addKeyPair = addKeyPair
+
+  return drawExpression
 
 })()

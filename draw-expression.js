@@ -503,14 +503,6 @@ var drawExpression = (function() {
 
       this.children.push(button)
 
-      // this.onclick(
-      //   functionCall(addGhostBabyArgument)
-      //   .withArgs(
-      //     expressionId,
-      //     functionCall.raw("event")
-      //   )
-      // )
-
       var container = element(
         ".function-call-args.container-"+expressionId)
 
@@ -743,17 +735,6 @@ var drawExpression = (function() {
       }
 
       this.classes.push("container-"+barCode(expression))
-
-
-
-      // this.onclick(
-      //   functionCall(addGhostBabyKeyPair)
-      //   .withArgs(
-      //     barCode(expression),
-      //     functionCall.raw("event")
-      //   )
-      // )
-
     }
   )
 
@@ -868,79 +849,6 @@ var drawExpression = (function() {
 
     container.innerHTML = container.innerHTML + el.html()
   }
-
-
-  // function addGhostBabyKeyPair(expressionId, event) {
-
-  //   var expression = barCode.scan(expressionId)
-
-  //   var pair = {
-  //     kind: "key pair",
-  //     key: "",
-  //     expression: expression,
-  //     valueExpression: stringLiteralJson("")
-  //   }
-
-  //   var pairId = barCode(pair)
-
-  //   var el = keyPair(
-  //     pair,
-  //     functionCall(onNewObjectKey).withArgs(barCode(pair))
-  //   )
-
-  //   el.classes.push("ghost")
-  //   el.classes.push("ghost-baby-key-pair-"+pairId)
-
-  //   addGhost(expressionId, el)
-
-  // }
-
-  // function onNewObjectKey(pairId, newKey, oldKey) {
-
-  //   var pairExpression = barCode.scan(pairId)
-
-  //   pairExpression.key = newKey
-
-  //   var object = pairExpression.expression.object
-
-  //   object[newKey] = pairExpression.valueExpression
-
-  //   pairExpression.key = newKey
-
-  //   // remove classes:
-
-  //   var pairElement = document.querySelector(".ghost-baby-key-pair-"+pairId)
-  //   pairElement.classList.remove("ghost")
-  //   pairElement.classList.remove("ghost-baby-key-pair-"+pairId)
-
-  //   // mark the ghost baby as gone:
-
-  //   var expressionId = barCode(pairExpression.expression)
-  //   expressionHasGhostBaby[expressionId] = false
-
-  //   // swap in the normal callbacks:
-
-  //   var keyElement = document.querySelector(".key-pair-"+pairId+"-key")
-  //   var getValue = functionCall(getKeyName).withArgs(pairId)
-
-  //   // this mabe needs to be more beefy, with the targetElement updater etc
-  //   var setValue = functionCall(onKeyRename).withArgs(pairId)
-
-  //   var startEditingScript = functionCall(startEditing).withArgs(keyElement.id, getValue, setValue).evalable()
-
-  //   keyElement.setAttribute(
-  //     "onclick",
-  //     startEditingScript
-  //   )
-
-  //   var setValue = onKeyRename.bind(null, pairId)
-
-  //   humanInputListener.callback = updateEditable.bind(null, setValue)
-
-  //   programChanged()
-
-  // }
-
 
 
 

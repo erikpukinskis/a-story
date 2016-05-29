@@ -315,72 +315,103 @@ function updateSelection() {
 
   if (!currentSelection) { return }
 
-  afterASecond(showSelectionControls)
+  afterASecond(updateControls)
 }
 
 var controlsSelector
 
-function showSelectionControls() {
+function updateControls() {
   if (!currentSelection) { return }
 
   var selectedElementId = currentSelection.id
 
   var expression = expressionsByElementId[selectedElementId]
 
-  if (expression.role == "function literal line") {
+  var keyValue = getSelectedKeyValue(selectedElementId)
 
-    controlsSelector = ".ghost-baby-line.ghost-baby-line-"+selectedElementId
+  if (keyValue) {
 
-    var controls = document.querySelectorAll(".ghost-baby-line-"+selectedElementId)
+    console.log("add ghost babies around", keyValue.elementId)
 
-    if (controls.length > 0) {
-      setDisplay(controls, "block")
-    } else {
-      addControls(currentSelection, expression)
-    }
+    console.log("relative to", keyValue.key)
 
-    offsetCameraUp(1)
+    console.log("modifying", keyValue.expression)
 
-    controlsAreVisible = true
+  } else if (expression.role == "function literal line") {
+
+    showAddButtons(currentSelection, expression)
+
   }
 
 }
 
+var keyPairsByValueExpressionId = {}
+
+function getSelectedKeyValue(elementId) {
+  var expression = expressionsByElementId[elementId]
+
+  var nextId = elementId
+  var parent
+  var possibleValueExpression = expression
+
+  while(parent = parentExpressionsByChildId[nextId]) {
+    if (parent.kind == "object literal") {
+      var keyPair = keyPairsByValueExpressionId[possibleValueExpression.elementId]
+
+      return keyPair
+    }
+    possibleValueExpression = parent
+    nextId = parent.elementId
+  }
+}
+
 var ghostBabyLine = element.template(
+  ".ghost-baby-line",
   "+",
   function(selectedElementId) {
-
-    this.classes = [
-      "ghost-baby-line",
-      "ghost-baby-line-"+selectedElementId
-    ]
+    this.classes.push("controls-for-"+selectedElementId)
   }
 )
 
-function addControls(selectedNode, expression) {
+function showAddButtons(selectedNode, action) {
 
-  ["before", "after"].forEach(
-    function(beforeOrAfter) {
+  controlsSelector = ".controls-for-"+selectedNode.id
 
-      var baby = ghostBabyLine(selectedNode.id)
+  var controls = document.querySelectorAll(controlsSelector)
 
-      var add = 
-        functionCall(showAddExpressionMenu)
-        .withArgs(
-          baby.assignId(),
-          selectedNode.id,
-          beforeOrAfter
+  if (controls.length > 0) {
+    setDisplay(controls, "block")
+  } else {
+
+    ["before", "after"].forEach(
+      function(beforeOrAfter) {
+
+        var baby = ghostBabyLine(selectedNode.id)
+
+        var action = 
+          functionCall(showAddExpressionMenu)
+          .withArgs(
+            baby.assignId(),
+            selectedNode.id,
+            beforeOrAfter
+          )
+
+        baby.onclick(action)
+
+        addHtml[beforeOrAfter](
+          selectedNode,
+          baby.html()
         )
 
-      baby.onclick(add)
+      }
+    )
 
-      addHtml[beforeOrAfter](
-        selectedNode,
-        baby.html()
-      )
 
-    }
-  )
+  }
+
+  offsetCameraUp(1)
+
+  controlsAreVisible = true
 
 }
 
@@ -689,6 +720,7 @@ var drawExpression = (function() {
     function keyPair(pairExpression, keyRenameHandler, objectExpression) {
 
       pairExpression.kind = "key pair"
+      pairExpression.elementId = this.assignId()
 
       var expression = pairExpression.expression
       var key = pairExpression.key
@@ -729,6 +761,9 @@ var drawExpression = (function() {
           {parent: objectExpression}
         )
 
+      keyPairsByValueExpressionId[valueElement.assignId()] = pairExpression
+
+      valueElement.classes.push("key-value")
       this.children.push(keyButton)
       this.children.push(valueElement)
     }

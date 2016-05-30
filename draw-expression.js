@@ -906,13 +906,6 @@ var drawExpression = (function() {
       throw new Error("Trying to turn "+stringify(expression)+" into an element, but it doesn't look like an expression")
     }
 
-    var i = ++lastInsertedExpressionIndex
-
-    var splicePosition = options &&options.splicePosition
-    var deleteThisMany = splicePosition && (options.deleteThisMany || 0)
-
-    var parent = options && options.parent
-
     var kind = expression.kind
     var render = renderers[kind]
 
@@ -924,6 +917,17 @@ var drawExpression = (function() {
 
     var id = expression.elementId = el.assignId()
 
+
+
+    // DELETE THIS....
+
+    var parent = options && options.parent
+
+    var i = ++lastInsertedExpressionIndex
+
+    var splicePosition = options &&options.splicePosition
+    var deleteThisMany = splicePosition && (options.deleteThisMany || 0)
+
     if (parent) {
       parentExpressionsByChildId[id] = parent
     }
@@ -933,6 +937,10 @@ var drawExpression = (function() {
     } else {
       expressionElementIds[i] = id
     }
+
+    // ... TO HERE
+
+
 
     expressionsByElementId[id] = expression
 

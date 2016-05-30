@@ -555,7 +555,7 @@ var drawExpression = (function() {
 
       var expression = args[i]
       var isFunctionCall = expression.kind == "function call"
-      var arg = expressionToElement(expression, {parent: parent})
+      var arg = expressionToElement(expression)
 
       arg.classes.push(
         "function-argument")
@@ -686,7 +686,9 @@ var drawExpression = (function() {
       function toChild(child) {
         child.role = "function literal line"
         
-        var el = expressionToElement(child, {parent: parent})
+        var el = expressionToElement(child)
+
+        parentExpressionsByChildId[el.id] = parent
 
         el.classes.push("function-literal-line")
 
@@ -730,7 +732,9 @@ var drawExpression = (function() {
       )
 
       var rhs = expressionToElement(
-        expression.expression, {parent: expression})
+        expression.expression)
+
+      // parentExpressionsByChildId[rhs.id] = expression
 
       rhs.classes.push("rhs")
       this.children.push(lhs)
@@ -816,9 +820,9 @@ var drawExpression = (function() {
 
       var valueElement =
         expressionToElement(
-          valueExpression,
-          {parent: objectExpression}
-        )
+          valueExpression)
+
+      parentExpressionsByChildId[valueElement.id] = objectExpression
 
       valueExpression.role = "key value"
 
@@ -853,7 +857,7 @@ var drawExpression = (function() {
       function itemToElement(item) {
         return element(
           ".array-item",
-          expressionToElement(item, {parent: expression})
+          expressionToElement(item)
         )
       }
 
@@ -900,7 +904,14 @@ var drawExpression = (function() {
     "empty expression": emptyExpression
   }
 
-  function expressionToElement(expression, options) {
+
+  var expressionIdWritePosition = 0
+
+  function expressionToElement(expression) {
+
+    var position = expressionIdWritePosition
+
+    expressionIdWritePosition++
 
     if (typeof expression != "object" || !expression || !expression.kind) {
       throw new Error("Trying to turn "+stringify(expression)+" into an element, but it doesn't look like an expression")
@@ -917,32 +928,9 @@ var drawExpression = (function() {
 
     var id = expression.elementId = el.assignId()
 
-
-
-    // DELETE THIS....
-
-    var parent = options && options.parent
-
-    var i = ++lastInsertedExpressionIndex
-
-    var splicePosition = options &&options.splicePosition
-    var deleteThisMany = splicePosition && (options.deleteThisMany || 0)
-
-    if (parent) {
-      parentExpressionsByChildId[id] = parent
-    }
-
-    if (splicePosition) {
-      expressionElementIds.splice(splicePosition, deleteThisMany, id)
-    } else {
-      expressionElementIds[i] = id
-    }
-
-    // ... TO HERE
-
-
-
     expressionsByElementId[id] = expression
+
+    expressionElementIds[position] = id
 
     return el
   }
@@ -1014,14 +1002,13 @@ var drawExpression = (function() {
 
     } else { throw new Error() }
 
-    var newElement = drawExpression(
-        newExpression,
-        {
-          parent: parentExpression,
-          splicePosition: splicePosition,
-          deleteThisMany: deleteThisMany
-        }
-      )
+    var newElement = expressionToElement(
+        newExpression)
+
+    parentExpressionsByChildId[newElement.id] = parentExpression
+
+  
+    expressionElementIds.splice(splicePosition, deleteThisMany, newElement.id)
 
     var ghostElement = document.getElementById(ghostElementId)
 

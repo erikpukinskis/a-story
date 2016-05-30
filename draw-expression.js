@@ -107,42 +107,65 @@ function addKeyPair(insertByThisId, relationship, objectElementId, relativeToKey
   drawExpression.addKeyPair.apply(null, arguments)
 }
 
+var expressionChoices = [
+  menu.choice(
+    "drawScene(...)",
+    {
+      kind: "function call",
+      functionName: "drawScene",
+      arguments: [
+        triangle()
+      ]
+    }
+  ),
 
-function showAddExpressionMenu(ghostElementId, relativeToThisId, relationship) {
+  menu.choice(
+    "addHtml(\"<...>\")",
+    {
+      kind: "function call",
+      functionName: "addHtml",
+      arguments: [
+        aProgramAppeared.stringLiteral("")
+      ]
+    }
+  ),
+
+  menu.choice(
+    "bridgeTo.browser(...)",
+    {
+      kind: "function call",
+      functionName: "bridgeTo.browser",
+      arguments: [
+        {
+          kind: "function literal",
+          argumentNames: [],
+          body: [aProgramAppeared.emptyExpression()]}
+      ]
+    }
+  ),
+
+  menu.choice(
+    "\"some text\"",
+    {
+      kind: "string literal",
+      string: ""
+    }
+  ),
+
+  menu.choice(
+    "var yourVariable =",
+    {
+      kind: "variable assignment",
+      expression: aProgramAppeared.emptyExpression(),
+      variableName: "fraggleRock"
+    }
+  ),
+]
+
+function showExpressionMenu(ghostElementId, relativeToThisId, relationship) {
 
   menu(
-    menu.choice(
-      "drawScene(...)",
-      {kind: "function call", functionName: "drawScene", arguments: [triangle()]}),
-
-    menu.choice(
-      "addHtml(\"<...>\")",
-      {kind: "function call", functionName: "addHtml", arguments: [aProgramAppeared.stringLiteral("")]}),
-
-    menu.choice(
-      "bridgeTo.browser(...)",
-      {
-        kind: "function call",
-        functionName: "bridgeTo.browser",
-        arguments: [
-          {
-            kind: "function literal",
-            argumentNames: [],
-            body: [aProgramAppeared.emptyExpression()]}
-        ]}),
-
-    menu.choice(
-      "\"some text\"",
-      {kind: "string literal", string: ""}
-    ),
-    menu.choice(
-      "var yourVariable =",
-      {
-        kind: "variable assignment",
-        expression: aProgramAppeared.emptyExpression(),
-        variableName: "fraggleRock"
-      }
-    ),
+    expressionChoices,
     drawExpression.new.bind(null, ghostElementId, relativeToThisId, relationship)
   )
 
@@ -365,12 +388,6 @@ function updateControls() {
 
   if (keyValue) {
 
-    console.log("add ghost babies around", keyValue.elementId)
-
-    console.log("relative to", keyValue.key)
-
-    console.log("modifying", keyValue.expression)
-
     var keyPairElement = document.getElementById(keyValue.elementId)
 
     showControls(
@@ -397,7 +414,7 @@ function updateControls() {
       function(baby, relativeToThisId, relationship) {
 
         var showMenu = 
-          functionCall(showAddExpressionMenu)
+          functionCall(showExpressionMenu)
           .withArgs(
             baby.assignId(),
             relativeToThisId,
@@ -468,19 +485,34 @@ var drawExpression = (function() {
   var emptyExpression = element.template(
     ".empty-expression.button",
     "empty",
-    function() {
+    function(expression) {
 
       this.assignId()
 
-      var add = 
-        functionCall(showAddExpressionMenu)
-        .withArgs(
-          this.id,
-          this.id,
-          "inPlaceOf"
-        )
+      if (expression.role == "key value") {
 
-      this.onclick(add)
+        var add = 
+          functionCall(showExpressionMenu)
+          .withArgs(
+            this.id,
+            this.id,
+            "inPlaceOf"
+          )
+
+      } else if (expression.role == "function literal line") {
+
+        var add = 
+          functionCall(showExpressionMenu)
+          .withArgs(
+            this.id,
+            this.id,
+            "inPlaceOf"
+          )
+
+      }
+
+      if (add) { this.onclick(add) }
+
     }
   )
 
@@ -752,10 +784,6 @@ var drawExpression = (function() {
 
       var valueExpression = value || pairExpression.valueExpression
 
-      if (key == "") {
-        var valueExpression = aProgramAppeared.emptyExpression()
-      }
-
      if (typeof valueExpression != "object" || !valueExpression.kind) {
         throw new Error("Trying to draw object expression "+stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression? It's "+stringify(valueExpression))
       }
@@ -782,12 +810,17 @@ var drawExpression = (function() {
         {updateElement: textElement}
       )
 
+      this.startEditing = function() {
+        eval(keyButton.attributes.onclick)
+      }
 
       var valueElement =
         expressionToElement(
           valueExpression,
           {parent: objectExpression}
         )
+
+      valueExpression.role = "key value"
 
       keyPairsByValueExpressionId[valueElement.assignId()] = pairExpression
 
@@ -1095,6 +1128,11 @@ var drawExpression = (function() {
 
     objectExpression.keys.splice(index, 0, "")
 
+    var valueExpression = aProgramAppeared.emptyExpression()
+    valueExpression.role = "key value"
+
+    objectExpression.object[""] = valueExpression
+
     var neighbor = document.getElementById(insertByThisId)
 
     var pairExpression = {
@@ -1111,6 +1149,8 @@ var drawExpression = (function() {
     addHtml[relationship](neighbor, el.html())
 
     updateSelection({controls: "none"})
+
+    el.startEditing()
   }
 
   var drawExpression = expressionToElement

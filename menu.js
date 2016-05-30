@@ -1,25 +1,41 @@
 
 var menu = (function() {
-  var values = []
+  var values
   var menuCallback
 
   var template = element.template(
     ".menu",
     function() {
+
+      values = []
+      var childElements = this.children
+
       for(var i=0; i<arguments.length; i++) {
 
         if (typeof arguments[i] == "function") {
+
           menuCallback = arguments[i]
-          continue
+
+        } else if(Array.isArray(arguments[i])) {
+
+          arguments[i].forEach(addChoice)
+
+        } else {
+
+          addChoice(arguments[i])
+
         }
+      }
 
-        var choice = arguments[i]
+      function addChoice(choice) {
 
-        values[i] = choice.value
+        var index = values.length
 
-        var onclick = "menu.choose(\""+i+"\", event)"
-   
-        this.children.push(element(
+        var onclick = "menu.choose(\""+index+"\", event)"
+
+        values[index]= choice.value
+
+        childElements.push(element(
           ".menu-item.button",
           {
             onclick: onclick
@@ -27,6 +43,7 @@ var menu = (function() {
           choice.label && element.raw(choice.label) || []
         ))                  
       }
+
     }
   )
 

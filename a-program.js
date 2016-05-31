@@ -46,11 +46,11 @@ var aProgramAppeared = (function() {
     function(object) {
       var expression = {
         kind: "object literal",
-        object: {}
+        valuesByKey: {}
       }
 
       for (var key in object) {
-        expression.object[key] = toExpression(object[key])
+        expression.valuesByKey[key] = toExpression(object[key])
       }
 
       return expression
@@ -126,12 +126,12 @@ var aProgramAppeared = (function() {
     "object literal": function(expression) {
       var keyPairs = []
 
-      for(var key in expression.object) {
+      for(var key in expression.valuesByKey) {
         keyPairs.push(
           "  "
           +JSON.stringify(key)
           +": "
-          +expressionToJavascript(expression.object[key])
+          +expressionToJavascript(expression.valuesByKey[key])
         )
       }
       return "{\n"+keyPairs.join(",\n")+"\n}"

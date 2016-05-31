@@ -70,7 +70,7 @@ function getKeyName(id) {
 
 function onKeyRename(pairId, newKey) {
   var pairExpression = barCode.scan(pairId)
-  var object = pairExpression.expression.object
+  var object = pairExpression.objectExpression.valuesByKey
   var oldKey = pairExpression.key
 
   pairExpression.key = newKey
@@ -386,7 +386,7 @@ function updateControls() {
 
     var valueElement = document.getElementById(valueExpression.elementId)
 
-    var objectExpression = valueExpression.expression
+    var objectExpression = valueExpression.objectExpression
 
     showControls(
       valueElement,
@@ -756,16 +756,15 @@ var drawExpression = (function() {
     ".object-literal",
     function(expression) {
 
-      var object = expression.object
       expression.keys = []
 
-      for(var key in object) {
+      for(var key in expression.valuesByKey) {
 
         expression.keys.push(key)
 
         var pairExpression = {
           key: key,
-          expression: expression
+          objectExpression: expression
         }
 
         var el = keyPairTemplate(
@@ -785,7 +784,6 @@ var drawExpression = (function() {
     ".key-pair",
     function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression) {
 
-      var expression = pairExpression.expression
       var key = pairExpression.key
 
       pairExpression.kind = "key pair"
@@ -819,7 +817,7 @@ var drawExpression = (function() {
       this.children.push(keyButton)
 
 
-      var valueExpression = objectExpression.object[key]
+      var valueExpression = objectExpression.valuesByKey[key]
 
       if (typeof valueExpression != "object" || !valueExpression.kind) {
         throw new Error("Trying to draw object expression "+stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression? It's "+stringify(valueExpression))
@@ -849,7 +847,7 @@ var drawExpression = (function() {
 
   function rememberKeyValue(valueElement, pairExpression) {
 
-    parentExpressionsByChildId[valueElement.id] = pairExpression.expression
+    parentExpressionsByChildId[valueElement.id] = pairExpression.objectExpression
 
     keyPairsByValueElementId[valueElement.id] = pairExpression
 
@@ -1149,13 +1147,13 @@ var drawExpression = (function() {
 
     valueExpression.role = "key value"
 
-    objectExpression.object[""] = valueExpression
+    objectExpression.valuesByKey[""] = valueExpression
 
     var neighbor = document.getElementById(insertByThisId)
 
     var pairExpression = {
       key: "",
-      expression: objectExpression
+      objectExpression: objectExpression
     }
 
     var el = keyPairTemplate(
@@ -1175,13 +1173,13 @@ var drawExpression = (function() {
 
     var pairExpression = keyPairsByValueElementId[valueElementId]
 
-    var objectExpression = pairExpression.expression
+    var objectExpression = pairExpression.objectExpression
 
     var key = pairExpression.key
 
-    var oldExpression = objectExpression.object[key]
+    var oldExpression = objectExpression.valuesByKey[key]
 
-    objectExpression.object[key] = newExpression
+    objectExpression.valuesByKey[key] = newExpression
 
     var oldElement = document.getElementById(valueElementId)
 

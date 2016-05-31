@@ -41,7 +41,7 @@ var loadedProgram = aProgramAppeared({
 function styleObject() {
   return {
     kind: "object literal",
-    object:
+    valuesByKey:
       {
     "font-size": expressions.stringLiteral("60pt"),
     "font-family": expressions.stringLiteral("georgia")

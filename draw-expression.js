@@ -45,6 +45,7 @@ function programChanged() {
   loadedProgram.run()
 }
 
+
 function getProperty(property, expressionId) {
   var expression = barCode.scan(expressionId)
   return expression[property]
@@ -162,13 +163,8 @@ var expressionChoices = [
   ),
 ]
 
-function showExpressionMenu(ghostElementId, relativeToThisId, relationship) {
-
-  menu(
-    expressionChoices,
-    drawExpression.new.bind(null, ghostElementId, relativeToThisId, relationship)
-  )
-
+function chooseExpression(callback) {
+  menu(expressionChoices, callback)
 }
 
 function indexBefore(list, value) {
@@ -308,7 +304,7 @@ function getSelectedElement() {
 
 }
 
-var keyPairsByValueExpressionId = {}
+var keyPairsByValueElementId = {}
 
 function getSelectedKeyValue(elementId) {
   var expression = expressionsByElementId[elementId]
@@ -319,7 +315,7 @@ function getSelectedKeyValue(elementId) {
 
   while(parent = parentExpressionsByChildId[nextId]) {
     if (parent.kind == "object literal") {
-      var keyPair = keyPairsByValueExpressionId[possibleValueExpression.elementId]
+      var keyPair = keyPairsByValueElementId[possibleValueExpression.elementId]
 
       return keyPair
     }
@@ -384,14 +380,16 @@ function updateControls() {
 
   var expression = expressionsByElementId[selectedElementId]
 
-  var keyValue = getSelectedKeyValue(selectedElementId)
+  var valueExpression = getSelectedKeyValue(selectedElementId)
 
-  if (keyValue) {
+  if (valueExpression) {
 
-    var keyPairElement = document.getElementById(keyValue.elementId)
+    var valueElement = document.getElementById(valueExpression.elementId)
+
+    var objectExpression = valueExpression.expression
 
     showControls(
-      keyPairElement,
+      valueElement,
       function(baby, relativeToThisId, relationship) {
 
         var add = 
@@ -399,8 +397,8 @@ function updateControls() {
           .withArgs(
             baby.assignId(),
             relationship,
-            keyValue.expression.elementId,
-            keyValue.key
+            objectExpression.elementId,
+            valueExpression.key
           )
 
         baby.onclick(add)
@@ -413,13 +411,16 @@ function updateControls() {
       currentSelection,
       function(baby, relativeToThisId, relationship) {
 
-        var showMenu = 
-          functionCall(showExpressionMenu)
+        var addLine =
+          functionCall(
+            "drawExpression.addLine")
           .withArgs(
             baby.assignId(),
             relativeToThisId,
             relationship
           )
+
+        var showMenu = functionCall(chooseExpression).withArgs(addLine)
 
         baby.onclick(showMenu)
       }
@@ -489,29 +490,35 @@ var drawExpression = (function() {
 
       this.assignId()
 
+      // this stuff is really weird. It seems like I have to do it because expressionToElement is recursive. But really I could do the same thing with expressionRoles and valueExpressionKeys objects.
+
       if (expression.role == "key value") {
 
-        var add = 
-          functionCall(showExpressionMenu)
+        var replaceIt = 
+          functionCall("drawExpression.replaceValue")
           .withArgs(
-            this.id,
-            this.id,
-            "inPlaceOf"
+            this.id
           )
+
+        var showMenu = functionCall(chooseExpression).withArgs(replaceIt)
 
       } else if (expression.role == "function literal line") {
 
-        var add = 
-          functionCall(showExpressionMenu)
+        var replaceIt =
+          functionCall(
+            "drawExpression.addLine")
           .withArgs(
             this.id,
             this.id,
             "inPlaceOf"
           )
 
+        var showMenu = functionCall(chooseExpression).withArgs(replaceIt)
       }
 
-      if (add) { this.onclick(add) }
+      if (showMenu) {
+        this.onclick(showMenu)
+      }
 
     }
   )
@@ -774,38 +781,33 @@ var drawExpression = (function() {
     }
   )
 
-
   var keyPairTemplate = element.template(
     ".key-pair",
     function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression) {
 
-      pairExpression.kind = "key pair"
-      pairExpression.elementId = this.assignId()
-
       var expression = pairExpression.expression
       var key = pairExpression.key
-      var value = expression.object[key]
 
-      var valueExpression = value || pairExpression.valueExpression
-
-     if (typeof valueExpression != "object" || !valueExpression.kind) {
-        throw new Error("Trying to draw object expression "+stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression? It's "+stringify(valueExpression))
-      }
+      pairExpression.kind = "key pair"
+      pairExpression.elementId = this.assignId()
 
       var textElement = element(
         "span",
         element.raw(key)
       )
 
-      var pairId = barCode(pairExpression)
-
       var keyButton = element(
-        ".button.key.key-pair-"+pairId+"-key",
+        ".button.key",
         [
           textElement,
           element("span", ":")
         ]
       )
+
+
+      // maybe we should just use keyPairsByValueElementId instead?
+
+      var pairId = barCode(pairExpression)
 
       makeItEditable(
         keyButton,
@@ -814,25 +816,45 @@ var drawExpression = (function() {
         {updateElement: textElement}
       )
 
-      this.startEditing = function() {
-        eval(keyButton.attributes.onclick)
+      this.children.push(keyButton)
+
+
+      var valueExpression = objectExpression.object[key]
+
+      if (typeof valueExpression != "object" || !valueExpression.kind) {
+        throw new Error("Trying to draw object expression "+stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression? It's "+stringify(valueExpression))
       }
+
+      valueExpression.key = key
 
       var valueElement =
         expressionToElement(
           valueExpression)
 
-      parentExpressionsByChildId[valueElement.id] = objectExpression
+      rememberKeyValue(valueElement, pairExpression)
 
-      valueExpression.role = "key value"
-
-      keyPairsByValueExpressionId[valueElement.assignId()] = pairExpression
-
-      valueElement.classes.push("key-value")
-      this.children.push(keyButton)
       this.children.push(valueElement)
+
+      this.startEditing = function() {
+        eval(keyButton.attributes.onclick)
+      }
     }
   )
+
+  function forgetKeyValue(oldExpression) {
+    delete parentExpressionsByChildId[oldExpression.elementId]
+
+    delete keyPairsByValueElementId[oldExpression.elementId]
+  }
+
+  function rememberKeyValue(valueElement, pairExpression) {
+
+    parentExpressionsByChildId[valueElement.id] = pairExpression.expression
+
+    keyPairsByValueElementId[valueElement.id] = pairExpression
+
+    valueElement.classes.push("key-value")
+  }
 
   var variableReference = element.template(
     ".button.variable-reference",
@@ -970,7 +992,7 @@ var drawExpression = (function() {
     }
   }
 
-  function addExpression(ghostElementId, relativeToThisId, relationship, newExpression) {
+  function addLine(ghostElementId, relativeToThisId, relationship, newExpression) {
 
     var parentExpression = parentExpressionsByChildId[relativeToThisId]
 
@@ -1124,6 +1146,7 @@ var drawExpression = (function() {
     objectExpression.keys.splice(index, 0, "")
 
     var valueExpression = aProgramAppeared.emptyExpression()
+
     valueExpression.role = "key value"
 
     objectExpression.object[""] = valueExpression
@@ -1148,9 +1171,36 @@ var drawExpression = (function() {
     el.startEditing()
   }
 
+  function replaceValue(valueElementId, newExpression) {
+
+    var pairExpression = keyPairsByValueElementId[valueElementId]
+
+    var objectExpression = pairExpression.expression
+
+    var key = pairExpression.key
+
+    var oldExpression = objectExpression.object[key]
+
+    objectExpression.object[key] = newExpression
+
+    var oldElement = document.getElementById(valueElementId)
+
+    var newElement = drawExpression(newExpression)
+
+    rememberKeyValue(newElement, pairExpression)
+
+    addHtml.inPlaceOf(oldElement, newElement.html())
+
+    forgetKeyValue(oldExpression)
+
+  }
+
+
   var drawExpression = expressionToElement
 
-  drawExpression.new = addExpression
+  drawExpression.addLine = addLine
+
+  drawExpression.replaceValue = replaceValue
 
   drawExpression.addKeyPair = addKeyPair
 

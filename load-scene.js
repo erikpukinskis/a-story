@@ -1,5 +1,3 @@
-var expressions = aProgramAppeared
-
 function triangle() {
 
   var expression = {
@@ -7,11 +5,18 @@ function triangle() {
     items: [
       aProgramAppeared.objectLiteral({
         name: "triangle",
-        position: [-1.5, 0.0, -7.0]
-      }),
-      aProgramAppeared.objectLiteral({
-        name: "other triangle",
-        position: [1.5, 0.0, -7.0]
+        position: [-1.5, 0.0, -7.0],
+        verticies: [
+           0.0,  1.0,  0.0,
+          -1.0, -1.0,  0.0,
+           1.0, -1.0,  0.0
+        ],
+        pointCount: 3,
+        colors: [
+          1.0, 0.4, 0.6, 1.0,
+          0.9, 0.4, 0.7, 1.0,
+          0.8, 0.4, 0.9, 1.0
+        ]
       })
     ]
   }
@@ -19,11 +24,17 @@ function triangle() {
   return expression
 }
 
-
 var loadedProgram = aProgramAppeared({
   kind: "function literal",
-  argumentNames: [],
+  argumentNames: ["addHtml", "drawScene"],
   body: [
+    {
+      kind: "function call",
+      functionName: "addHtml",
+      arguments: [
+        aProgramAppeared.stringLiteral("<canvas></canvas>")
+      ]
+    },
     {
       kind: "function call",
       functionName: "drawScene",

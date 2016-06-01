@@ -87,16 +87,48 @@ function triangle() {
     items: [
       aProgramAppeared.objectLiteral({
         name: "triangle",
-        position: [-1.5, 0.0, -7.0]
+        position: [-1.5, 0.0, -7.0],
+        verticies: [
+           0.0,  1.0,  0.0,
+          -1.0, -1.0,  0.0,
+           1.0, -1.0,  0.0
+        ],
+        pointCount: 3,
+        colors: [
+          1.0, 0.4, 0.6, 1.0,
+          0.9, 0.4, 0.7, 1.0,
+          0.8, 0.4, 0.9, 1.0
+        ]
       }),
-      aProgramAppeared.objectLiteral({
-        name: "other triangle",
-        position: [1.5, 0.0, -7.0]
-      })
     ]
   }
 
   return expression
+}
+
+function square() {
+  return {
+    kind: "array literal",
+    items: [
+      aProgramAppeared.objectLiteral({
+        name: "square",
+        position: [1.5, 0.0, -7.0],
+        verticies: [
+           1.0,  1.0,  0.0,
+          -1.0,  1.0,  0.0,
+           1.0, -1.0,  0.0,
+          -1.0, -1.0,  0.0
+        ],
+        pointCount: 4,
+        colors: [
+          1.0, 0.8, 0.2, 1.0,
+          0.9, 0.7, 0.4 , 1.0,
+          0.8, 0.7, 0.6, 1.0,
+          0.7, 0.6, 0.8, 1.0
+        ]
+      })
+    ]
+  }
 }
 
 
@@ -128,6 +160,34 @@ var expressionChoices = [
       arguments: [
         aProgramAppeared.stringLiteral("")
       ]
+    }
+  ),
+
+  menu.choice(
+    "4 verticies",
+    aProgramAppeared.arrayLiteral([
+       1.0,  1.0,  0.0,
+      -1.0,  1.0,  0.0,
+       1.0, -1.0,  0.0,
+      -1.0, -1.0,  0.0
+    ])
+  ),
+
+  menu.choice(
+    "4 colors",
+    aProgramAppeared.arrayLiteral([
+      1.0, 0.8, 0.2, 1.0,
+      0.9, 0.7, 0.4 , 1.0,
+      0.8, 0.7, 0.6, 1.0,
+      0.7, 0.6, 0.8, 1.0
+    ])
+  ),
+
+  menu.choice(
+    "Number",
+    {
+      kind: "number literal",
+      number: 0
     }
   ),
 
@@ -584,7 +644,7 @@ var drawExpression = (function() {
     ".button.literal",
     function(expression) {
 
-      var stringElement = element("span", element.raw(expression.string))
+      var stringElement = element("span", element.raw(expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")))
 
       this.children.push(
         element("span", "\""),

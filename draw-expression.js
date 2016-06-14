@@ -5,17 +5,17 @@ var MINIMUM_PAUSE = 750
 
 function afterASecond(func) {
   if (!func.waitingToTry) {
-    func.waitingToTry = setTimeout(tryToRun.bind(null, func), MINIMUM_PAUSE)
+    func.waitingToTry = setTimeout(tryToCall.bind(null, func), MINIMUM_PAUSE)
   }
 
   func.lastTry = new Date()
 }
 
-function tryToRun(func) {
+function tryToCall(func) {
   var sinceLastTry = new Date() - func.lastTry
 
   if (sinceLastTry < MINIMUM_PAUSE) {
-    func.waitingToTry = setTimeout(tryToRun.bind(null, func), MINIMUM_PAUSE - sinceLastTry + 100)
+    func.waitingToTry = setTimeout(tryToCall.bind(null, func), MINIMUM_PAUSE - sinceLastTry + 100)
   } else {
     func.waitingToTry = null
     func()

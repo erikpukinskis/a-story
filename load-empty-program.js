@@ -1,9 +1,7 @@
-var expressions = aProgramAppeared
-
-var loadedProgram = aProgramAppeared({
+var loadedProgram = anExpression({
   kind: "function literal",
   argumentNames: [],
   body: [
-    expressions.emptyExpression()
+    anExpression.emptyExpression()
   ]
 })

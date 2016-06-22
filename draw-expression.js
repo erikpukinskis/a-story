@@ -85,7 +85,7 @@ function triangle() {
   var expression = {
     kind: "array literal",
     items: [
-      aProgramAppeared.objectLiteral({
+      anExpression.objectLiteral({
         name: "triangle",
         position: [-1.5, 0.0, -7.0],
         verticies: [
@@ -110,7 +110,7 @@ function square() {
   return {
     kind: "array literal",
     items: [
-      aProgramAppeared.objectLiteral({
+      anExpression.objectLiteral({
         name: "square",
         position: [1.5, 0.0, -7.0],
         verticies: [
@@ -158,14 +158,14 @@ var expressionChoices = [
       kind: "function call",
       functionName: "addHtml",
       arguments: [
-        aProgramAppeared.stringLiteral("")
+        anExpression.stringLiteral("")
       ]
     }
   ),
 
   menu.choice(
     "4 verticies",
-    aProgramAppeared.arrayLiteral([
+    anExpression.arrayLiteral([
        1.0,  1.0,  0.0,
       -1.0,  1.0,  0.0,
        1.0, -1.0,  0.0,
@@ -175,7 +175,7 @@ var expressionChoices = [
 
   menu.choice(
     "4 colors",
-    aProgramAppeared.arrayLiteral([
+    anExpression.arrayLiteral([
       1.0, 0.8, 0.2, 1.0,
       0.9, 0.7, 0.4 , 1.0,
       0.8, 0.7, 0.6, 1.0,
@@ -200,7 +200,7 @@ var expressionChoices = [
         {
           kind: "function literal",
           argumentNames: [],
-          body: [aProgramAppeared.emptyExpression()]}
+          body: [anExpression.emptyExpression()]}
       ]
     }
   ),
@@ -217,7 +217,7 @@ var expressionChoices = [
     "var yourVariable =",
     {
       kind: "variable assignment",
-      expression: aProgramAppeared.emptyExpression(),
+      expression: anExpression.emptyExpression(),
       variableName: "fraggleRock"
     }
   ),
@@ -1203,7 +1203,7 @@ var drawExpression = (function() {
 
     objectExpression.keys.splice(index, 0, "")
 
-    var valueExpression = aProgramAppeared.emptyExpression()
+    var valueExpression = anExpression.emptyExpression()
 
     valueExpression.role = "key value"
 

@@ -9,9 +9,9 @@ function pad(str) {
 }
 
 
-var aProgramAppeared = (function() {
+var anExpression = (function() {
 
-  function aProgramAppeared(json) {
+  function anExpression(json) {
     return new Program(json)
   }
 
@@ -19,7 +19,7 @@ var aProgramAppeared = (function() {
     this.expression = expression
   }
 
-  aProgramAppeared.stringLiteral =
+  anExpression.stringLiteral =
     function(string) {
       return {
         kind: "string literal",
@@ -27,7 +27,7 @@ var aProgramAppeared = (function() {
       }
     }
 
-  aProgramAppeared.numberLiteral =
+  anExpression.numberLiteral =
     function(number) {
       return {
         kind: "number literal",
@@ -35,14 +35,14 @@ var aProgramAppeared = (function() {
       }
     }
 
-  aProgramAppeared.emptyExpression =
+  anExpression.emptyExpression =
     function() {
       return {
         kind: "empty expression" 
       }
     }
 
-  aProgramAppeared.objectLiteral =
+  anExpression.objectLiteral =
     function(object) {
       var expression = {
         kind: "object literal",
@@ -56,7 +56,7 @@ var aProgramAppeared = (function() {
       return expression
     }
 
-  aProgramAppeared.arrayLiteral =
+  anExpression.arrayLiteral =
     function(array) {
       return {
         kind: "array literal",
@@ -66,13 +66,13 @@ var aProgramAppeared = (function() {
 
   function toExpression(stuff) {
     if (typeof stuff == "string") {
-      return aProgramAppeared.stringLiteral(stuff)
+      return anExpression.stringLiteral(stuff)
     } else if (typeof stuff == "number") {
-      return aProgramAppeared.numberLiteral(stuff)
+      return anExpression.numberLiteral(stuff)
     } else if (Array.isArray(stuff)) {
-      return aProgramAppeared.arrayLiteral(stuff)
+      return anExpression.arrayLiteral(stuff)
     } else if (typeof stuff == "object") {
-      return aProgramAppeared.objectLiteral(stuff)
+      return anExpression.objectLiteral(stuff)
     }
   }
 
@@ -180,7 +180,7 @@ var aProgramAppeared = (function() {
       .argumentNames
       .map(
         function(camelCase) {
-          return aProgramAppeared.stringLiteral(
+          return anExpression.stringLiteral(
             dasherized(camelCase)
           )
         }
@@ -221,5 +221,5 @@ var aProgramAppeared = (function() {
     return makeCode(expression)
   }
 
-  return aProgramAppeared
+  return anExpression
 })()

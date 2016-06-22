@@ -3,7 +3,7 @@ function triangle() {
   var expression = {
     kind: "array literal",
     items: [
-      aProgramAppeared.objectLiteral({
+      anExpression.objectLiteral({
         name: "triangle",
         position: [-1.5, 0.0, -7.0],
         verticies: [
@@ -24,7 +24,7 @@ function triangle() {
   return expression
 }
 
-var loadedProgram = aProgramAppeared({
+var loadedProgram = anExpression({
   kind: "function literal",
   argumentNames: ["addHtml", "drawScene"],
   body: [
@@ -32,7 +32,7 @@ var loadedProgram = aProgramAppeared({
       kind: "function call",
       functionName: "addHtml",
       arguments: [
-        aProgramAppeared.stringLiteral("<canvas></canvas>")
+        anExpression.stringLiteral("<canvas></canvas>")
       ]
     },
     {

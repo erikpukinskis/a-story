@@ -9,10 +9,12 @@
       <div class="output"></div>
     </div>
     <div class="column">
+      <div id="program-header"></div>
       <div class="program"></div>
     </div>
   </div>
 </body>
+
 
 
 <!-- EDITOR DEPENDENCIES -->
@@ -32,9 +34,34 @@
 
 
 
+<script>
+  var programName = "unnamed"
+
+  function getName() {
+    return programName
+  }
+
+  function setName(newName) {
+    programName = newName
+  }
+
+  var title = element(".program-name", programName)
+
+  makeItEditable(title, getName, setName)
+
+  var header = document.getElementById("program-header")
+
+  addHtml.inside(header, title.html())
+
+</script>
+
+
+
+
 <!-- APP DEPENDENCIES -->
 
 <script>
+
 
   var library = new Library()
   var using = library.using.bind(library)

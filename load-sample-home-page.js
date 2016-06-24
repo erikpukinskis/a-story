@@ -9,7 +9,7 @@ var loadedProgram = anExpression({
         kind: "function call",
         functionName: "element",
         arguments: [
-          expressions.stringLiteral(
+          anExpression.stringLiteral(
             "sup family"
           ),
           {
@@ -40,8 +40,8 @@ function styleObject() {
     kind: "object literal",
     valuesByKey:
       {
-    "font-size": expressions.stringLiteral("60pt"),
-    "font-family": expressions.stringLiteral("georgia")
+    "font-size": anExpression.stringLiteral("60pt"),
+    "font-family": anExpression.stringLiteral("georgia")
       }
   }
 }

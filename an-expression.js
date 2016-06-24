@@ -12,11 +12,7 @@ function pad(str) {
 var anExpression = (function() {
 
   function anExpression(json) {
-    return new Program(json)
-  }
-
-  function Program(expression) {
-    this.expression = expression
+    return json
   }
 
   anExpression.stringLiteral =
@@ -141,73 +137,15 @@ var anExpression = (function() {
 
   // RUN
 
-  Program.prototype.run = function(outputSelector) {
+  anExpression.run =
+    function(expression, fileName) {
+  
+      var js = expressionToJavascript(expression)
 
-    if (outputSelector) {
-      window.__nrtvFocusSelector = outputSelector
+      js = js + "\n//# sourceURL="+fileName+".js"
+
+      eval(js)
     }
-
-    document.querySelector(window.__nrtvFocusSelector).innerHTML = ""
-
-    var expression = packageAsModule(this.expression)
-
-    var js = expressionToJavascript(expression)
-
-    js = js + "\n//# sourceURL=my-program.js"
-
-    eval(js)
-  }
-
-  function packageAsModule(functionLiteral) {
-    
-    return {
-      kind: "function call",
-      functionName: "using",
-      arguments: [
-        {
-          kind: "array literal",
-          items: argumentNamesToStringLiterals(functionLiteral)
-        },
-        functionLiteral
-      ]
-    }
-
-  }
-
-  function argumentNamesToStringLiterals(functionLiteral) {
-
-    return functionLiteral
-      .argumentNames
-      .map(
-        function(camelCase) {
-          return anExpression.stringLiteral(
-            dasherized(camelCase)
-          )
-        }
-      )
-
-  }
-
-  function dasherized(camelCase) {
-    var words = []
-    var wordStart = 0
-
-    for(var i=0; i<camelCase.length+1; i++) {
-
-      var letter = camelCase[i]
-      var isEnd = i == camelCase.length
-      var isUpperCase = letter && letter.toUpperCase() == letter
-
-      if (isUpperCase || isEnd) {
-        // new word!
-        var word = camelCase.slice(wordStart, i)
-        words.push(word.toLowerCase())
-        wordStart = i
-      }
-    }
-
-    return words.join("-")
-  }
 
   function expressionToJavascript(expression) {
 

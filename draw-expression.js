@@ -41,11 +41,6 @@ window.onscroll = updateSelection
 
 addHtml(element(".selector", "EZJS").html())
 
-function programChanged() {
-  loadedProgram.run()
-}
-
-
 function getProperty(property, expressionId) {
   var expression = barCode.scan(expressionId)
   return expression[property]

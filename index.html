@@ -34,27 +34,6 @@
 
 
 
-<script>
-  var programName = "unnamed"
-
-  function getName() {
-    return programName
-  }
-
-  function setName(newName) {
-    programName = newName
-  }
-
-  var title = element(".program-name", programName)
-
-  makeItEditable(title, getName, setName)
-
-  var header = document.getElementById("program-header")
-
-  addHtml.inside(header, title.html())
-
-</script>
-
 
 
 
@@ -80,8 +59,8 @@
 
 <!-- DATA -->
 
-<script src="load-empty-program.js"></script>
-<!-- <script src="load-sample-home-page.js"></script> -->
+<!-- <script src="load-empty-program.js"></script> -->
+<script src="load-sample-home-page.js"></script>
 <!-- <script src="load-scene.js"></script> -->
 
 
@@ -90,12 +69,95 @@
 
 <script type="text/javascript">
 
+
+  var programName = "unnamed"
+
+  function getName() {
+    return programName
+  }
+
+  function setName(newName) {
+    programName = newName
+  }
+
+  var title = element(".program-name", programName)
+
+  makeItEditable(title, getName, setName)
+
+  var header = document.getElementById("program-header")
+
+  addHtml.inside(header, title.html())
+
+
+
   var el = drawExpression(
-      loadedProgram.expression)
+      loadedProgram)
 
   document.querySelector(".program").innerHTML = el.html()
 
-  loadedProgram.run(".output")
+  programChanged()
+
+
+
+  function programChanged() {
+    window.__nrtvFocusSelector = ".output"
+
+    document.querySelector(".output").innerHTML = ""
+
+    anExpression.run(packageAsModule(loadedProgram), programName)
+  }
+
+  function packageAsModule(functionLiteral) {
+    
+    return {
+      kind: "function call",
+      functionName: "using",
+      arguments: [
+        {
+          kind: "array literal",
+          items: argumentNamesToStringLiterals(functionLiteral)
+        },
+        functionLiteral
+      ]
+    }
+
+  }
+
+  function argumentNamesToStringLiterals(functionLiteral) {
+
+    return functionLiteral
+      .argumentNames
+      .map(
+        function(camelCase) {
+          return anExpression.stringLiteral(
+            dasherized(camelCase)
+          )
+        }
+      )
+
+  }
+
+  function dasherized(camelCase) {
+    var words = []
+    var wordStart = 0
+
+    for(var i=0; i<camelCase.length+1; i++) {
+
+      var letter = camelCase[i]
+      var isEnd = i == camelCase.length
+      var isUpperCase = letter && letter.toUpperCase() == letter
+
+      if (isUpperCase || isEnd) {
+        // new word!
+        var word = camelCase.slice(wordStart, i)
+        words.push(word.toLowerCase())
+        wordStart = i
+      }
+    }
+
+    return words.join("-")
+  }
+
 
 </script>
 

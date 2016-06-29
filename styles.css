@@ -11,10 +11,6 @@ body {
   padding: 30px 20px;
 }
 
-div[onclick] {
-  cursor: default;
-}
-
 body, button {
   font-family: sans-serif;
   font-size: 11pt;
@@ -113,6 +109,7 @@ body, button {
 .function-call-name {
   color: #88f;
   border-left: 2px solid #88f;
+  cursor: text;
 }
 
 .function-call-args {
@@ -178,10 +175,6 @@ body, button {
   color: #ccc;
   border: 2px solid #ddd;
   padding: 6px 10px 7px 10px;
-}
-
-div[onclick] {
-  cursor: default;
 }
 
 .empty-expression.selected {

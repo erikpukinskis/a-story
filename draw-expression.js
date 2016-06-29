@@ -26,10 +26,9 @@ function tryToCall(func) {
 
 // WHO RUNS THE WORLD? GLOBALS
 
-var lastInsertedExpressionIndex = -1
 var parentExpressionsByChildId = {}
 var expressionElementIds = []
-var expressionsByElementId = {}
+var expressionsById = {}
 
 
 var SELECTOR_TOP = 120
@@ -42,29 +41,29 @@ window.onscroll = updateSelection
 addHtml(element(".selector", "EZJS").html())
 
 function getProperty(property, expressionId) {
-  var expression = barCode.scan(expressionId)
+  var expression = expressionsById[expressionId]
   return expression[property]
 }
 
 function setProperty(property, expressionId, newValue, oldValue) {
-  var expression = barCode.scan(expressionId)
+  var expression = expressionsById[expressionId]
   expression[property] = newValue
   programChanged()
 }
 
 function setFloatProperty(property, expressionId, newValue, oldValue) {
-  var expression = barCode.scan(expressionId)
+  var expression = expressionsById[expressionId]
   expression[property] = parseFloat(newValue)
   programChanged()
 }
 
 function getKeyName(id) {
-  var pairExpression = barCode.scan(id)
+  var pairExpression = expressionsById[id]
   return pairExpression.key
 }
 
 function onKeyRename(pairId, newKey) {
-  var pairExpression = barCode.scan(pairId)
+  var pairExpression = expressionsById[pairId]
   var object = pairExpression.objectExpression.valuesByKey
   var oldKey = pairExpression.key
 
@@ -130,32 +129,27 @@ function square() {
 /* Onclick Handlers */
 
 
-function addKeyPair(insertByThisId, relationship, objectElementId, relativeToKey) {
-
-  drawExpression.addKeyPair.apply(null, arguments)
-}
-
 var expressionChoices = [
   menu.choice(
     "drawScene(...)",
-    {
+    anExpression({
       kind: "function call",
       functionName: "drawScene",
       arguments: [
         triangle()
       ]
-    }
+    })
   ),
 
   menu.choice(
     "addHtml(\"<...>\")",
-    {
+    anExpression({
       kind: "function call",
       functionName: "addHtml",
       arguments: [
         anExpression.stringLiteral("")
       ]
-    }
+    })
   ),
 
   menu.choice(
@@ -180,15 +174,15 @@ var expressionChoices = [
 
   menu.choice(
     "Number",
-    {
+    anExpression({
       kind: "number literal",
       number: 0
-    }
+    })
   ),
 
   menu.choice(
     "bridgeTo.browser(...)",
-    {
+    anExpression({
       kind: "function call",
       functionName: "bridgeTo.browser",
       arguments: [
@@ -197,24 +191,24 @@ var expressionChoices = [
           argumentNames: [],
           body: [anExpression.emptyExpression()]}
       ]
-    }
+    })
   ),
 
   menu.choice(
     "\"some text\"",
-    {
+    anExpression({
       kind: "string literal",
       string: ""
-    }
+    })
   ),
 
   menu.choice(
     "var yourVariable =",
-    {
+    anExpression({
       kind: "variable assignment",
       expression: anExpression.emptyExpression(),
       variableName: "fraggleRock"
-    }
+    })
   ),
 ]
 
@@ -257,7 +251,7 @@ function lastDescendantAfter(elementIds, startIndex) {
   for(var i = startIndex+1; i<elementIds.length; i++) {
 
     var testId = elementIds[i]
-    var testExpr = expressionsByElementId[testId]
+    var testExpr = expressionsById[testId]
 
     var testParent = parentExpressionsByChildId[testId]
 
@@ -323,7 +317,7 @@ function offsetCameraUp(lines) {
 
   verticalCameraOffset += lines
 
-  var containerElement = document.querySelector(".program")
+  var containerElement = document.querySelector(".two-columns")
 
   var transform = "translateY("+(verticalCameraOffset*-32)+"px)"
 
@@ -359,23 +353,23 @@ function getSelectedElement() {
 
 }
 
-var keyPairsByValueElementId = {}
+var keyPairsByValueId = {}
 
-function getSelectedKeyValue(elementId) {
-  var expression = expressionsByElementId[elementId]
+function getSelectedKeyValue(expressionId) {
+  var expression = expressionsById[expressionId]
 
-  var nextId = elementId
+  var nextId = expressionId
   var parent
   var possibleValueExpression = expression
 
   while(parent = parentExpressionsByChildId[nextId]) {
     if (parent.kind == "object literal") {
-      var keyPair = keyPairsByValueElementId[possibleValueExpression.elementId]
+      var keyPair = keyPairsByValueId[possibleValueExpression.id]
 
       return keyPair
     }
     possibleValueExpression = parent
-    nextId = parent.elementId
+    nextId = parent.id
   }
 }
 
@@ -433,13 +427,13 @@ function updateControls() {
 
   var selectedElementId = currentSelection.id
 
-  var expression = expressionsByElementId[selectedElementId]
+  var expression = expressionsById[selectedElementId]
 
   var valueExpression = getSelectedKeyValue(selectedElementId)
 
   if (valueExpression) {
 
-    var valueElement = document.getElementById(valueExpression.elementId)
+    var valueElement = document.getElementById(valueExpression.id)
 
     var objectExpression = valueExpression.objectExpression
 
@@ -448,11 +442,11 @@ function updateControls() {
       function(baby, relativeToThisId, relationship) {
 
         var add = 
-          functionCall(addKeyPair)
+          functionCall("drawExpression.addKeyPair")
           .withArgs(
             baby.assignId(),
             relationship,
-            objectExpression.elementId,
+            objectExpression.id,
             valueExpression.key
           )
 
@@ -542,8 +536,7 @@ var drawExpression = (function() {
     ".empty-expression.button",
     "empty",
     function(expression) {
-
-      this.assignId()
+      this.id = expression.id
 
       // this stuff is really weird. It seems like I have to do it because expressionToElement is recursive. But really I could do the same thing with expressionRoles and valueExpressionKeys objects.
 
@@ -552,23 +545,11 @@ var drawExpression = (function() {
         var replaceIt = 
           functionCall("drawExpression.replaceValue")
           .withArgs(
-            this.id
+            expression.id
           )
 
         var showMenu = functionCall(chooseExpression).withArgs(replaceIt)
 
-      } else if (expression.role == "function literal line") {
-
-        var replaceIt =
-          functionCall(
-            "drawExpression.addLine")
-          .withArgs(
-            this.id,
-            this.id,
-            "inPlaceOf"
-          )
-
-        var showMenu = functionCall(chooseExpression).withArgs(replaceIt)
       }
 
       if (showMenu) {
@@ -581,24 +562,25 @@ var drawExpression = (function() {
   var renderFunctionCall = element.template(
     ".function-call",
     function(expression) {
+      this.id = expression.id
 
       var button = element(
         ".button.function-call-name.indenter",
         expression.functionName
       )
 
-      var expressionId = barCode(expression)
-
       makeItEditable(
         button,
-        functionCall(getProperty).withArgs("functionName", expressionId),
-        functionCall(setProperty).withArgs("functionName", expressionId)
+        functionCall(getProperty).withArgs("functionName", expression.id),
+        functionCall(setProperty).withArgs("functionName", expression.id)
       )
 
       this.children.push(button)
 
+      // should be able to delete this container- stuff?
+
       var container = element(
-        ".function-call-args.container-"+expressionId)
+        ".function-call-args.container-"+expression.id)
 
       container.children =
         argumentsToElements(
@@ -638,6 +620,7 @@ var drawExpression = (function() {
   var stringLiteral = element.template(
     ".button.literal",
     function(expression) {
+      this.id = expression.id
 
       var stringElement = element("span", element.raw(expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")))
 
@@ -649,8 +632,8 @@ var drawExpression = (function() {
 
       makeItEditable(
         this,
-        functionCall(getProperty).withArgs("string", barCode(expression)),
-        functionCall(setProperty).withArgs("string", barCode(expression)),
+        functionCall(getProperty).withArgs("string", expression.id),
+        functionCall(setProperty).withArgs("string", expression.id),
         {updateElement: stringElement}
       )
     }
@@ -660,13 +643,14 @@ var drawExpression = (function() {
   var numberLiteral = element.template(
     ".button.literal",
     function(expression) {
+      this.id = expression.id
 
       this.children.push(element.raw(expression.number.toString()))
 
       makeItEditable(
         this,
-        functionCall(getProperty).withArgs("number", barCode(expression)),
-        functionCall(setFloatProperty).withArgs("number", barCode(expression))
+        functionCall(getProperty).withArgs("number", expression.id),
+        functionCall(setFloatProperty).withArgs("number", expression.id)
       )
     }
   )
@@ -677,6 +661,7 @@ var drawExpression = (function() {
   var functionLiteral = element.template(
     ".function-literal",
     function(expression) {
+      this.id = expression.id
 
       var children = this.children
 
@@ -716,21 +701,21 @@ var drawExpression = (function() {
       
       makeItEditable(
         this,
-        functionCall(getArgumentName).withArgs(barCode(expression), argumentIndex),
-        functionCall(renameArgument).withArgs(barCode(expression), argumentIndex)
+        functionCall("drawExpression.getArgumentName").withArgs(expression.id, argumentIndex),
+        functionCall("drawExpression.renameArgument").withArgs(expression.id, argumentIndex)
       )
 
     }
   )
 
   function getArgumentName(expressionId, index) {
-    var expression = barCode.scan(expressionId)
+    var expression = expressionsById[expressionId]
 
     return expression.argumentNames[index]
   }
 
   function renameArgument(expressionId, index, newName) {
-    var expression = barCode.scan(expressionId)
+    var expression = expressionsById[expressionId]
 
     expression.argumentNames[index] = newName
 
@@ -743,14 +728,33 @@ var drawExpression = (function() {
 
       var previous
 
-      this.children = parent.body.map(toChild)
+      this.children = parent.body.map(renderChild)
 
-      function toChild(child) {
+      function renderChild(child) {
+
+        // do we need this after we pull fillEmptyFunction in here?
+
         child.role = "function literal line"
-        
+
         var el = expressionToElement(child)
 
-        parentExpressionsByChildId[el.id] = parent
+        if (child.kind == "empty expression") {
+
+          var fillIt = functionCall(
+            "drawExpression.addLine")
+          .withArgs(
+            child.id,
+            child.id,
+            "inPlaceOf"
+          )
+
+          var showMenu = functionCall(chooseExpression)
+          .withArgs(fillIt)
+
+          el.attributes.onclick = showMenu.evalable()
+        }
+
+        parentExpressionsByChildId[child.id] = parent
 
         el.classes.push("function-literal-line")
 
@@ -773,6 +777,8 @@ var drawExpression = (function() {
   var variableAssignment = element.template(
     ".variable-assignment",
     function(expression) {
+      this.id = expression.id
+
       var nameSpan = element("span",
         expression.variableName
       )
@@ -788,8 +794,8 @@ var drawExpression = (function() {
 
       makeItEditable(
         lhs,
-        functionCall(getProperty).withArgs("variableName", barCode(expression)),
-        functionCall(setProperty).withArgs("variableName", barCode(expression)),
+        functionCall(getProperty).withArgs("variableName", expression.id),
+        functionCall(setProperty).withArgs("variableName", expression.id),
         {updateElement: nameSpan}
       )
 
@@ -810,6 +816,7 @@ var drawExpression = (function() {
   var objectLiteral = element.template(
     ".object-literal",
     function(expression) {
+      this.id = expression.id
 
       expression.keys = []
 
@@ -817,32 +824,34 @@ var drawExpression = (function() {
 
         expression.keys.push(key)
 
-        var pairExpression = {
+        var pair = {
+          kind: "key pair",
           key: key,
-          objectExpression: expression
+          objectExpression: expression,
+          id: anExpression.id()
         }
 
+        expressionsById[pair.id] = pair
+
         var el = keyPairTemplate(
-          pairExpression,
-          functionCall(onKeyRename).withArgs(barCode(pairExpression)),
+          pair,
+          functionCall(onKeyRename).withArgs(pair.id),
           expression
         )
 
         this.children.push(el)
       }
 
-      this.classes.push("container-"+barCode(expression))
+      this.classes.push("container-"+expression.id)
     }
   )
 
   var keyPairTemplate = element.template(
     ".key-pair",
     function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression) {
+      this.id = pairExpression.id
 
       var key = pairExpression.key
-
-      pairExpression.kind = "key pair"
-      pairExpression.elementId = this.assignId()
 
       var textElement = element(
         "span",
@@ -857,26 +866,16 @@ var drawExpression = (function() {
         ]
       )
 
-
-      // maybe we should just use keyPairsByValueElementId instead?
-
-      var pairId = barCode(pairExpression)
-
       makeItEditable(
         keyButton,
-        functionCall(getKeyName).withArgs(pairId),
+        functionCall(getKeyName).withArgs(pairExpression.id),
         keyRenameHandler,
         {updateElement: textElement}
       )
 
       this.children.push(keyButton)
 
-
       var valueExpression = objectExpression.valuesByKey[key]
-
-      if (typeof valueExpression != "object" || !valueExpression.kind) {
-        throw new Error("Trying to draw object expression "+stringify(objectExpression)+" but the "+key+" property doesn't seem to be an expression? It's "+stringify(valueExpression))
-      }
 
       valueExpression.key = key
 
@@ -895,16 +894,16 @@ var drawExpression = (function() {
   )
 
   function forgetKeyValue(oldExpression) {
-    delete parentExpressionsByChildId[oldExpression.elementId]
+    delete parentExpressionsByChildId[oldExpression.id]
 
-    delete keyPairsByValueElementId[oldExpression.elementId]
+    delete keyPairsByValueId[oldExpression.id]
   }
 
   function rememberKeyValue(valueElement, pairExpression) {
 
     parentExpressionsByChildId[valueElement.id] = pairExpression.objectExpression
 
-    keyPairsByValueElementId[valueElement.id] = pairExpression
+    keyPairsByValueId[valueElement.id] = pairExpression
 
     valueElement.classes.push("key-value")
   }
@@ -925,6 +924,8 @@ var drawExpression = (function() {
     ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
 
     function(expression) {
+      this.id = expression.id
+
       var items = expression.items
 
       this.children = items.map(itemToElement)
@@ -943,24 +944,6 @@ var drawExpression = (function() {
     return 
   }
 
-
-
-
-  // GHOST BABIES
-
-  var expressionHasGhostBaby = {}
-
-  function addGhost(containerId, el) {
-    if (expressionHasGhostBaby[containerId]) {
-      return
-    }
-
-    expressionHasGhostBaby[containerId] = true
-
-    var container = document.querySelector(".container-"+containerId)
-
-    container.innerHTML = container.innerHTML + el.html()
-  }
 
 
 
@@ -984,8 +967,7 @@ var drawExpression = (function() {
 
   function expressionToElement(expression) {
 
-    var position = expressionIdWritePosition
-
+    var i = expressionIdWritePosition
     expressionIdWritePosition++
 
     if (typeof expression != "object" || !expression || !expression.kind) {
@@ -1001,11 +983,17 @@ var drawExpression = (function() {
 
     var el = render(expression)
 
-    var id = expression.elementId = el.assignId()
+    if (el.id && el.id != expression.id) {
+      console.log("expression:", expression)
+      console.log("element:", el)
+      throw new Error("Expression element ids must match the expression id")
+    }
 
-    expressionsByElementId[id] = expression
+    el.id = expression.id
 
-    expressionElementIds[position] = id
+    expressionsById[expression.id] = expression
+
+    expressionElementIds[i] = expression.id
 
     return el
   }
@@ -1049,7 +1037,7 @@ var drawExpression = (function() {
 
     var parentExpression = parentExpressionsByChildId[relativeToThisId]
 
-    var relativeExpression = expressionsByElementId[relativeToThisId]
+    var relativeExpression = expressionsById[relativeToThisId]
 
     addExpressionToNeighbors(
       newExpression,
@@ -1080,7 +1068,7 @@ var drawExpression = (function() {
     var newElement = expressionToElement(
         newExpression)
 
-    parentExpressionsByChildId[newElement.id] = parentExpression
+    parentExpressionsByChildId[newExpression.id] = parentExpression
 
   
     expressionElementIds.splice(splicePosition, deleteThisMany, newElement.id)
@@ -1089,12 +1077,14 @@ var drawExpression = (function() {
 
     addHtml[relationship](ghostElement, newElement.html())
 
-    updateDependencies(parentExpression, newExpression)
+    // updateDependencies(parentExpression, newExpression)
 
     programChanged()
     hideSelectionControls()
     updateSelection()
-    offsetCameraUp(1)
+    if (relationship != "inPlaceOf") {
+      offsetCameraUp(1)
+    }
   }
 
   function updateDependencies(parent, line) {
@@ -1152,7 +1142,7 @@ var drawExpression = (function() {
     package.argumentNames.push(dep)
     var el = argumentName(package, dep, index)
 
-    var selector = "#"+package.elementId+" .function-argument-names"
+    var selector = "#"+package.id+" .function-argument-names"
 
     var container = document.querySelector(selector)
 
@@ -1186,9 +1176,9 @@ var drawExpression = (function() {
     return dashed
   }
 
-  function addKeyPair(insertByThisId, relationship, objectElementId, relativeToKey) {
+  function addKeyPair(insertByThisId, relationship, objectExpressionId, relativeToKey) {
 
-    var objectExpression = expressionsByElementId[objectElementId]
+    var objectExpression = expressionsById[objectExpressionId]
 
     var index = objectExpression.keys.indexOf(relativeToKey)
 
@@ -1208,12 +1198,15 @@ var drawExpression = (function() {
 
     var pairExpression = {
       key: "",
-      objectExpression: objectExpression
+      objectExpression: objectExpression,
+      id: anExpression.id()
     }
+
+    expressionsById[pairExpression.id] = pairExpression
 
     var el = keyPairTemplate(
       pairExpression,
-      functionCall(onKeyRename).withArgs(barCode(pairExpression)),
+      functionCall(onKeyRename).withArgs(pairExpression.id),
       objectExpression
     )
 
@@ -1226,7 +1219,7 @@ var drawExpression = (function() {
 
   function replaceValue(valueElementId, newExpression) {
 
-    var pairExpression = keyPairsByValueElementId[valueElementId]
+    var pairExpression = keyPairsByValueId[valueElementId]
 
     var objectExpression = pairExpression.objectExpression
 
@@ -1256,6 +1249,10 @@ var drawExpression = (function() {
   drawExpression.replaceValue = replaceValue
 
   drawExpression.addKeyPair = addKeyPair
+
+  drawExpression.getArgumentName = getArgumentName
+
+  drawExpression.renameArgument = renameArgument
 
   return drawExpression
 

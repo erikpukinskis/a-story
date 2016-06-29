@@ -9,17 +9,41 @@ function pad(str) {
 }
 
 
+var lastExpressionInteger = 1999*1999
+
 var anExpression = (function() {
 
   function anExpression(json) {
+    if (!json) { return }
+
+    if (!json.id) {
+      json.id = anId()
+    }
+
+    if (json.arguments) {
+      json.arguments.forEach(anExpression)
+    } else if (json.body) {
+      json.body.forEach(anExpression)
+    } else if (json.expression) {
+      anExpression(json.expression)
+    }
+
     return json
   }
+
+  function anId() {
+    lastExpressionInteger++
+    return "expr-"+lastExpressionInteger.toString(36)
+  }
+
+  anExpression.id = anId
 
   anExpression.stringLiteral =
     function(string) {
       return {
         kind: "string literal",
-        string: string
+        string: string,
+        id: anId()
       }
     }
 
@@ -27,14 +51,16 @@ var anExpression = (function() {
     function(number) {
       return {
         kind: "number literal",
-        number: number
+        number: number,
+        id: anId()
       }
     }
 
   anExpression.emptyExpression =
     function() {
       return {
-        kind: "empty expression" 
+        kind: "empty expression",
+        id: anId()
       }
     }
 
@@ -42,7 +68,8 @@ var anExpression = (function() {
     function(object) {
       var expression = {
         kind: "object literal",
-        valuesByKey: {}
+        valuesByKey: {},
+        id: anId()
       }
 
       for (var key in object) {
@@ -56,7 +83,8 @@ var anExpression = (function() {
     function(array) {
       return {
         kind: "array literal",
-        items: array.map(toExpression)
+        items: array.map(toExpression),
+        id: anId()
       }
     }
 

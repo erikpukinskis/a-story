@@ -26,7 +26,6 @@
 <script src="../build/function-call.js"></script>
 <script src="../build/add-html.js"></script>
 <script src="../build/make-it-editable.js"></script>
-<script src="../build/bar-code.js"></script>
 <script src="../build/tap-out.js"></script>
 <script src="menu.js"></script>
 <script src="an-expression.js"></script>
@@ -78,6 +77,7 @@
 
   function setName(newName) {
     programName = newName
+    programChanged()
   }
 
   var title = element(".program-name", programName)
@@ -104,7 +104,9 @@
 
     document.querySelector(".output").innerHTML = ""
 
-    anExpression.run(packageAsModule(loadedProgram), programName)
+    var expression = packageAsModule(loadedProgram)
+
+    anExpression.run(expression, programName)
   }
 
   function packageAsModule(functionLiteral) {

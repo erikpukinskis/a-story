@@ -27,7 +27,7 @@ function tryToCall(func) {
 // WHO RUNS THE WORLD? GLOBALS
 
 var parentExpressionsByChildId = {}
-var expressionElementIds = []
+var expressionIds = []
 var expressionsById = {}
 
 
@@ -337,9 +337,9 @@ function elementOverlapsSelector(el) {
 
 function getSelectedElement() {
 
-  for(var i=expressionElementIds.length-1; i>=0; i--) {
+  for(var i=expressionIds.length-1; i>=0; i--) {
 
-    var id = expressionElementIds[i]
+    var id = expressionIds[i]
     var el = document.getElementById(id)
 
     if (!el) {
@@ -976,7 +976,7 @@ var drawExpression = (function() {
 
     expressionsById[expression.id] = expression
 
-    expressionElementIds[i] = expression.id
+    expressionIds[i] = expression.id
 
     return el
   }
@@ -991,7 +991,7 @@ var drawExpression = (function() {
 
 
   function addLine(ghostElementId, relativeToThisId, relationship, newExpression) {
-
+    
     var parentExpression = parentExpressionsByChildId[relativeToThisId]
 
     var relativeExpression = expressionsById[relativeToThisId]
@@ -1007,12 +1007,12 @@ var drawExpression = (function() {
 
     if (relationship == "before") {
 
-      var splicePosition = indexBefore(expressionElementIds, relativeToThisId)
+      var splicePosition = indexBefore(expressionIds, relativeToThisId)
       var deleteThisMany = 0
 
     } else if (relationship == "after") {
 
-      var splicePosition = indexAfter(expressionElementIds, relativeToThisId)
+      var splicePosition = indexAfter(expressionIds, relativeToThisId)
       var deleteThisMany = 0
 
     } else if (relationship == "inPlaceOf") {
@@ -1028,7 +1028,7 @@ var drawExpression = (function() {
     parentExpressionsByChildId[newExpression.id] = parentExpression
 
   
-    expressionElementIds.splice(splicePosition, deleteThisMany, newElement.id)
+    expressionIds.splice(splicePosition, deleteThisMany, newElement.id)
 
     var ghostElement = document.getElementById(ghostElementId)
 

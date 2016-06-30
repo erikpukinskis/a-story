@@ -40,6 +40,13 @@ window.onscroll = updateSelection
 
 addHtml(element(".selector", "EZJS").html())
 
+
+
+
+// PROGRAM MANIPULATION
+
+// so, these all just change the program and call programChanged. Or they grab some data off it.
+
 function getProperty(property, expressionId) {
   var expression = expressionsById[expressionId]
   return expression[property]
@@ -74,60 +81,23 @@ function onKeyRename(pairId, newKey) {
   programChanged()
 }
 
-function triangle() {
+function getArgumentName(expressionId, index) {
+  var expression = expressionsById[expressionId]
 
-  var expression = {
-    kind: "array literal",
-    items: [
-      anExpression.objectLiteral({
-        name: "triangle",
-        position: [-1.5, 0.0, -7.0],
-        verticies: [
-           0.0,  1.0,  0.0,
-          -1.0, -1.0,  0.0,
-           1.0, -1.0,  0.0
-        ],
-        pointCount: 3,
-        colors: [
-          1.0, 0.4, 0.6, 1.0,
-          0.9, 0.4, 0.7, 1.0,
-          0.8, 0.4, 0.9, 1.0
-        ]
-      }),
-    ]
-  }
-
-  return expression
+  return expression.argumentNames[index]
 }
 
-function square() {
-  return {
-    kind: "array literal",
-    items: [
-      anExpression.objectLiteral({
-        name: "square",
-        position: [1.5, 0.0, -7.0],
-        verticies: [
-           1.0,  1.0,  0.0,
-          -1.0,  1.0,  0.0,
-           1.0, -1.0,  0.0,
-          -1.0, -1.0,  0.0
-        ],
-        pointCount: 4,
-        colors: [
-          1.0, 0.8, 0.2, 1.0,
-          0.9, 0.7, 0.4 , 1.0,
-          0.8, 0.7, 0.6, 1.0,
-          0.7, 0.6, 0.8, 1.0
-        ]
-      })
-    ]
-  }
+function renameArgument(expressionId, index, newName) {
+  var expression = expressionsById[expressionId]
+
+  expression.argumentNames[index] = newName
+
+  programChanged()
 }
 
 
-/* Onclick Handlers */
 
+// EXPRESSION ANTICIPATION
 
 var expressionChoices = [
   menu.choice(
@@ -212,36 +182,38 @@ var expressionChoices = [
   ),
 ]
 
+function triangle() {
+  return anExpression({
+    kind: "array literal",
+    items: [
+      anExpression.objectLiteral({
+        name: "triangle",
+        position: [-1.5, 0.0, -7.0],
+        verticies: [
+           0.0,  1.0,  0.0,
+          -1.0, -1.0,  0.0,
+           1.0, -1.0,  0.0
+        ],
+        pointCount: 3,
+        colors: [
+          1.0, 0.4, 0.6, 1.0,
+          0.9, 0.4, 0.7, 1.0,
+          0.8, 0.4, 0.9, 1.0
+        ]
+      }),
+    ]
+  })
+}
+
 function chooseExpression(callback) {
   menu(expressionChoices, callback)
 }
 
-function indexBefore(list, value) {
 
-  for(var i = 0; i < list.length; i++) {
-    if (list[i] == value) {
-      return i
-    }
-  }
 
-  throw new Error("can't find "+value+" to insert before it")
 
-}
 
-function contains(array, value) {
-  if (!Array.isArray(array)) {
-    throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
-  }
-  var index = -1;
-  var length = array.length;
-  while (++index < length) {
-    if (array[index] == value) {
-      return true;
-    }
-  }
-  return false;
-}
-
+// LAST DESCENDANT AFTER
 
 function lastDescendantAfter(elementIds, startIndex) {
 
@@ -273,9 +245,20 @@ function lastDescendantAfter(elementIds, startIndex) {
   return lastDescendant
 }
 
+function indexBefore(list, value) {
+
+  for(var i = 0; i < list.length; i++) {
+    if (list[i] == value) {
+      return i
+    }
+  }
+
+  throw new Error("can't find "+value+" to insert before it")
+
+}
+
 function indexAfter(elementIds, relativeId) {
 
-  var splicePosition
   var parentIdStack = []
 
   for(var i = 0; i < elementIds.length; i++) {
@@ -288,6 +271,23 @@ function indexAfter(elementIds, relativeId) {
 
   throw new Error("can't find "+relativeId+" to insert after it")
 }
+
+function contains(array, value) {
+  if (!Array.isArray(array)) {
+    throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+  }
+  var index = -1;
+  var length = array.length;
+  while (++index < length) {
+    if (array[index] == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
 
 
 // SELECTION CONTROLS
@@ -577,10 +577,9 @@ var drawExpression = (function() {
 
       this.children.push(button)
 
-      // should be able to delete this container- stuff?
 
       var container = element(
-        ".function-call-args.container-"+expression.id)
+        ".function-call-args")
 
       container.children =
         argumentsToElements(
@@ -701,26 +700,12 @@ var drawExpression = (function() {
       
       makeItEditable(
         this,
-        functionCall("drawExpression.getArgumentName").withArgs(expression.id, argumentIndex),
-        functionCall("drawExpression.renameArgument").withArgs(expression.id, argumentIndex)
+        functionCall(getArgumentName).withArgs(expression.id, argumentIndex),
+        functionCall(renameArgument).withArgs(expression.id, argumentIndex)
       )
 
     }
   )
-
-  function getArgumentName(expressionId, index) {
-    var expression = expressionsById[expressionId]
-
-    return expression.argumentNames[index]
-  }
-
-  function renameArgument(expressionId, index, newName) {
-    var expression = expressionsById[expressionId]
-
-    expression.argumentNames[index] = newName
-
-    programChanged()
-  }
 
   var functionLiteralBody = element.template(
     ".function-literal-body",
@@ -841,8 +826,6 @@ var drawExpression = (function() {
 
         this.children.push(el)
       }
-
-      this.classes.push("container-"+expression.id)
     }
   )
 
@@ -1006,32 +989,6 @@ var drawExpression = (function() {
     }
   }
 
-  function getDeps(newExpression) {
-    var deps = []
-    var lines = newExpression.body
-    var name = newExpression.functionName
-
-    if (name) {
-      var parts = name.split(".")
-      deps.push(parts[0])
-    }
-
-    if (lines) {
-      for(var i=0; i<lines; i++) {
-        var moreDeps =
-          getDeps(lines[i])
-        deps = deps.concat(modeDeps)
-      }
-    }
-
-    return deps
-  }
-
-  function getPackageFunctionLiteral(expression) {
-    if (expression.kind == "function literal") {
-      return expression
-    }
-  }
 
   function addLine(ghostElementId, relativeToThisId, relationship, newExpression) {
 
@@ -1077,7 +1034,7 @@ var drawExpression = (function() {
 
     addHtml[relationship](ghostElement, newElement.html())
 
-    // updateDependencies(parentExpression, newExpression)
+    onNewExpression(parentExpression, newExpression)
 
     programChanged()
     hideSelectionControls()
@@ -1086,27 +1043,6 @@ var drawExpression = (function() {
       offsetCameraUp(1)
     }
   }
-
-  function updateDependencies(parent, line) {
-
-    if (line.kind == "function call") {
-
-      var deps = getDeps(line)
-
-      var package = getPackageFunctionLiteral(parent)
-
-      if (package && deps.length) {
-        deps.forEach(function(dep) {
-          var isMissing = package.argumentNames.indexOf(dep) == -1
-          if (isMissing) {
-            addDependency(package, dep)
-          }
-        })
-      }
-    }
-  }
-
-
 
   function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
     
@@ -1132,48 +1068,6 @@ var drawExpression = (function() {
     }
 
     neighbors.splice(lineIndex, deleteThisMany,  newExpression)
-  }
-
-
-  function addDependency(package, dep) {
-
-    var index = package.argumentNames.length
-
-    package.argumentNames.push(dep)
-    var el = argumentName(package, dep, index)
-
-    var selector = "#"+package.id+" .function-argument-names"
-
-    var container = document.querySelector(selector)
-
-    addHtml.inside(
-      container, el.html()
-    )
-
-    var scriptTag = element(
-      "script",
-      {
-        src: "../build/"+dasherize(dep)+".library.js"
-      }
-    )
-
-    addHtml(scriptTag.html())
-
-  }
-
-  function dasherize(camelCase) {
-    var parts = camelCase.match(/([^A-Z]*)([A-Z][^A-Z]+)/)
-
-    var dashed
-    for(var i=1; i<parts.length; i++) {
-      var part = parts[i].toLowerCase()
-      if (dashed) {
-        dashed = dashed+"-"+part
-      } else {
-        dashed = part
-      }
-    }
-    return dashed
   }
 
   function addKeyPair(insertByThisId, relationship, objectExpressionId, relativeToKey) {
@@ -1241,6 +1135,31 @@ var drawExpression = (function() {
 
   }
 
+  function addFunctionArgument(expressionId, dep) {
+
+    // This part is the program manipulation part:
+
+    var package = expressionsById[expressionId]
+
+    var index = package.argumentNames.length
+
+    package.argumentNames.push(dep)
+
+
+    // and then we have the editor part:
+
+    var el = argumentName(package, dep, index)
+
+    var selector = "#"+expressionId+" .function-argument-names"
+
+    var container = document.querySelector(selector)
+
+    addHtml.inside(
+      container, el.html()
+    )
+
+  }
+
 
   var drawExpression = expressionToElement
 
@@ -1250,9 +1169,7 @@ var drawExpression = (function() {
 
   drawExpression.addKeyPair = addKeyPair
 
-  drawExpression.getArgumentName = getArgumentName
-
-  drawExpression.renameArgument = renameArgument
+  drawExpression.addFunctionArgument = addFunctionArgument
 
   return drawExpression
 

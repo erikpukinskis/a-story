@@ -58,8 +58,8 @@
 
 <!-- DATA -->
 
-<!-- <script src="load-empty-program.js"></script> -->
-<script src="load-sample-home-page.js"></script>
+<script src="load-empty-program.js"></script>
+<!-- <script src="load-sample-home-page.js"></script> -->
 <!-- <script src="load-scene.js"></script> -->
 
 
@@ -99,6 +99,13 @@
 
 
 
+
+  // Change handlers
+
+  function onNewExpression(parentExpression, newExpression) {
+    updateDependencies(parentExpression, newExpression)
+  }
+
   function programChanged() {
     window.__nrtvFocusSelector = ".output"
 
@@ -108,6 +115,9 @@
 
     anExpression.run(expression, programName)
   }
+
+
+
 
   function packageAsModule(functionLiteral) {
     
@@ -132,32 +142,87 @@
       .map(
         function(camelCase) {
           return anExpression.stringLiteral(
-            dasherized(camelCase)
+            dasherize(camelCase)
           )
         }
       )
 
   }
 
-  function dasherized(camelCase) {
-    var words = []
-    var wordStart = 0
+  function dasherize(camelCase) {
+    var parts = camelCase.match(/([^A-Z]*)([A-Z][^A-Z]+)/)
 
-    for(var i=0; i<camelCase.length+1; i++) {
+    var dashed
+    for(var i=1; i<parts.length; i++) {
+      var part = parts[i].toLowerCase()
+      if (dashed) {
+        dashed = dashed+"-"+part
+      } else {
+        dashed = part
+      }
+    }
+    return dashed
+  }
 
-      var letter = camelCase[i]
-      var isEnd = i == camelCase.length
-      var isUpperCase = letter && letter.toUpperCase() == letter
 
-      if (isUpperCase || isEnd) {
-        // new word!
-        var word = camelCase.slice(wordStart, i)
-        words.push(word.toLowerCase())
-        wordStart = i
+  function updateDependencies(parent, line) {
+
+    if (line.kind == "function call") {
+
+      var deps = getDeps(line)
+
+      var package = getPackageFunctionLiteral(parent)
+
+      if (package && deps.length) {
+        deps.forEach(function(dep) {
+          var isMissing = package.argumentNames.indexOf(dep) == -1
+          if (isMissing) {
+            addDependency(package, dep)
+          }
+        })
+      }
+    }
+  }
+
+  function getDeps(newExpression) {
+    var deps = []
+    var lines = newExpression.body
+    var name = newExpression.functionName
+
+    if (name) {
+      var parts = name.split(".")
+      deps.push(parts[0])
+    }
+
+    if (lines) {
+      for(var i=0; i<lines; i++) {
+        var moreDeps =
+          getDeps(lines[i])
+        deps = deps.concat(modeDeps)
       }
     }
 
-    return words.join("-")
+    return deps
+  }
+
+
+  function getPackageFunctionLiteral(expression) {
+    if (expression.kind == "function literal") {
+      return expression
+    }
+  }
+
+  function addDependency(package, dep) {
+    drawExpression.addFunctionArgument(package.id, dep)
+
+    var scriptTag = element(
+      "script",
+      {
+        src: "../build/"+dasherize(dep)+".library.js"
+      }
+    )
+
+    addHtml(scriptTag.html())
   }
 
 

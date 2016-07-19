@@ -58,8 +58,8 @@
 
 <!-- DATA -->
 
-<script src="load-empty-program.js"></script>
-<!-- <script src="load-sample-home-page.js"></script> -->
+<!-- <script src="load-empty-program.js"></script> -->
+<script src="load-sample-home-page.js"></script>
 <!-- <script src="load-scene.js"></script> -->
 
 
@@ -68,8 +68,7 @@
 
 <script type="text/javascript">
 
-
-  var programName = "unnamed"
+  var programName = loadedProgram.name || "unnamed"
 
   function getName() {
     return programName
@@ -150,10 +149,11 @@
   }
 
   function dasherize(camelCase) {
-    var parts = camelCase.match(/([^A-Z]*)([A-Z][^A-Z]+)/)
+    var parts = camelCase.match(/([^A-Z]+)([A-Z][^A-Z])*/)
 
     var dashed
     for(var i=1; i<parts.length; i++) {
+      if (!parts[i]) { continue }
       var part = parts[i].toLowerCase()
       if (dashed) {
         dashed = dashed+"-"+part

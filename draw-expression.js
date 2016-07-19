@@ -525,10 +525,68 @@ function showControls(selectedNode, handleBaby) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // EDITOR ///////////////////////
 
-
 var drawExpression = (function() {
+
+  var replaceValue
+
+  function prepareBridge(bridge) {
+
+    var rememberKeyValue = bridge.defineFunction(function rememberKeyValue(valueElement, pairExpression) {
+
+      parentExpressionsByChildId[valueElement.id] = pairExpression.objectExpression
+
+      keyPairsByValueId[valueElement.id] = pairExpression
+
+      valueElement.classes.push("key-value")
+    })
+
+    var forgetKeyValue = bridge.defineFunction(function forgetKeyValue(oldExpression) {
+      delete parentExpressionsByChildId[oldExpression.id]
+
+      delete keyPairsByValueId[oldExpression.id]
+    })
+
+    replaceValue = bridge.defineFunction([rememberKeyValue, forgetKeyValue],function replaceValue(rememberKeyValue, forgetKeyValue, valueElementId, newExpression) {
+
+      var pairExpression = keyPairsByValueId[valueElementId]
+
+      var objectExpression = pairExpression.objectExpression
+
+      var key = pairExpression.key
+
+      var oldExpression = objectExpression.valuesByKey[key]
+
+      objectExpression.valuesByKey[key] = newExpression
+
+      var oldElement = document.getElementById(valueElementId)
+
+      var newElement = drawExpression(newExpression)
+
+      rememberKeyValue(newElement, pairExpression)
+
+      addHtml.inPlaceOf(oldElement, newElement.html())
+
+      forgetKeyValue(oldExpression)
+
+    })
+  }
 
   // RENDERERS 
 
@@ -543,7 +601,7 @@ var drawExpression = (function() {
       if (expression.role == "key value") {
 
         var replaceIt = 
-          functionCall("drawExpression.replaceValue")
+          replaceValue
           .withArgs(
             expression.id
           )
@@ -876,20 +934,6 @@ var drawExpression = (function() {
     }
   )
 
-  function forgetKeyValue(oldExpression) {
-    delete parentExpressionsByChildId[oldExpression.id]
-
-    delete keyPairsByValueId[oldExpression.id]
-  }
-
-  function rememberKeyValue(valueElement, pairExpression) {
-
-    parentExpressionsByChildId[valueElement.id] = pairExpression.objectExpression
-
-    keyPairsByValueId[valueElement.id] = pairExpression
-
-    valueElement.classes.push("key-value")
-  }
 
   var variableReference = element.template(
     ".button.variable-reference",
@@ -1111,30 +1155,6 @@ var drawExpression = (function() {
     el.startEditing()
   }
 
-  function replaceValue(valueElementId, newExpression) {
-
-    var pairExpression = keyPairsByValueId[valueElementId]
-
-    var objectExpression = pairExpression.objectExpression
-
-    var key = pairExpression.key
-
-    var oldExpression = objectExpression.valuesByKey[key]
-
-    objectExpression.valuesByKey[key] = newExpression
-
-    var oldElement = document.getElementById(valueElementId)
-
-    var newElement = drawExpression(newExpression)
-
-    rememberKeyValue(newElement, pairExpression)
-
-    addHtml.inPlaceOf(oldElement, newElement.html())
-
-    forgetKeyValue(oldExpression)
-
-  }
-
   function addFunctionArgument(expressionId, dep) {
 
     // This part is the program manipulation part:
@@ -1160,14 +1180,13 @@ var drawExpression = (function() {
 
   }
 
-
   var drawExpression = expressionToElement
 
   drawExpression.addLine = addLine
 
-  drawExpression.replaceValue = replaceValue
-
   drawExpression.addKeyPair = addKeyPair
+
+  drawExpression.prepareBridge = prepareBridge
 
   drawExpression.addFunctionArgument = addFunctionArgument
 

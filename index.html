@@ -24,13 +24,13 @@
 <script src="../build/tree.js"></script>
 <script src="../build/library.js"></script>
 <script src="../build/function-call.js"></script>
+<script src="../build/browser-bridge.js"></script>
 <script src="../build/add-html.js"></script>
 <script src="../build/make-it-editable.js"></script>
 <script src="../build/tap-out.js"></script>
 <script src="menu.js"></script>
 <script src="an-expression.js"></script>
 <script src="draw-expression.js"></script>
-
 
 
 
@@ -53,6 +53,7 @@
 <script src="../build/add-html.library.js"></script>
 
 <script src="../build/element.library.js"></script>
+
 
 
 
@@ -87,7 +88,9 @@
 
   addHtml.inside(header, title.html())
 
-
+  var bridge = new BrowserBridge()
+  drawExpression.prepareBridge(bridge)
+  eval(bridge.script())
 
   var el = drawExpression(
       loadedProgram)
@@ -149,18 +152,29 @@
   }
 
   function dasherize(camelCase) {
-    var parts = camelCase.match(/([^A-Z]+)([A-Z][^A-Z])*/)
+    var word = null
+    var words = []
 
-    var dashed
-    for(var i=1; i<parts.length; i++) {
-      if (!parts[i]) { continue }
-      var part = parts[i].toLowerCase()
-      if (dashed) {
-        dashed = dashed+"-"+part
+    for(var i=0; i<camelCase.length; i++) {
+      var char = camelCase[i]
+      var isUpper = char == char.toUpperCase()
+
+      if (isUpper && !word) {
+        word = char.toLowerCase()
+      } else if (isUpper) {
+        words.push(word)
+        word = char.toLowerCase()
+      } else if (!isUpper && !word) {
+        word = char
       } else {
-        dashed = part
+        word = word + char
       }
     }
+
+    words.push(word)
+
+    var dashed = words.join("-")
+
     return dashed
   }
 

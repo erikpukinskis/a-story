@@ -1,0 +1,17 @@
+{
+  "name": "ezjs",
+  "version": "0.0.0",
+  "description": "Javascript programs anyone can edit",
+  "dependencies": {
+    "nrtv-library": "*",
+    "nrtv-element": "*",
+    "nrtv-server": "*",
+    "nrtv-browser-bridge": "*",
+    "bridge-module": "*",
+    "function-call": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erikpukinskis/ezjs.git"
+  }
+}

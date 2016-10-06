@@ -8,9 +8,10 @@ library.using(
     "nrtv-element",
     "./draw-expression",
     "./an-expression",
-    "./choose-expression"
+    "./choose-expression",
+    "./load-sample-home-page",
   ],
-  function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, chooseExpression) {
+  function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, chooseExpression, sampleHomePage) {
 
 
     var emptyProgram = anExpression({
@@ -23,36 +24,44 @@ library.using(
 
 
     var bridge = new BrowserBridge()
-    drawExpression.prepareBridge(bridge)
 
     var chooseExpression = bridgeModule(library, "choose-expression", bridge)
 
-    debugger
-    
-    var program = drawExpression(emptyProgram,
-      {
-        chooseExpression: chooseExpression
-      }
+    var draw = bridgeModule(library, "draw-expression", bridge)
+
+    drawExpression.prepareBridge(bridge)
+
+    var program = drawExpression(sampleHomePage, {
+      binding: draw,
+      getExpression: chooseExpression,
+    })
+
+    bridge.asap(
+      draw.methodCall("load")
+      .withArgs(program.data)
     )
 
-    var head = element([
+    var head = element("head", [
       element("script", {src: "/dependencies/tap-out.js"}),
       element("script", {src: "/dependencies/element.js"}),
       element("script", {src: "/dependencies/function-call.js"}),
-      element("script", {src: "/dependencies/add-html.js"})
+      element("script", {src: "/dependencies/add-html.js"}),
+      element("script", {src: "/dependencies/menu.js"})
     ])
 
 
-    var body = element(".two-columns", [
-      element(
-        ".column",
-        element(".output")
-      ),
-      element(".column", [
-        element(".program-header"),
-        element(".program", program)
+    var body = element("body",
+      element(".two-columns", [
+        element(
+          ".column",
+          element(".output")
+        ),
+        element(".column", [
+          element(".program-header"),
+          element(".program", program)
+        ])
       ])
-    ])
+    )
 
     var stylesheet = element("link", {
       rel: "stylesheet",

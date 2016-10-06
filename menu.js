@@ -51,7 +51,11 @@ module.exports = library.export(
       }
     )
 
-    var container
+    function chooseFromMenu(containerId, menuCallback, i, event) {
+      event.preventDefault()
+      document.getElementById(containerId).hide()
+      menuCallback(values[i])
+    }
 
     function showMenu()  {
       var menuElement = template.apply(null, arguments)
@@ -62,6 +66,7 @@ module.exports = library.export(
           console.log("cancelled menu!")
         }
       )
+      container.assignId()
 
       container.attributes.display = "block"
 
@@ -72,11 +77,6 @@ module.exports = library.export(
       return {label: label, value: value}
     }
 
-    showMenu.choose = function(i, event) {
-      event.preventDefault()
-      container.hide()
-      menuCallback(values[i])
-    }
 
     return showMenu
 

@@ -1,3 +1,5 @@
+var anExpression = require("./an-expression")
+
 var loadedProgram = anExpression({
   kind: "function literal",
   argumentNames: ["element", "bridgeTo"],
@@ -58,4 +60,6 @@ function sendPage() {
     ]
   }
 }
+
+module.exports = loadedProgram
 

@@ -8,7 +8,8 @@
     "nrtv-server": "*",
     "nrtv-browser-bridge": "*",
     "bridge-module": "*",
-    "function-call": "*"
+    "function-call": "*",
+    "make-it-editable": "*"
   },
   "repository": {
     "type": "git",

@@ -52,13 +52,7 @@ library.using(
       ).withArgs(program.binding, programName)
     )
 
-    var head = element("head", [
-      element("script", {src: "/dependencies/tap-out.js"}),
-      element("script", {src: "/dependencies/element.js"}),
-      element("script", {src: "/dependencies/function-call.js"}),
-      element("script", {src: "/dependencies/add-html.js"}),
-      element("script", {src: "/dependencies/menu.js"})
-    ])
+    var head = element("head")
 
 
     var body = element("body",
@@ -100,7 +94,8 @@ library.using(
       "/dependencies/:name.js",
       function(request, response) {
         var name = request.params.name
-        if (name.match(/[^a-z-]/)) {
+        console.log("looking for", name)
+        if (name.match(/[^.a-z-]/)) {
           throw new Error("Dependencies can only have lowercase letters and dash. You asked for "+name)
         }
         response.sendFile(__dirname+"/build/"+name+".js")

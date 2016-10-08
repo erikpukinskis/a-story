@@ -2,21 +2,21 @@ var anExpression = require("./an-expression")
 
 var loadedProgram = anExpression({
   kind: "function literal",
-  argumentNames: ["element", "bridgeTo"],
+  argumentNames: ["webElement", "bridgeTo"],
   body: [
     {
       kind: "variable assignment",
       variableName: "sup",
       expression: {
         kind: "function call",
-        functionName: "element",
+        functionName: "webElement",
         arguments: [
           anExpression.stringLiteral(
             "sup family"
           ),
           {
             kind: "function call",
-            functionName: "element.style",
+            functionName: "webElement.style",
             arguments: [styleObject()]
           }
         ]

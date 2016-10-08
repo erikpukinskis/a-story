@@ -4,9 +4,9 @@
   "description": "Javascript programs anyone can edit",
   "dependencies": {
     "nrtv-library": "*",
-    "nrtv-element": "*",
+    "web-element": "*",
     "nrtv-server": "*",
-    "nrtv-browser-bridge": "*",
+    "browser-bridge": "*",
     "bridge-module": "*",
     "function-call": "*",
     "make-it-editable": "*"

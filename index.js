@@ -3,15 +3,16 @@ var library = require("nrtv-library")(require)
 library.using(
   [
     "nrtv-server",
-    "nrtv-browser-bridge",
+    "browser-bridge",
     "bridge-module",
-    "nrtv-element",
+    "web-element",
     "./draw-expression",
     "./an-expression",
     "./choose-expression",
     "./load-sample-home-page",
+    "./module"
   ],
-  function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, chooseExpression, sampleHomePage) {
+  function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, chooseExpression, sampleHomePage, Module) {
 
 
     var emptyProgram = anExpression({
@@ -27,18 +28,28 @@ library.using(
 
     var chooseExpression = bridgeModule(library, "choose-expression", bridge)
 
-    var draw = bridgeModule(library, "draw-expression", bridge)
+    var loadedExpression = sampleHomePage
 
-    drawExpression.prepareBridge(bridge)
+    var program = drawExpression(loadedExpression, bridge, chooseExpression)
 
-    var program = drawExpression(sampleHomePage, {
-      binding: draw,
-      getExpression: chooseExpression,
-    })
+    var programName = loadedExpression.name || "unnamed"
+
+
+    Module.prepareBridge(bridge)
 
     bridge.asap(
-      draw.methodCall("load")
-      .withArgs(program.data)
+      bridge.defineFunction(
+        [bridgeModule(library, "./module", bridge)],
+        function(Module, program, name) {
+          var mod = new Module(program, name)
+
+          mod.run()
+
+          program.onchanged(module.run)
+
+          program.onnewexpression(module.updateDependencies)
+        }
+      ).withArgs(program.binding, programName)
     )
 
     var head = element("head", [
@@ -58,7 +69,7 @@ library.using(
         ),
         element(".column", [
           element(".program-header"),
-          element(".program", program)
+          element(".program", program.element)
         ])
       ])
     )

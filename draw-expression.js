@@ -1,147 +1,285 @@
 var library = require("nrtv-library")(require)
 
+
+library.define(
+  "program",
+  ["an-expression"],
+  function(anExpression) {
+
+    function Program() {
+      this.expressionIds = []
+      this.expressionsById = {}
+      this.keyPairsByValueId = {}
+      this.parentExpressionsByChildId = {}
+      this.onchangedCallbacks = []
+      this.onnewexpressionCallbacks = []
+    }
+
+    Program.prototype.rootExpression = function() {
+      var rootId = this.expressionIds[0]
+      return this.expressionsById[rootId]
+    }
+
+    Program.prototype.onchanged = function(callback) {
+      this.onchangedCallbacks.push(callback)
+    }
+
+    Program.prototype.onnewexpression = function(callback) {
+      this.onnewexpressionCallbacks.push(callback)
+    }
+
+    Program.prototype.changed = function() {
+
+      window.__nrtvFocusSelector = ".output"
+
+      document.querySelector(".output").innerHTML = ""
+
+      var expression = this.rootExpression()
+
+      this.onchangedCallbacks.forEach(function(callback) {
+        callback(expression)
+      })
+    }
+
+    Program.prototype.newexpression =
+      function(parent, newExpression) {
+        this.onnewexpressionCallbacks.forEach(function(callback) {
+
+          callback(parent, newExpression)
+        })
+      }
+
+    function call(func) { func() }
+
+    Program.prototype.data = function() {
+      var parentExpressionIds = {}
+
+      for(var childId in this.parentExpressionsByChildId) {
+        var parentId = this.parentExpressionsByChildId[childId]
+
+        parentExpressionIds[childId] = parentId
+      }
+
+      return {
+        expressionIds: this.expressionIds,
+        expressionsById: this.expressionsById,
+        keyPairsByValueId: this.keyPairsByValueId,
+        parentExpressionIds: parentExpressionIds
+      }
+    }
+
+    Program.prototype.load = function(data) {
+
+      this.expressionIds = data.expressionIds
+
+      this.expressionsById = data.expressionsById
+
+      this.keyPairsByValueId = data.keyPairsByValueId
+
+      this.parentExpressionsByChildId = {}
+
+      for(var childId in data.parentExpressionIds) {
+        var parentId = data.parentExpressionIds[childId]
+
+        this.parentExpressionsByChildId[childId] = this.expressionsById[parentId]
+      }
+    }
+
+
+
+    Program.prototype.getProperty = function(property, expressionId) {
+      var expression = this.expressionsById[expressionId]
+      return expression[property]
+    }
+
+    Program.prototype.setProperty = function(property, expressionId, newValue, oldValue) {
+      var expression = this.expressionsById[expressionId]
+      expression[property] = newValue
+      this.changed()
+    }
+
+    Program.prototype.setFloatProperty = function(property, expressionId, newValue, oldValue) {
+      var expression = expressionsById[expressionId]
+      expression[property] = parseFloat(newValue)
+      this.changed()
+    }
+
+    Program.prototype.getKeyName = function(id) {
+      var pairExpression = this.expressionsById[id]
+      return pairExpression.key
+    }
+
+    Program.prototype.onKeyRename = function(pairId, newKey) {
+      var pairExpression = this.expressionsById[pairId]
+      var object = pairExpression.objectExpression.valuesByKey
+      var oldKey = pairExpression.key
+
+      pairExpression.key = newKey
+      object[newKey] = object[oldKey]
+
+      delete object[oldKey]
+      this.changed()
+    }
+
+    Program.prototype.getArgumentName = function(expressionId, index) {
+      var expression = this.expressionsById[expressionId]
+
+      return expression.argumentNames[index]
+    }
+
+    Program.prototype.getPairForValue = function(valueElementId) {
+      return this.keyPairsByValueId[valueElementId]
+    }
+
+    Program.prototype.renameArgument = function(expressionId, index, newName) {
+      var expression = this.expressionsById[expressionId]
+
+      expression.argumentNames[index] = newName
+
+      this.changed()
+    }
+
+    Program.prototype.addVirtualExpression = function(newExpression) {
+
+      this.expressionsById[newExpression.id] = newExpression
+    }
+
+    Program.prototype.addExpressionAt = function(newExpression, i) {
+
+      this.expressionsById[newExpression.id] = newExpression
+
+      this.expressionIds[i] = newExpression.id
+    }
+
+
+    Program.prototype.insertExpression = function(newExpression, relationship, relativeToThisId) {
+
+      if (!relationship) {
+        this.expressionsById[newExpression.id] = newExpression
+
+        this.expressionIds.push(newExpression.id)
+
+        return
+      }
+
+      if (relationship == "before") {
+
+        var splicePosition = indexBefore(this, expressionIds, relativeToThisId)
+        var deleteThisMany = 0
+
+      } else if (relationship == "after") {
+
+        var splicePosition = indexAfter(this, expressionIds, relativeToThisId)
+        var deleteThisMany = 0
+
+      } else if (relationship == "inPlaceOf") {
+
+        var splicePosition = 0
+        var deleteThisMany = 1
+
+      } else { throw new Error() }
+
+      this.parentExpressionsByChildId[newExpression.id] = parentExpression
+
+      this.expressionIds.splice(splicePosition, deleteThisMany, newElement.id)
+    }
+
+    function lastDescendantAfter(program, ids, startIndex) {
+
+      var possibleParentIds = [elementIds[startIndex]]
+      var lastDescendant = startIndex
+
+      for(var i = startIndex+1; i<elementIds.length; i++) {
+
+        var testId = ids[i]
+        var testExpr = program.expressionsById[testId]
+
+        var testParent = program.parentExpressionsByChildId[testId]
+
+        if (!testParent) {
+          var isDescendant = false
+        } else {
+          var testParentId = testParent.elementId
+          var isDescendant = contains(possibleParentIds, testParent.elementId)
+        }
+
+        if (isDescendant) {
+          possibleParentIds.push(testId)
+          lastDescendant = i
+        } else {
+          return lastDescendant
+        }      
+      }
+
+      return lastDescendant
+    }
+
+    function indexBefore(program, ids, relativeId) {
+
+      for(var i = 0; i < ids.length; i++) {
+        if (list[i] == relativeId) {
+          return i
+        }
+      }
+
+      throw new Error("Wanted to insert before "+relativeId+" but I can't find it!")
+
+    }
+
+    function indexAfter(program, ids, relativeId) {
+
+      var parentIdStack = []
+
+      for(var i = 0; i < ids.length; i++) {
+        var testId = ids[i]
+
+        if (testId == relativeId) {
+          return lastDescendantAfter(program, ids, i)+1
+        }
+      }
+
+      throw new Error("Wanted to insert after "+relativeId+" but I can't find it!")
+    }
+
+    Program.prototype.setParent = function(childId, parent) {
+      this.parentExpressionsByChildId[childId] = parent
+    }
+
+    Program.prototype.setKeyValue = function(pairExpression, newExpression, newElement) {
+
+      var key = pairExpression.key
+
+      var objectExpression = pairExpression.objectExpression
+
+      var oldExpression = objectExpression.valuesByKey[key]
+
+      objectExpression.valuesByKey[key] = newExpression
+
+      if (oldExpression.id != newExpression.id) {
+
+        delete program.parentExpressionsByChildId[oldExpression.id]
+
+        delete program.keyPairsByValueId[oldExpression.id]
+      }
+
+      program.parentExpressionsByChildId[newExpression.id] = pairExpression.objectExpression
+
+      program.keyPairsByValueId[newExpression.id] = pairExpression
+
+    }
+
+    return Program
+  }
+)
+
+
 module.exports = library.export(
   "draw-expression",
-  ["nrtv-element", "./an-expression", "function-call", "make-it-editable"],
-  function(element, anExpression, functionCall, makeItEditable) {
+  ["web-element", "./an-expression", "make-it-editable", "bridge-module", "program"],
+  function(element, anExpression, makeItEditable, bridgeModule, Program) {
 
-    // var expressionIds = []
-    // var expressionsById = {}
-    // var keyPairsByValueId
-    // var parentExpressionsByChildId
-
-    // function getProperty(property, expressionId) {
-    //   var expression = expressionsById[expressionId]
-    //   return expression[property]
-    // }
-
-    // function setProperty(property, expressionId, newValue, oldValue) {
-    //   var expression = expressionsById[expressionId]
-    //   expression[property] = newValue
-    //   programChanged()
-    // }
-
-    // function setFloatProperty(property, expressionId, newValue, oldValue) {
-    //   var expression = expressionsById[expressionId]
-    //   expression[property] = parseFloat(newValue)
-    //   programChanged()
-    // }
-
-    // function getKeyName(id) {
-    //   var pairExpression = expressionsById[id]
-    //   return pairExpression.key
-    // }
-
-    // function onKeyRename(pairId, newKey) {
-    //   var pairExpression = expressionsById[pairId]
-    //   var object = pairExpression.objectExpression.valuesByKey
-    //   var oldKey = pairExpression.key
-
-    //   pairExpression.key = newKey
-    //   object[newKey] = object[oldKey]
-
-    //   delete object[oldKey]
-    //   programChanged()
-    // }
-
-    // function getArgumentName(expressionId, index) {
-    //   var expression = expressionsById[expressionId]
-
-    //   return expression.argumentNames[index]
-    // }
-
-    // function renameArgument(expressionId, index, newName) {
-    //   var expression = expressionsById[expressionId]
-
-    //   expression.argumentNames[index] = newName
-
-    //   programChanged()
-    // }
-
-
-
-
-
-    // // LAST DESCENDANT AFTER
-
-    // function lastDescendantAfter(elementIds, startIndex) {
-
-    //   var possibleParentIds = [elementIds[startIndex]]
-    //   var lastDescendant = startIndex
-
-    //   for(var i = startIndex+1; i<elementIds.length; i++) {
-
-    //     var testId = elementIds[i]
-    //     var testExpr = expressionsById[testId]
-
-    //     var testParent = parentExpressionsByChildId[testId]
-
-    //     if (!testParent) {
-    //       var isDescendant = false
-    //     } else {
-    //       var testParentId = testParent.elementId
-    //       var isDescendant = contains(possibleParentIds, testParent.elementId)
-    //     }
-
-    //     if (isDescendant) {
-    //       possibleParentIds.push(testId)
-    //       lastDescendant = i
-    //     } else {
-    //       return lastDescendant
-    //     }      
-    //   }
-
-    //   return lastDescendant
-    // }
-
-    // function indexBefore(list, value) {
-
-    //   for(var i = 0; i < list.length; i++) {
-    //     if (list[i] == value) {
-    //       return i
-    //     }
-    //   }
-
-    //   throw new Error("can't find "+value+" to insert before it")
-
-    // }
-
-    // function indexAfter(elementIds, relativeId) {
-
-    //   var parentIdStack = []
-
-    //   for(var i = 0; i < elementIds.length; i++) {
-    //     var testId = elementIds[i]
-
-    //     if (testId == relativeId) {
-    //       return lastDescendantAfter(elementIds, i)+1
-    //     }
-    //   }
-
-    //   throw new Error("can't find "+relativeId+" to insert after it")
-    // }
-
-    // function contains(array, value) {
-    //   if (!Array.isArray(array)) {
-    //     throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
-    //   }
-    //   var index = -1;
-    //   var length = array.length;
-    //   while (++index < length) {
-    //     if (array[index] == value) {
-    //       return true;
-    //     }
-    //   }
-    //   return false;
-    // }
-
-
-
-
-
-
-
-
+    var programBinding
+    var programConstructor
 
 
 
@@ -149,18 +287,16 @@ module.exports = library.export(
 
     function prepareBridge(bridge) {
 
-      keyPairsBinding = bridge.defineSingleton("keyPairsByValueId", function() { return {} })
+      programConstructor = bridgeModule(library, "program", bridge)
 
-      parentExpressionsBinding = bridge.defineSingleton("parentExpressionsByChildId", function() { return {} })
+      var thisGetsPassedToTemplatesMaybe = bridgeModule(library, "make-it-editable", bridge)
 
-      parentExpressionsByChildId = {}
-      keyPairsByValueId = {}
-
-      addLine = bridge.defineFunction([parentExpressionsBinding], function addLine(parentExpressionsByChildId,ghostElementId, relativeToThisId, relationship, newExpression) {
+      addLine = bridge.defineFunction(function addLine(program,ghostElementId, relativeToThisId, relationship, newExpression) {
         
-        var parentExpression = parentExpressionsByChildId[relativeToThisId]
 
-        var relativeExpression = expressionsById[relativeToThisId]
+        var parentExpression = program.getParentOf(relativeToThisId)
+
+        var relativeExpression = program.getExpression(relativeToThisId)
 
         addExpressionToNeighbors(
           newExpression,
@@ -171,38 +307,18 @@ module.exports = library.export(
 
         newExpression.role = "function literal line"
 
-        if (relationship == "before") {
-
-          var splicePosition = indexBefore(expressionIds, relativeToThisId)
-          var deleteThisMany = 0
-
-        } else if (relationship == "after") {
-
-          var splicePosition = indexAfter(expressionIds, relativeToThisId)
-          var deleteThisMany = 0
-
-        } else if (relationship == "inPlaceOf") {
-
-          var splicePosition = 0
-          var deleteThisMany = 1
-
-        } else { throw new Error() }
-
         var newElement = expressionToElement(
-            newExpression)
+            newExpression, program)
 
-        parentExpressionsByChildId[newExpression.id] = parentExpression
-
-      
-        expressionIds.splice(splicePosition, deleteThisMany, newElement.id)
+        program.insertExpression(relationship, relativeToThisId, newExpression)
 
         var ghostElement = document.getElementById(ghostElementId)
 
         addHtml[relationship](ghostElement, newElement.html())
 
-        onNewExpression(parentExpression, newExpression)
+        program.newexpression(parentExpression, newExpression)
 
-        programChanged()
+        program.changed()
         hideSelectionControls()
         updateSelection()
         if (relationship != "inPlaceOf") {
@@ -210,47 +326,20 @@ module.exports = library.export(
         }
       })
 
+      replaceValue = bridge.defineFunction(function replaceValue(program, valueElementId, newExpression) {
 
-      rememberKeyValue = bridge.defineFunction(
-        [parentExpressionsBinding, keyPairsBinding],
-        function rememberKeyValue(parentExpressionsByChildId, keyPairsByValueId, valueElement, pairExpression) {
-
-        parentExpressionsByChildId[valueElement.id] = pairExpression.objectExpression
-
-        keyPairsByValueId[valueElement.id] = pairExpression
-
-        valueElement.classes.push("key-value")
-      })
-
-      var forgetKeyValue = bridge.defineFunction(
-        [keyPairsBinding, parentExpressionsBinding], 
-        function forgetKeyValue(keyPairsByValueId, parentExpressionsByChildId, oldExpression) {
-        delete parentExpressionsByChildId[oldExpression.id]
-
-        delete keyPairsByValueId[oldExpression.id]
-      })
-
-      replaceValue = bridge.defineFunction([rememberKeyValue, forgetKeyValue, keyPairsBinding],function replaceValue(rememberKeyValue, forgetKeyValue, keyPairsByValueId, valueElementId, newExpression) {
-
-        var pairExpression = keyPairsByValueId[valueElementId]
-
-        var objectExpression = pairExpression.objectExpression
-
-        var key = pairExpression.key
-
-        var oldExpression = objectExpression.valuesByKey[key]
-
-        objectExpression.valuesByKey[key] = newExpression
+        var pairExpression = program.getPairForValue(valueElementId)
 
         var oldElement = document.getElementById(valueElementId)
 
-        var newElement = expressionToElement(newExpression)
+        var newElement = expressionToElement(newExpression, program)
 
-        rememberKeyValue(newElement, pairExpression)
+        program.replaceKeyValue(pairExpression, newExpression, newElement)
+
+        newElement.classes.push("key-value")
 
         addHtml.inPlaceOf(oldElement, newElement.html())
 
-        forgetKeyValue(oldExpression)
 
       })
     }
@@ -284,9 +373,10 @@ module.exports = library.export(
       }
     )
 
+
     var renderFunctionCall = element.template(
       ".function-call",
-      function(expression) {
+      function(expression, program) {
         this.id = expression.id
 
         var button = element(
@@ -296,8 +386,8 @@ module.exports = library.export(
 
         makeItEditable(
           button,
-          functionCall(getProperty).withArgs("functionName", expression.id),
-          functionCall(setProperty).withArgs("functionName", expression.id)
+          programBinding.methodCall("getProperty").withArgs("functionName", expression.id),
+          programBinding.methodCall("setProperty").withArgs("functionName", expression.id)
         )
 
         this.children.push(button)
@@ -309,21 +399,21 @@ module.exports = library.export(
         container.children =
           argumentsToElements(
             expression.arguments,
-            expression
+            expression, program
           )
 
         this.children.push(container)
       }
     )
 
-    function argumentsToElements(args, parent) {
+    function argumentsToElements(args, parent, program) {
 
       var elements = []
       for(var i=0; i<args.length; i++) {
 
         var expression = args[i]
         var isFunctionCall = expression.kind == "function call"
-        var arg = expressionToElement(expression)
+        var arg = expressionToElement(expression, program)
 
         arg.classes.push(
           "function-argument")
@@ -353,8 +443,8 @@ module.exports = library.export(
 
         makeItEditable(
           this,
-          functionCall(getProperty).withArgs("string", expression.id),
-          functionCall(setProperty).withArgs("string", expression.id),
+          programBinding.methodCall("getProperty").withArgs("string", expression.id),
+          programBinding.methodCall("setProperty").withArgs("string", expression.id),
           {updateElement: stringElement}
         )
       }
@@ -369,15 +459,15 @@ module.exports = library.export(
 
         makeItEditable(
           this,
-          functionCall(getProperty).withArgs("number", expression.id),
-          functionCall(setFloatProperty).withArgs("number", expression.id)
+          programBinding.methodCall("getProperty").withArgs("number", expression.id),
+          programBinding.methodCall("setFloatProperty").withArgs("number", expression.id)
         )
       }
     )
 
     var functionLiteral = element.template(
       ".function-literal",
-      function(expression) {
+      function(expression, program) {
         this.id = expression.id
 
         var children = this.children
@@ -404,7 +494,7 @@ module.exports = library.export(
 
         children.push(argumentNames)
 
-        children.push(functionLiteralBody(expression))
+        children.push(functionLiteralBody(expression, program))
       }
     )
 
@@ -418,8 +508,8 @@ module.exports = library.export(
         
         makeItEditable(
           this,
-          functionCall(getArgumentName).withArgs(expression.id, argumentIndex),
-          functionCall(renameArgument).withArgs(expression.id, argumentIndex)
+          programBinding.methodCall("getArgumentName").withArgs(expression.id, argumentIndex),
+          programBinding.methodCall("renameArgument").withArgs(expression.id, argumentIndex)
         )
 
       }
@@ -427,7 +517,7 @@ module.exports = library.export(
 
     var functionLiteralBody = element.template(
       ".function-literal-body",
-      function(parent) {
+      function(parent, program) {
 
         var previous
 
@@ -439,7 +529,7 @@ module.exports = library.export(
 
           child.role = "function literal line"
 
-          var el = expressionToElement(child)
+          var el = expressionToElement(child, program)
 
           if (child.kind == "empty expression") {
 
@@ -452,7 +542,7 @@ module.exports = library.export(
             el.attributes.onclick = getExpression.withArgs(addIt).evalable()
           }
 
-          parentExpressionsByChildId[child.id] = parent
+          program.setParent(child.id, parent)
 
           el.classes.push("function-literal-line")
 
@@ -471,7 +561,7 @@ module.exports = library.export(
 
     var variableAssignment = element.template(
       ".variable-assignment",
-      function(expression) {
+      function(expression, program) {
         this.id = expression.id
 
         var nameSpan = element("span",
@@ -489,13 +579,13 @@ module.exports = library.export(
 
         makeItEditable(
           lhs,
-          functionCall(getProperty).withArgs("variableName", expression.id),
-          functionCall(setProperty).withArgs("variableName", expression.id),
+          programBinding.methodCall("getProperty").withArgs("variableName", expression.id),
+          programBinding.methodCall("setProperty").withArgs("variableName", expression.id),
           {updateElement: nameSpan}
         )
 
         var rhs = expressionToElement(
-          expression.expression)
+          expression.expression, program)
 
         // parentExpressionsByChildId[rhs.id] = expression
 
@@ -505,9 +595,10 @@ module.exports = library.export(
       }
     )
 
+
     var objectLiteral = element.template(
       ".object-literal",
-      function(expression) {
+      function(expression, program) {
         this.id = expression.id
 
         expression.keys = []
@@ -523,12 +614,13 @@ module.exports = library.export(
             id: anExpression.id()
           }
 
-          expressionsById[pair.id] = pair
+          program.addVirtualExpression(pair)
 
           var el = keyPairTemplate(
             pair,
-            functionCall(onKeyRename).withArgs(pair.id),
-            expression
+            programBinding.methodCall("onKeyRename").withArgs(pair.id),
+            expression,
+            program
           )
 
           this.children.push(el)
@@ -538,7 +630,7 @@ module.exports = library.export(
 
     var keyPairTemplate = element.template(
       ".key-pair",
-      function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression) {
+      function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression, program) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
@@ -558,7 +650,7 @@ module.exports = library.export(
 
         makeItEditable(
           keyButton,
-          functionCall(getKeyName).withArgs(pairExpression.id),
+          programBinding.methodCall("getKeyName").withArgs(pairExpression.id),
           keyRenameHandler,
           {updateElement: textElement}
         )
@@ -571,9 +663,11 @@ module.exports = library.export(
 
         var valueElement =
           expressionToElement(
-            valueExpression)
+            valueExpression, program)
 
-        rememberKeyValue(valueElement, pairExpression)
+        program.setKeyValue(pairExpression, valueExpression, valueElement)
+
+        valueElement.classes.push("key-value")
 
         this.children.push(valueElement)
 
@@ -593,10 +687,11 @@ module.exports = library.export(
       }
     )
 
+
     var arrayLiteral = element.template(
       ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
 
-      function(expression) {
+      function(expression, program) {
         this.id = expression.id
 
         var items = expression.items
@@ -606,7 +701,7 @@ module.exports = library.export(
         function itemToElement(item) {
           return element(
             ".array-item",
-            expressionToElement(item)
+            expressionToElement(item, program)
           )
         }
 
@@ -638,7 +733,7 @@ module.exports = library.export(
 
     var expressionIdWritePosition = 0
 
-    function expressionToElement(expression) {
+    function expressionToElement(expression, program) {
 
       var i = expressionIdWritePosition
       expressionIdWritePosition++
@@ -654,7 +749,8 @@ module.exports = library.export(
         throw new Error("No renderer for "+kind)
       }
 
-      var el = render(expression)
+      if (!program) {throw new Error()}
+      var el = render(expression, program)
 
       if (el.id && el.id != expression.id) {
         console.log("expression:", expression)
@@ -664,9 +760,7 @@ module.exports = library.export(
 
       el.id = expression.id
 
-      expressionsById[expression.id] = expression
-
-      expressionIds[i] = expression.id
+      program.addExpressionAt(expression, i)
 
       return el
     }
@@ -735,8 +829,9 @@ module.exports = library.export(
 
       var el = keyPairTemplate(
         pairExpression,
-        functionCall(onKeyRename).withArgs(pairExpression.id),
-        objectExpression
+        programBinding.methodCall("onKeyRename").withArgs(pairExpression.id),
+        objectExpression,
+        program
       )
 
       addHtml[relationship](neighbor, el.html())
@@ -774,19 +869,50 @@ module.exports = library.export(
 
     var drawing
 
-    function drawExpression(expression, options) {
-      if (!options) { options = {} }
+    function drawExpression(expression, bridge, getExpression) {
 
-      getExpression = options.getExpression
+      prepareBridge(bridge)
 
-      return expressionToElement(expression)
+      makeItEditable.prepareBridge(bridge)
+
+      programBinding = bridge.defineSingleton(
+        "program",
+        [programConstructor],
+        function(Program) {
+          return new Program()
+        }
+      )
+
+      program = new Program()
+
+      var el = expressionToElement(expression, program)
+
+      bridge.asap(
+        programBinding.methodCall("load")
+        .withArgs(program.data())
+      )
+
+      program.element = el
+      program.binding = programBinding
+
+      return program
     }
 
-    drawExpression.addKeyPair = addKeyPair
 
-    drawExpression.prepareBridge = prepareBridge
 
-    drawExpression.addFunctionArgument = addFunctionArgument
+    function contains(array, value) {
+      if (!Array.isArray(array)) {
+        throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+      }
+      var index = -1;
+      var length = array.length;
+      while (++index < length) {
+        if (array[index] == value) {
+          return true;
+        }
+      }
+      return false;
+    }
 
 
     return drawExpression

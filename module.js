@@ -2,8 +2,8 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "module",
-  ["an-expression", "add-html"],
-  function(anExpression) {
+  ["an-expression", "function-call"],
+  function(anExpression, functionCall) {
 
     function Module(program, name) {
       this.program = program
@@ -86,7 +86,7 @@ module.exports = library.export(
       return dashed
     }
 
-    function updateDependencies(parent, line) {
+    function updateDependencies(parent, line, callback) {
 
       if (line.kind != "function call") { return }
 
@@ -102,6 +102,9 @@ module.exports = library.export(
           addDependency(program, package, dep)
         }
       }
+
+      waitForScripts(callback)
+
     }
 
     function getDeps(newExpression) {
@@ -138,13 +141,49 @@ module.exports = library.export(
       addScriptTag(dep)
     }
 
+
+    var pendingScripts = []
+
     function addScriptTag(dep) {
+      var moduleName = dasherize(dep)
+
+      pendingScripts.push(moduleName)
 
       var el = document.createElement("script")
-      el.setAttribute("src", "/dependencies/"+dasherize(dep)+".library.js")
+      el.setAttribute("src", "/library/"+moduleName+".js")
       el.setAttribute("type","text/javascript")
 
+      var ready = functionCall("library.get").withArgs("module").methodCall("ready").withArgs(moduleName)
+
+      el.setAttribute("onload", ready.evalable())
+
       document.getElementsByTagName("head")[0].appendChild(el)
+    }
+
+    var waitingForScripts = []
+    function waitForScripts(callback) {
+      waitingForScripts.push(callback)
+    }
+
+    Module.ready = function(name) {
+      remove(pendingScripts, name)
+      if (pendingScripts.length > 0) {
+        return
+      }
+
+      var callback
+      while(
+        callback = waitingForScripts.shift()
+      ) {
+        callback()
+      }
+    }
+
+    function remove(array, item) {
+      var i = array.indexOf(item)
+      if (i >= 0) {
+        array.splice(i, 1)
+      }
     }
 
     Module.prepareBridge = function(bridge) {

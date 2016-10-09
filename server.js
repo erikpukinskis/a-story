@@ -10,7 +10,8 @@ library.using(
     "./an-expression",
     "./choose-expression",
     "./load-sample-home-page",
-    "./module"
+    "./module",
+    "./bridge-to"
   ],
   function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, chooseExpression, sampleHomePage, Module) {
 
@@ -34,20 +35,24 @@ library.using(
 
     var programName = loadedExpression.name || "unnamed"
 
-
     Module.prepareBridge(bridge)
 
     bridge.asap(
       bridge.defineFunction(
         [bridgeModule(library, "./module", bridge)],
-        function(Module, program, name) {
+        function runProgramOnChange(Module, program, name) {
           var mod = new Module(program, name)
 
-          mod.run()
+          mod.updateDependencies(
+            function() { mod.run() }
+          )
 
-          program.onchanged(module.run)
+          program.onchanged(mod.run)
 
-          program.onnewexpression(module.updateDependencies)
+          program.onnewexpression(function(parent, line) {
+            console.log("done")
+            // module.updateDependencies(parent, line, 
+          })
         }
       ).withArgs(program.binding, programName)
     )
@@ -91,14 +96,23 @@ library.using(
 
     server.addRoute(
       "get",
-      "/dependencies/:name.js",
+      "/library/:name.js",
       function(request, response) {
         var name = request.params.name
+
         console.log("looking for", name)
-        if (name.match(/[^.a-z-]/)) {
+
+        if (name.match(/[^a-z-]/)) {
           throw new Error("Dependencies can only have lowercase letters and dash. You asked for "+name)
         }
-        response.sendFile(__dirname+"/build/"+name+".js")
+
+        var bridge = new BrowserBridge()
+
+        var source = bridgeModule.definitionWithDeps(library, name, bridge)
+
+        response.setHeader('content-type', 'text/javascript')
+
+        response.send(source)
       }
     )
 

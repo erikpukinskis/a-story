@@ -2,8 +2,7 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "program",
-  ["an-expression"],
-  function(anExpression) {
+  function() {
 
     function Program() {
       this.expressionIds = []
@@ -267,6 +266,20 @@ module.exports = library.export(
 
     }
 
+    function contains(array, value) {
+      if (!Array.isArray(array)) {
+        throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+      }
+      var index = -1;
+      var length = array.length;
+      while (++index < length) {
+        if (array[index] == value) {
+          return true;
+        }
+      }
+      return false;
+    }
+    
     return Program
   }
 )

@@ -10,7 +10,10 @@ module.exports = library.export(
     var programBinding
     var programConstructor
 
-
+    var addLine
+    var addKeyPair
+    var addFunctionArgument
+    var replaceValue
 
     // EDITOR ///////////////////////
 
@@ -19,6 +22,100 @@ module.exports = library.export(
       programConstructor = bridgeModule(library, "./program", bridge)
 
       var thisGetsPassedToTemplatesMaybe = bridgeModule(library, "make-it-editable", bridge)
+
+      var addExpressionToNeighbors = bridge.defineFunction(function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
+        
+        for(var i = 0; i < neighbors.length; i++) {
+          var neighborExpression = neighbors[i]
+
+          if (neighborExpression == relativeExpression) {
+
+            lineIndex = i
+
+            if (relationship == "after") {
+              lineIndex++
+            }
+
+            break
+          }
+        }
+
+        if (relationship == "inPlaceOf") {
+          var deleteThisMany = 1
+        } else {
+          var deleteThisMany = 0
+        }
+
+        neighbors.splice(lineIndex, deleteThisMany,  newExpression)
+      })
+
+      addKeyPair = bridge.defineFunction(function addKeyPair(insertByThisId, relationship, objectExpressionId, relativeToKey) {
+
+        var objectExpression = expressionsById[objectExpressionId]
+
+        var index = objectExpression.keys.indexOf(relativeToKey)
+
+        if (relationship == "after") {
+          index = index + 1
+        }
+
+        objectExpression.keys.splice(index, 0, "")
+
+        var valueExpression = anExpression.emptyExpression()
+
+        valueExpression.role = "key value"
+
+        objectExpression.valuesByKey[""] = valueExpression
+
+        var neighbor = document.getElementById(insertByThisId)
+
+        var pairExpression = {
+          key: "",
+          objectExpression: objectExpression,
+          id: anExpression.id()
+        }
+
+        expressionsById[pairExpression.id] = pairExpression
+
+        var el = keyPairTemplate(
+          pairExpression,
+          programBinding.methodCall("onKeyRename").withArgs(pairExpression.id),
+          objectExpression,
+          program
+        )
+
+        addHtml[relationship](neighbor, el.html())
+
+        console.log("ya")
+        updateSelection({controls: "none"})
+
+        el.startEditing()
+      })
+
+      addFunctionArgument = bridge.defineFunction(function addFunctionArgument(program, expressionId, dep) {
+
+        var functionExpression = program.getExpression(expressionId)
+
+        // This part is the program manipulation part:
+
+        var index = functionExpression.argumentNames.length
+
+        functionExpression.argumentNames.push(dep)
+
+        // and then we have the editor part:
+
+        var el = argumentName(functionExpression, dep, index)
+
+        var selector = "#"+expressionId+" .function-argument-names"
+
+        var container = document.querySelector(selector)
+
+        addHtml.inside(
+          container, el.html()
+        )
+
+      })
+
 
       addLine = bridge.defineFunction(function addLine(program,ghostElementId, relativeToThisId, relationship, newExpression) {
         
@@ -502,102 +599,6 @@ module.exports = library.export(
       }
     }
 
-    function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
-      
-      for(var i = 0; i < neighbors.length; i++) {
-        var neighborExpression = neighbors[i]
-
-        if (neighborExpression == relativeExpression) {
-
-          lineIndex = i
-
-          if (relationship == "after") {
-            lineIndex++
-          }
-
-          break
-        }
-      }
-
-      if (relationship == "inPlaceOf") {
-        var deleteThisMany = 1
-      } else {
-        var deleteThisMany = 0
-      }
-
-      neighbors.splice(lineIndex, deleteThisMany,  newExpression)
-    }
-
-    function addKeyPair(insertByThisId, relationship, objectExpressionId, relativeToKey) {
-
-      var objectExpression = expressionsById[objectExpressionId]
-
-      var index = objectExpression.keys.indexOf(relativeToKey)
-
-      if (relationship == "after") {
-        index = index + 1
-      }
-
-      objectExpression.keys.splice(index, 0, "")
-
-      var valueExpression = anExpression.emptyExpression()
-
-      valueExpression.role = "key value"
-
-      objectExpression.valuesByKey[""] = valueExpression
-
-      var neighbor = document.getElementById(insertByThisId)
-
-      var pairExpression = {
-        key: "",
-        objectExpression: objectExpression,
-        id: anExpression.id()
-      }
-
-      expressionsById[pairExpression.id] = pairExpression
-
-      var el = keyPairTemplate(
-        pairExpression,
-        programBinding.methodCall("onKeyRename").withArgs(pairExpression.id),
-        objectExpression,
-        program
-      )
-
-      addHtml[relationship](neighbor, el.html())
-
-      console.log("ya")
-      updateSelection({controls: "none"})
-
-      el.startEditing()
-    }
-
-    function addFunctionArgument(expressionId, dep) {
-
-      // This part is the program manipulation part:
-
-      var package = expressionsById[expressionId]
-
-      var index = package.argumentNames.length
-
-      package.argumentNames.push(dep)
-
-
-      // and then we have the editor part:
-
-      var el = argumentName(package, dep, index)
-
-      var selector = "#"+expressionId+" .function-argument-names"
-
-      var container = document.querySelector(selector)
-
-      addHtml.inside(
-        container, el.html()
-      )
-
-    }
-
-    var drawing
-
     function drawExpression(expression, bridge, getExpression) {
 
       prepareBridge(bridge)
@@ -623,6 +624,14 @@ module.exports = library.export(
 
       program.element = el
       program.binding = programBinding
+
+      program.bindings = {
+        program: programBinding,
+        addLine: addLine,
+        addKeyPair: addKeyPair,
+        addFunctionArgument: addFunctionArgument,
+        replaceValue: replaceValue
+      }
 
       return program
     }

@@ -94,17 +94,9 @@ module.exports = library.export(
 
       addFunctionArgument = bridge.defineFunction(function addFunctionArgument(program, expressionId, dep) {
 
-        var functionExpression = program.getExpression(expressionId)
+        var index = program.addFunctionArgument(expressionId, dep)
 
-        // This part is the program manipulation part:
-
-        var index = functionExpression.argumentNames.length
-
-        functionExpression.argumentNames.push(dep)
-
-        // and then we have the editor part:
-
-        var el = argumentName(functionExpression, dep, index)
+        var el = argumentName(expressionId, dep, index)
 
         var selector = "#"+expressionId+" .function-argument-names"
 
@@ -313,7 +305,7 @@ module.exports = library.export(
           ".function-argument-names",
           expression.argumentNames.map(
             function(name, index) {
-              return argumentName(expression, name, index)
+              return argumentName(expression.id, name, index)
             }
           )
         )
@@ -326,7 +318,7 @@ module.exports = library.export(
 
     var argumentName = element.template(
       ".button.argument-name",
-      function(expression, name, argumentIndex) {
+      function(expressionId, name, argumentIndex) {
 
         this.children.push(
           element.raw(name)
@@ -334,8 +326,8 @@ module.exports = library.export(
         
         makeItEditable(
           this,
-          programBinding.methodCall("getArgumentName").withArgs(expression.id, argumentIndex),
-          programBinding.methodCall("renameArgument").withArgs(expression.id, argumentIndex)
+          programBinding.methodCall("getArgumentName").withArgs(expressionId, argumentIndex),
+          programBinding.methodCall("renameArgument").withArgs(expressionId, argumentIndex)
         )
 
       }

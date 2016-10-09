@@ -137,6 +137,17 @@ module.exports = library.export(
       this.changed()
     }
 
+    Program.prototype.addFunctionArgument = function(expressionId, name) {
+
+      var functionExpression = this.expressionsById[expressionId]
+
+      var index = functionExpression.argumentNames.length
+
+      functionExpression.argumentNames.push(name)
+
+      return index
+    }
+
     Program.prototype.addVirtualExpression = function(newExpression) {
 
       this.expressionsById[newExpression.id] = newExpression
@@ -279,7 +290,7 @@ module.exports = library.export(
       }
       return false;
     }
-    
+
     return Program
   }
 )

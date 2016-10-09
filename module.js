@@ -11,6 +11,7 @@ module.exports = library.export(
       this.run = run.bind(this)
       this.updateDependencies = updateDependencies.bind(this)
       this.depsAvailable = false
+      this.loadDependencies = loadDependencies.bind(this)
     }
 
     function run() {
@@ -86,25 +87,38 @@ module.exports = library.export(
       return dashed
     }
 
+    function loadDependencies(deps, callback) {
+      var program = this.program
+      var package = program.rootExpression()
+
+      deps.forEach(function(dep) {
+        addScriptTag(dep)
+      })
+
+      waitForScripts(callback)
+
+    }
+
     function updateDependencies(parent, line, callback) {
 
       if (line.kind != "function call") { return }
 
-      var deps = getDeps(line)
-      var package = getPackageFunctionLiteral(parent)
       var program = this.program
+      var package = program.rootExpression()
+      var alreadyIn = package.argumentNames
 
-      deps.forEach(requireIt)
+      getDeps(line).forEach(requireIt)
 
       function requireIt(dep) {
-        var isMissing = package.argumentNames.indexOf(dep) == -1
+        var isMissing = !contains(alreadyIn, dep)
+
         if (isMissing) {
-          addDependency(program, package, dep)
+          program.addFunctionArgument(package.id, dep)
+          addScriptTag(dep)
         }
       }
 
       waitForScripts(callback)
-
     }
 
     function getDeps(newExpression) {
@@ -135,12 +149,6 @@ module.exports = library.export(
       }
     }
 
-    function addDependency(program, package, dep) {
-      program.addFunctionArgument(package.id, dep)
-
-      addScriptTag(dep)
-    }
-
 
     var pendingScripts = []
 
@@ -162,7 +170,11 @@ module.exports = library.export(
 
     var waitingForScripts = []
     function waitForScripts(callback) {
-      waitingForScripts.push(callback)
+      if (pendingScripts.length < 1) {
+        callback()
+      } else {
+        waitingForScripts.push(callback)
+      }
     }
 
     Module.ready = function(name) {

@@ -2,7 +2,7 @@ var anExpression = require("./an-expression")
 
 var loadedProgram = anExpression({
   kind: "function literal",
-  argumentNames: ["module", "bridgeTo"],
+  argumentNames: ["webElement", "bridgeTo"],
   body: [
     {
       kind: "variable assignment",

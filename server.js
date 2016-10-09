@@ -43,15 +43,18 @@ library.using(
         function runProgramOnChange(Module, program, name) {
           var mod = new Module(program, name)
 
-          mod.updateDependencies(
-            function() { mod.run() }
-          )
+          var dependencies = program.rootExpression().argumentNames
+
+          mod.loadDependencies(dependencies, function() {
+            console.log("first run!")
+            mod.run() 
+          })
 
           program.onchanged(mod.run)
 
           program.onnewexpression(function(parent, line) {
-            console.log("done")
-            // module.updateDependencies(parent, line, 
+            console.log("runnin...")
+            module.updateDependencies(parent, line, mod.run)
           })
         }
       ).withArgs(program.binding, programName)

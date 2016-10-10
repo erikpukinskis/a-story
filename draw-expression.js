@@ -80,7 +80,6 @@ module.exports = library.export(
         var el = keyPairTemplate(
           pairExpression,
           programBinding.methodCall("onKeyRename").withArgs(pairExpression.id),
-          objectExpression,
           program
         )
 
@@ -436,7 +435,6 @@ module.exports = library.export(
           var el = keyPairTemplate(
             pair,
             programBinding.methodCall("onKeyRename").withArgs(pair.id),
-            expression,
             program
           )
 
@@ -447,7 +445,7 @@ module.exports = library.export(
 
     var keyPairTemplate = element.template(
       ".key-pair",
-      function keyPairTemplate(pairExpression, keyRenameHandler, objectExpression, program) {
+      function keyPairTemplate(pairExpression, keyRenameHandler, program) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
@@ -474,9 +472,7 @@ module.exports = library.export(
 
         this.children.push(keyButton)
 
-        var valueExpression = objectExpression.valuesByKey[key]
-
-        valueExpression.key = key
+        var valueExpression = pairExpression.objectExpression.valuesByKey[key]
 
         var valueElement =
           expressionToElement(

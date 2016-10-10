@@ -222,11 +222,6 @@ module.exports = library.export(
       return index
     }
 
-    Program.prototype.addVirtualExpression = function(newExpression) {
-
-      this.expressionsById[newExpression.id] = newExpression
-    }
-
     Program.prototype.addExpressionAt = function(newExpression, i) {
 
       this.expressionsById[newExpression.id] = newExpression
@@ -328,6 +323,11 @@ module.exports = library.export(
       this.parentExpressionsByChildId[childId] = parent
     }
 
+    Program.prototype.addVirtualExpression = function(expression) {
+
+      this.expressionsById[expression.id] = expression
+    }
+
     Program.prototype.setKeyValue = function(pairExpression, newExpression, newElement) {
 
       var key = pairExpression.key
@@ -337,6 +337,8 @@ module.exports = library.export(
       var oldExpression = objectExpression.valuesByKey[key]
 
       objectExpression.valuesByKey[key] = newExpression
+
+      newExpression.key = key
 
       if (oldExpression.id != newExpression.id) {
 

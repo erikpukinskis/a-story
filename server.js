@@ -1,5 +1,9 @@
 var library = require("nrtv-library")(require)
 
+library.using([
+  "./bridge-to"
+], function() {})
+
 library.using(
   [
     "nrtv-server",
@@ -11,7 +15,6 @@ library.using(
     "./choose-expression",
     "./load-sample-home-page",
     "./module",
-    "./bridge-to"
   ],
   function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, chooseExpression, sampleHomePage, Module) {
 
@@ -32,6 +35,23 @@ library.using(
     var loadedExpression = sampleHomePage
 
     var program = drawExpression(loadedExpression, bridge, chooseExpression)
+
+    bridge.asap(
+      bridge.defineFunction([
+        bridgeModule(library, "./scroll-to-select", bridge),
+        bridgeModule(library, "./line-controls", bridge),
+        program.binding
+      ], function showControlsOnScroll(scrollToSelect, lineControls, program) {
+
+        var controls = lineControls(program)
+
+        scrollToSelect({
+          getIds: program.getIds,
+          show: controls.show,
+          hide: controls.hide
+        })
+      })
+    )
 
     var programName = loadedExpression.name || "unnamed"
 

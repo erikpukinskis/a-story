@@ -11,6 +11,7 @@ module.exports = library.export(
       this.parentExpressionsByChildId = {}
       this.onchangedCallbacks = []
       this.onnewexpressionCallbacks = []
+      this.getIds = getIds.bind(this)
     }
 
     Program.prototype.rootExpression = function() {
@@ -157,7 +158,9 @@ module.exports = library.export(
       this.expressionIds.forEach(rehydrate) 
     }
 
-
+    function getIds() {
+      return this.expressionIds
+    }
 
     Program.prototype.getProperty = function(property, expressionId) {
       var expression = this.expressionsById[expressionId]

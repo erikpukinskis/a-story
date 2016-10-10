@@ -2,7 +2,7 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "menu",
-  ["nrtv-element"],
+  ["web-element"],
   function(element) {
     var values
     var menuCallback

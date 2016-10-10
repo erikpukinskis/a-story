@@ -1,7 +1,6 @@
 var library = require("nrtv-library")(require)
 
 
-
 module.exports = library.export(
   "draw-expression",
   ["web-element", "./an-expression", "make-it-editable", "bridge-module", "./program"],
@@ -22,6 +21,7 @@ module.exports = library.export(
       programConstructor = bridgeModule(library, "./program", bridge)
 
       var thisGetsPassedToTemplatesMaybe = bridgeModule(library, "make-it-editable", bridge)
+
 
       var addExpressionToNeighbors = bridge.defineFunction(function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
         

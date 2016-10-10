@@ -15,10 +15,6 @@ module.exports = library.export(
     }
 
     function run() {
-      if (!this.depsAvailable) {
-        this.program.rootExpression().argumentNames.map(addScriptTag)
-      }
-
       window.__nrtvFocusSelector = ".output"
 
       document.querySelector(".output").innerHTML = ""
@@ -26,6 +22,8 @@ module.exports = library.export(
       var moduleExpression = packageExpression(this.program.rootExpression())
 
       anExpression.run(moduleExpression, name)
+      window.__nrtvFocusSelector = null
+
     }
 
     function packageExpression(functionLiteral) {

@@ -50,19 +50,80 @@ module.exports = library.export(
     function call(func) { func() }
 
     Program.prototype.data = function() {
-      var parentExpressionIds = {}
+      var parents = {}
+      var dehydratedById = {}
+      var program = this
 
-      for(var childId in this.parentExpressionsByChildId) {
-        var parentId = this.parentExpressionsByChildId[childId]
+      this.expressionIds.forEach(function(id) {
 
-        parentExpressionIds[childId] = parentId
-      }
+        var expression = program.expressionsById[id]
+        var parentId = program.parentExpressionsByChildId[id]
+
+        if (parentId) {
+          parents[id] = parentId
+        }
+
+        var dehydrated = {}
+        for(var key in expression) {
+          dryCopy(key, expression, dehydrated)
+        }
+
+        dehydratedById[id] = dehydrated
+      })
 
       return {
         expressionIds: this.expressionIds,
-        expressionsById: this.expressionsById,
-        keyPairsByValueId: this.keyPairsByValueId,
-        parentExpressionIds: parentExpressionIds
+        expressionsById: dehydratedById,
+        keyPairsByValueId: null,
+        parents: parents
+      }
+    }
+
+    function dryCopy(attribute, expression, dehydrated) {
+
+      switch(attribute) {
+        case "body":
+        case "arguments":
+        case "items":
+          dehydrated[attribute] = expression[attribute].map(toId)
+          break
+        case "expression":
+          dehydrated[attribute] = toId(expression[attribute])
+          break
+        case "valuesByKey":
+          dehydrated[attribute] = {}
+          for(var key in expression.valuesByKey) {
+            dehydrated[attribute][key] = toId(expression[attribute][key])
+          }
+          break
+        default:
+          dehydrated[attribute] = expression[attribute]
+      }
+    }
+
+    function toId(x) { return x.id }
+
+    function wetCopy(attribute, dehydrated, expressionsById) {
+
+      function toExpression(id) {
+        return expressionsById[id]
+      }
+      switch(attribute) {
+        case "body":
+        case "arguments":
+        case "items":
+          dehydrated[attribute] = dehydrated[attribute].map(toExpression)
+          break
+        case "expression":
+          dehydrated[attribute] = toExpression(dehydrated[attribute])
+          break
+        case "valuesByKey":
+          var ids = dehydrated.valuesByKey
+          dehydrated.valuesByKey = {}
+          for(var key in ids) {
+            dehydrated.valuesByKey[key] = toExpression(ids[key])
+          }
+          break
       }
     }
 
@@ -72,15 +133,28 @@ module.exports = library.export(
 
       this.expressionsById = data.expressionsById
 
-      this.keyPairsByValueId = data.keyPairsByValueId
+      this.keyPairsByValueId
 
       this.parentExpressionsByChildId = {}
 
-      for(var childId in data.parentExpressionIds) {
-        var parentId = data.parentExpressionIds[childId]
+      var program = this
 
-        this.parentExpressionsByChildId[childId] = this.expressionsById[parentId]
+      function rehydrate(id) {
+
+        var dehydrated = program.expressionsById[id]
+
+        for(var attribute in dehydrated) {
+          wetCopy(attribute, dehydrated, program.expressionsById)
+        }
+
+        var parentId = data.parents[id]
+
+        if (parentId) {
+          program.parentExpressionsByChildId[id] = program.expressionsById[parentId]
+        }
       }
+
+      this.expressionIds.forEach(rehydrate) 
     }
 
 

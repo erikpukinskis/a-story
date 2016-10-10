@@ -46,14 +46,12 @@ library.using(
           var dependencies = program.rootExpression().argumentNames
 
           mod.loadDependencies(dependencies, function() {
-            console.log("first run!")
             mod.run() 
           })
 
           program.onchanged(mod.run)
 
           program.onnewexpression(function(parent, line) {
-            console.log("runnin...")
             module.updateDependencies(parent, line, mod.run)
           })
         }
@@ -102,8 +100,6 @@ library.using(
       "/library/:name.js",
       function(request, response) {
         var name = request.params.name
-
-        console.log("looking for", name)
 
         if (name.match(/[^a-z-]/)) {
           throw new Error("Dependencies can only have lowercase letters and dash. You asked for "+name)

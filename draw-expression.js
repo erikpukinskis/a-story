@@ -86,7 +86,6 @@ module.exports = library.export(
 
         addHtml[relationship](neighbor, el.html())
 
-        console.log("ya")
         updateSelection({controls: "none"})
 
         el.startEditing()

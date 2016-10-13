@@ -13,7 +13,7 @@ module.exports = library.export(
     }
 
 
-    var lastExpressionInteger = 1999*1999
+    var lastExpressionInteger = typeof window == "undefined" ? 1000*1000 : 1000
 
     function anExpression(json) {
       if (!json) { return }

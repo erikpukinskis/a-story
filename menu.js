@@ -2,10 +2,11 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "menu",
-  ["web-element"],
-  function(element) {
+  ["web-element", "tap-away", "add-html"],
+  function(element, tapAway, addHtml) {
     var values
     var menuCallback
+    var containerId
 
     var template = element.template(
       ".menu",
@@ -35,7 +36,7 @@ module.exports = library.export(
 
           var index = values.length
 
-          var onclick = "menu.choose(\""+index+"\", event)"
+          var onclick = "__chooseFromMenu(\""+index+"\", event)"
 
           values[index]= choice.value
 
@@ -51,26 +52,30 @@ module.exports = library.export(
       }
     )
 
-    function chooseFromMenu(containerId, menuCallback, i, event) {
+    function chooseFromMenu(i, event) {
       event.preventDefault()
-      document.getElementById(containerId).hide()
+      document.getElementById(containerId).style.display = "none"
       menuCallback(values[i])
     }
 
     function showMenu()  {
       var menuElement = template.apply(null, arguments)
 
-      container = tapOut.catcher(
+      container = tapAway.catcher(
         menuElement,
         function() {
           console.log("cancelled menu!")
         }
       )
-      container.assignId()
+      containerId = container.assignId()
 
       container.attributes.display = "block"
 
       addHtml(container.html())
+
+      if (!window.__chooseFromMenu) {
+        window.__chooseFromMenu = chooseFromMenu
+      }
     }
 
     showMenu.choice = function (label, value) {

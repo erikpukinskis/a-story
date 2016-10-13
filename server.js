@@ -1,7 +1,7 @@
 var library = require("nrtv-library")(require)
 
 library.using([
-  "./bridge-to"
+  "./bridge-to" // need this until we can unify this with browser-bridge or make it its own module or something.
 ], function() {})
 
 library.using(
@@ -36,14 +36,51 @@ library.using(
 
     var program = drawExpression(loadedExpression, bridge, chooseExpression)
 
+    bridge.asap("var functionCall = library.get(\"function-call\")")
+
+
+    ///////////////// ONE
+
+    var functionCall = require("function-call")
+    var chobe = bridgeModule(library, "./choose-expression", bridge).asBinding()
+
+    var binding = eval(chobe.callable())
+    var chobeOut = binding.withArgs(true).evalable()
+    // should not bind to library
+
+
+    ///////////////// TWO
+
+    var addBinding = eval(program.bindings.addLine.asBinding().callable())
+    var addOut = addBinding.withArgs(true).evalable()
+
+    // should not bind to addLine
+
+    /////////////////////
+    var asB = program.binding.asBinding().callable()
+
+    debugger
+
     bridge.asap(
       bridge.defineFunction([
         bridgeModule(library, "./scroll-to-select", bridge),
         bridgeModule(library, "./line-controls", bridge),
-        program.binding
-      ], function showControlsOnScroll(scrollToSelect, lineControls, program) {
+        bridgeModule(library, "./choose-expression", bridge).asBinding(),
+        program.binding,
+        program.binding.asBinding(),
+        program.bindings.addKeyPair.asBinding(),
+        program.bindings.addLine.asBinding()
+      ], function showControlsOnScroll(scrollToSelect, lineControls, chooseExpression, program, programBinding, addKeyPair, addLine) {
 
-        var controls = lineControls(program)
+        var controls = lineControls(
+          program,
+          {
+            program: programBinding,
+            chooseExpression: chooseExpression,
+            addLine: addLine,
+            addKeyPair: addKeyPair
+          }
+        )
 
         scrollToSelect({
           getIds: program.getIds,

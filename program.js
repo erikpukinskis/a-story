@@ -2,7 +2,8 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "program",
-  function() {
+  ["an-expression"],
+  function(anExpression) {
 
     function Program() {
       this.expressionIds = []
@@ -17,6 +18,14 @@ module.exports = library.export(
     Program.prototype.rootExpression = function() {
       var rootId = this.expressionIds[0]
       return this.expressionsById[rootId]
+    }
+
+    Program.prototype.get = function(id) {
+      return this.expressionsById[id]
+    }
+
+    Program.prototype.getParentOf = function(id) {
+      return this.parentExpressionsByChildId[id]
     }
 
     Program.prototype.onchanged = function(callback) {
@@ -58,10 +67,10 @@ module.exports = library.export(
       this.expressionIds.forEach(function(id) {
 
         var expression = program.expressionsById[id]
-        var parentId = program.parentExpressionsByChildId[id]
+        var parent = program.parentExpressionsByChildId[id]
 
-        if (parentId) {
-          parents[id] = parentId
+        if (parent) {
+          parents[id] = parent.id
         }
 
         var dehydrated = {}
@@ -104,10 +113,10 @@ module.exports = library.export(
 
     function toId(x) { return x.id }
 
-    function wetCopy(attribute, dehydrated, expressionsById) {
+    function wetCopy(attribute, dehydrated, program) {
 
       function toExpression(id) {
-        return expressionsById[id]
+        return program.expressionsById[id]
       }
       switch(attribute) {
         case "body":
@@ -119,10 +128,15 @@ module.exports = library.export(
           dehydrated[attribute] = toExpression(dehydrated[attribute])
           break
         case "valuesByKey":
+          var objectExpression = dehydrated
           var ids = dehydrated.valuesByKey
-          dehydrated.valuesByKey = {}
+          objectExpression.valuesByKey = {}
           for(var key in ids) {
-            dehydrated.valuesByKey[key] = toExpression(ids[key])
+            program.addKeyPair(
+              objectExpression,
+              key,
+              program.get(ids[key])
+            )
           }
           break
       }
@@ -145,7 +159,7 @@ module.exports = library.export(
         var dehydrated = program.expressionsById[id]
 
         for(var attribute in dehydrated) {
-          wetCopy(attribute, dehydrated, program.expressionsById)
+          wetCopy(attribute, dehydrated, program)
         }
 
         var parentId = data.parents[id]
@@ -202,8 +216,8 @@ module.exports = library.export(
       return expression.argumentNames[index]
     }
 
-    Program.prototype.getPairForValue = function(valueElementId) {
-      return this.keyPairsByValueId[valueElementId]
+    Program.prototype.getPairForValueId = function(valueExpressionId) {
+      return this.keyPairsByValueId[valueExpressionId]
     }
 
     Program.prototype.renameArgument = function(expressionId, index, newName) {
@@ -331,7 +345,29 @@ module.exports = library.export(
       this.expressionsById[expression.id] = expression
     }
 
-    Program.prototype.setKeyValue = function(pairExpression, newExpression, newElement) {
+    Program.prototype.addKeyPair = function(objectExpression, key, valueExpression) {
+
+      if (!objectExpression.keys) {
+        objectExpression.keys = []
+      }
+      
+      objectExpression.keys.push(key)
+
+      var pair = {
+        kind: "key pair",
+        key: key,
+        objectExpression: objectExpression,
+        id: anExpression.id()
+      }
+
+      objectExpression.valuesByKey[key] = valueExpression
+
+      this.keyPairsByValueId[valueExpression.id] = pair
+
+      return pair
+    }
+
+    Program.prototype.setKeyValue = function(pairExpression, newExpression) {
 
       var key = pairExpression.key
 
@@ -355,6 +391,7 @@ module.exports = library.export(
       program.keyPairsByValueId[newExpression.id] = pairExpression
 
     }
+
 
     function contains(array, value) {
       if (!Array.isArray(array)) {

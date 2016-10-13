@@ -107,12 +107,13 @@ module.exports = library.export(
       })
 
 
-      addLine = bridge.defineFunction(function addLine(program,ghostElementId, relativeToThisId, relationship, newExpression) {
+      addLine = bridge.defineFunction(
+        function addLine(program,ghostElementId, relativeToThisId, relationship, newExpression) {
         
 
         var parentExpression = program.getParentOf(relativeToThisId)
 
-        var relativeExpression = program.getExpression(relativeToThisId)
+        var relativeExpression = program.get(relativeToThisId)
 
         addExpressionToNeighbors(
           newExpression,
@@ -417,20 +418,11 @@ module.exports = library.export(
       function(expression, program) {
         this.id = expression.id
 
-        expression.keys = []
-
         for(var key in expression.valuesByKey) {
 
-          expression.keys.push(key)
+          var valueExpression = expression.valuesByKey[key]
 
-          var pair = {
-            kind: "key pair",
-            key: key,
-            objectExpression: expression,
-            id: anExpression.id()
-          }
-
-          program.addVirtualExpression(pair)
+          var pair = program.addKeyPair(expression, key, valueExpression)
 
           var el = keyPairTemplate(
             pair,

@@ -2,91 +2,83 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  function() {
+  ["web-element", "function-call", "add-html"],
+  function(element, functionCall, addHtml) {
     var selectionIsHidden = true
     var controlsAreVisible
+    var controlsSelector
 
-    function LineControls(program) {
+    function LineControls(program, bindings) {
+
       this.program = program
+      this.bindings = bindings
       this.show = showControls.bind(this)
       this.hide = hideControls.bind(this)
     }
 
-    function getSelectedKeyValue(expressionId) {
-      var expression = expressionsById[expressionId]
+    function showControls(selectedElement) {
 
-      var nextId = expressionId
-      var parent
-      var possibleValueExpression = expression
+      var selectedExpressionId = selectedElement.id
 
-      while(parent = parentExpressionsByChildId[nextId]) {
-        if (parent.kind == "object literal") {
-          var keyPair = keyPairsByValueId[possibleValueExpression.id]
+      var pairExpression = getSelectedKeyPair(this.program, selectedExpressionId)
 
-          return keyPair
-        }
-        possibleValueExpression = parent
-        nextId = parent.id
+      var isLine = this.program.get(selectedElement.id).role == "function literal line"
+
+      controlsSelector = ".controls-for-"+selectedElement.id
+
+      if (pairExpression) {
+        showKeyValueControls(pairExpression, this.bindings.addKeyPair)
+      } else if (isLine) {
+        showLineControls(selectedElement, this.bindings)
       }
+
     }
 
-    function showControls(selectedElementId) {
-      throw new Error("port this to program")
-      var expression = expressionsById[selectedElementId]
+    function showLineControls(lineElement, bindings) {
 
-      var valueExpression = getSelectedKeyValue(selectedElementId)
+      showPlusses(
+        lineElement,
+        function addClickHandler(plusButton, relativeToThisId, relationship) {
 
-      if (valueExpression) {
+          var add = bindings.addLine.withArgs(
+            bindings.program,
+            plusButton.assignId(),
+            relativeToThisId,
+            relationship
+          )
 
-        var valueElement = document.getElementById(valueExpression.id)
+          var showMenu = bindings.chooseExpression.withArgs(add)
 
-        var objectExpression = valueExpression.objectExpression
+          plusButton.onclick(showMenu)
+        }
+      )
 
-        showPlusses(
-          valueElement,
-          function(baby, relativeToThisId, relationship) {
+    }
 
-            var add = 
-              functionCall("drawExpression.addKeyPair")
-              .withArgs(
-                baby.assignId(),
-                relationship,
-                objectExpression.id,
-                valueExpression.key
-              )
+    function showKeyValueControls(pair, addKeyPair) {
 
-            baby.onclick(add)
-          }
-        )
+      var pairElement = document.getElementById(pair.id)
 
-      } else if (expression.role == "function literal line") {
+      var objectExpression = pair.objectExpression
 
-        showPlusses(
-          currentSelection,
-          function(baby, relativeToThisId, relationship) {
+      showPlusses(
+        pairElement,
+        function addClickHandler(plusButton, relativeToThisId, relationship) {
 
-            var addLine =
-              functionCall(
-                "drawExpression.addLine")
-              .withArgs(
-                baby.assignId(),
-                relativeToThisId,
-                relationship
-              )
+          var add = addKeyPair.withArgs(
+            plusButton.assignId(),
+            relationship,
+            objectExpression.id,
+            pair.key
+          )
 
-            var showMenu = functionCall(chooseExpression).withArgs(addLine)
-
-            baby.onclick(showMenu)
-          }
-        )
-
-      }
+          plusButton.onclick(add)
+        }
+      )
 
     }
 
     function showPlusses(selectedNode, addClickHandler) {
-
-      controlsSelector = ".controls-for-"+selectedNode.id
 
       var controls = document.querySelectorAll(controlsSelector)
 
@@ -125,6 +117,24 @@ module.exports = library.export(
 
     }
 
+    function getSelectedKeyPair(program, expressionId) {
+
+      var expression = program.get(expressionId)
+
+      var nextId = expressionId
+      var parent
+      var possibleValueExpression = expression
+
+      while(parent = program.getParentOf(nextId)) {
+        if (parent.kind == "object literal") {
+          var keyPair = program.getPairForValueId(possibleValueExpression.id)
+
+          return keyPair
+        }
+        possibleValueExpression = parent
+        nextId = parent.id
+      }
+    }
 
     function hideControls() {
       controlsAreVisible = false
@@ -147,6 +157,7 @@ module.exports = library.export(
     var verticalCameraOffset = 0
 
     function offsetCameraUp(lines) {
+      return
       var orig = verticalCameraOffset
 
       verticalCameraOffset += lines
@@ -159,8 +170,10 @@ module.exports = library.export(
     }
 
 
-    return function(program) {
-      return new LineControls(program)
+    return function() {
+      var args = Array.prototype.slice.call(arguments)
+
+      return new (Function.prototype.bind.apply(LineControls, [null].concat(args)))
     }
   }
 )

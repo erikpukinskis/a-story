@@ -2,13 +2,19 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "program",
-  ["an-expression", "function-call"],
+  ["./an-expression", "function-call"],
   function(anExpression, functionCall) {
 
-    var lastProgramId = 0
-    function Program(data) {
+    var programs = {}
+    var lastProgramId = 300
+    function makeId() {
       lastProgramId++
-      this.id = lastProgramId
+      return "prog-"+lastProgramId.toString(36)
+    }
+
+    function Program(data) {
+      this.id = makeId()
+      programs[this.id] = this
       this.expressionIds = []
       this.expressionsById = {}
       this.keyPairsByValueId = {}
@@ -18,6 +24,10 @@ module.exports = library.export(
       this.getIds = getIds.bind(this)
 
       if (data) { this.load(data) }
+    }
+
+    Program.findById = function(id) {
+      return programs[id]
     }
 
     Program.prototype.asBinding = function() {
@@ -258,9 +268,9 @@ module.exports = library.export(
 
     Program.prototype.insertExpression = function(newExpression, relationship, relativeToThisId) {
 
-      var parentExpression = program.getParentOf(relativeToThisId)
+      var parentExpression = this.getParentOf(relativeToThisId)
 
-      var relativeExpression = program.get(relativeToThisId)
+      var relativeExpression = this.get(relativeToThisId)
 
       addExpressionToNeighbors(
         newExpression,
@@ -271,12 +281,12 @@ module.exports = library.export(
 
       if (relationship == "before") {
 
-        var splicePosition = indexBefore(this, expressionIds, relativeToThisId)
+        var splicePosition = indexBefore(this, relativeToThisId)
         var deleteThisMany = 0
 
       } else if (relationship == "after") {
 
-        var splicePosition = indexAfter(this, expressionIds, relativeToThisId)
+        var splicePosition = indexAfter(this, relativeToThisId)
         var deleteThisMany = 0
 
       } else if (relationship == "inPlaceOf") {
@@ -289,7 +299,7 @@ module.exports = library.export(
 
       this.parentExpressionsByChildId[newExpression.id] = parentExpression
 
-      this.expressionIds.splice(splicePosition, deleteThisMany, newElement.id)
+      this.expressionIds.splice(splicePosition, deleteThisMany, newExpression.id)
     }
 
 
@@ -349,10 +359,12 @@ module.exports = library.export(
       return lastDescendant
     }
 
-    function indexBefore(program, ids, relativeId) {
+    function indexBefore(program, relativeId) {
+
+      var ids = program.expressionIds
 
       for(var i = 0; i < ids.length; i++) {
-        if (list[i] == relativeId) {
+        if (ids[i] == relativeId) {
           return i
         }
       }
@@ -361,8 +373,9 @@ module.exports = library.export(
 
     }
 
-    function indexAfter(program, ids, relativeId) {
+    function indexAfter(program, relativeId) {
 
+      var ids = program.expressionIds
       var parentIdStack = []
 
       for(var i = 0; i < ids.length; i++) {

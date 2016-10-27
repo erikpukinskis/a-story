@@ -1,21 +1,5 @@
 var library = require("nrtv-library")(require)
 
-require("./renderers")
-require("./actions")
-
-var rendererModules = library.using(
-  ["./an-expression"],
-  function(anExpression) {
-
-    function toModuleName(kind) {
-      return "render-"+kind.replace(" ", "-")
-    }
-
-    return anExpression.kinds.map(toModuleName)
-  }
-)
-
-
 library.define(
   "expression-to-element",
   ["stringify-expression"],
@@ -82,10 +66,12 @@ library.define(
     
 module.exports = library.export(
   "draw-expression",
-  ["make-it-editable", "expression-to-element", "./program"],
-  function(makeItEditable, expressionToElement, Program) {
+  ["make-it-editable", "expression-to-element", "./program", "./renderers", "bridge-module"],
+  function(makeItEditable, expressionToElement, Program, renderers, bridgeModule) {
 
     function drawExpression(expression, bridge) {
+
+      bridgeModule(library, "renderers", bridge)
 
       makeItEditable.prepareBridge(bridge)
 

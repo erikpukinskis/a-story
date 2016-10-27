@@ -2,7 +2,7 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "./scroll-to-select"],
+  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "./scroll-to-select", "./choose-expression"],
   function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect) {
     var selectionIsHidden = true
     var controlsAreVisible
@@ -33,12 +33,12 @@ module.exports = library.export(
       if (pairExpression) {
         showKeyValueControls(pairExpression, this.bindings.addKeyPair)
       } else if (isLine) {
-        showLineControls(selectedElement, this.bindings)
+        showLineControls(selectedElement, this.program)
       }
 
     }
 
-    function showLineControls(lineElement, bindings) {
+    function showLineControls(lineElement, program) {
 
       showPlusses(
         lineElement,
@@ -46,22 +46,22 @@ module.exports = library.export(
 
           // hacky:
 
-          var add = functionCall("library.get(\"add-line\"")
+          var add = functionCall("library.get(\"add-line\")")
 
           // could be something like:
           //
           // var add = library.buildSingletonCall("add-line")
 
-          add = addLine.withArgs(
-            bindings.program,
+          add = add.withArgs(
+            program.id,
             plusButton.assignId(),
             relativeToThisId,
             relationship
           )
 
-          var showMenu = bindings.chooseExpression.withArgs(add)
+          var showMenu = functionCall("library.get(\"choose-expression\")")
 
-          plusButton.onclick(showMenu)
+          plusButton.onclick(showMenu.withArgs(add))
         }
       )
 

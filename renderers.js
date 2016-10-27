@@ -1,8 +1,22 @@
 var library = require("nrtv-library")(require)
 
+require("./actions")
+
+var rendererModules = library.using(
+  ["./an-expression"],
+  function(anExpression) {
+
+    function toModuleName(kind) {
+      return "render-"+kind.replace(" ", "-")
+    }
+
+    return anExpression.kinds.map(toModuleName)
+  }
+)
+
 library.define(
   "render-empty-expression",
-  ["web-element", "replace-value", "choose-expression"],
+  ["web-element", "replace-value"],
   function(element, replaceValue, chooseExpression) {
 
 
@@ -460,3 +474,15 @@ library.define(
 
   }
 )
+
+
+
+module.exports = library.export(
+  "renderers",
+  rendererModules,
+  function() {
+    return true
+  }
+)
+
+

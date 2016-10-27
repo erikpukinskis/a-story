@@ -91,7 +91,7 @@ library.define(
       var newElement = expressionToElement(
           newExpression, program)
 
-      program.insertExpression(relationship, relativeToThisId, newExpression)
+      program.insertExpression(newExpression, relationship, relativeToThisId)
 
       var ghostElement = document.getElementById(ghostElementId)
 

@@ -31,7 +31,7 @@ module.exports = library.export(
       controlsSelector = ".controls-for-"+selectedElement.id
 
       if (pairExpression) {
-        showKeyValueControls(pairExpression, this.bindings.addKeyPair)
+        showKeyValueControls(pairExpression, this.program)
       } else if (isLine) {
         showLineControls(selectedElement, this.program)
       }
@@ -67,9 +67,15 @@ module.exports = library.export(
 
     }
 
-    function showKeyValueControls(pair, addKeyPair) {
+    function showKeyValueControls(pair, program) {
 
       var pairElement = document.getElementById(pair.id)
+
+      if (!pairElement) {
+        debugger
+      }
+
+      // we have expr-lf06, but we're looking for expr-ts
 
       var objectExpression = pair.objectExpression
 
@@ -77,9 +83,10 @@ module.exports = library.export(
         pairElement,
         function addClickHandler(plusButton, relativeToThisId, relationship) {
 
-          var add = functionCall("library.get(\"add-key-pair\"")
+          var add = functionCall("library.get(\"add-key-pair\")")
 
-          add = addKeyPair.withArgs(
+          add = add.withArgs(
+            program.id,
             plusButton.assignId(),
             relationship,
             objectExpression.id,

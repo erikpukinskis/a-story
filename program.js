@@ -22,6 +22,7 @@ module.exports = library.export(
       this.onchangedCallbacks = []
       this.onnewexpressionCallbacks = []
       this.getIds = getIds.bind(this)
+      this.pairIds = {}
 
       if (data) { this.load(data) }
     }
@@ -104,7 +105,8 @@ module.exports = library.export(
         expressionIds: this.expressionIds,
         expressionsById: dehydratedById,
         keyPairsByValueId: null,
-        parents: parents
+        parents: parents,
+        pairIds: this.pairIds
       }
     }
 
@@ -148,13 +150,18 @@ module.exports = library.export(
           break
         case "valuesByKey":
           var objectExpression = dehydrated
-          var ids = dehydrated.valuesByKey
+          var valueIds = dehydrated.valuesByKey
           objectExpression.valuesByKey = {}
-          for(var key in ids) {
+
+          for(var key in valueIds) {
+
+            var pairId = program.pairIds[objectExpression.id+"/"+key]
+
             program.addKeyPair(
               objectExpression,
               key,
-              program.get(ids[key])
+              program.get(valueIds[key]),
+              pairId
             )
           }
           break
@@ -164,6 +171,8 @@ module.exports = library.export(
     Program.prototype.load = function(data) {
 
       this.expressionIds = data.expressionIds
+
+      this.pairIds = data.pairIds
 
       this.expressionsById = data.expressionsById
 
@@ -331,10 +340,10 @@ module.exports = library.export(
 
     function lastDescendantAfter(program, ids, startIndex) {
 
-      var possibleParentIds = [elementIds[startIndex]]
+      var possibleParentIds = [ids[startIndex]]
       var lastDescendant = startIndex
 
-      for(var i = startIndex+1; i<elementIds.length; i++) {
+      for(var i = startIndex+1; i < ids.length; i++) {
 
         var testId = ids[i]
         var testExpr = program.expressionsById[testId]
@@ -398,7 +407,7 @@ module.exports = library.export(
       this.expressionsById[expression.id] = expression
     }
 
-    Program.prototype.addKeyPair = function(objectExpression, key, valueExpression) {
+    Program.prototype.addKeyPair = function(objectExpression, key, valueExpression, id) {
 
       if (!objectExpression.keys) {
         objectExpression.keys = []
@@ -410,8 +419,12 @@ module.exports = library.export(
         kind: "key pair",
         key: key,
         objectExpression: objectExpression,
-        id: anExpression.id()
+        id: id || anExpression.id()
       }
+
+      var pairIdentifier = objectExpression.id+"/"+key
+
+      this.pairIds[pairIdentifier] = pair.id
 
       objectExpression.valuesByKey[key] = valueExpression
 

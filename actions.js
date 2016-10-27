@@ -2,10 +2,12 @@ var library = require("nrtv-library")(require)
 
 library.define(
   "add-key-pair",
-  ["render-key-pair", "an-expression"],
-  function(keyPair, anExpression) {
+  ["render-key-pair", "an-expression", "program"],
+  function(keyPair, anExpression, Program) {
 
-    return function(program, insertByThisId, relationship, objectExpressionId, relativeToKey) {
+    return function(programId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
+
+      var program = Program.findById(programId)
 
       var objectExpression = program.get(objectExpressionId)
 

@@ -462,15 +462,15 @@ library.define(
 
         this.children = items.map(itemToElement)
 
+        function itemToElement(item) {
+          return element(
+            ".array-item",
+            expressionToElement(item, program)
+          )
+        }
       }
     )
 
-    function itemToElement(item) {
-      return element(
-        ".array-item",
-        expressionToElement(item, program)
-      )
-    }
 
   }
 )

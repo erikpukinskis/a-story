@@ -35,7 +35,8 @@ module.exports = library.export(
 
     function anId() {
       lastExpressionInteger++
-      return "expr-"+lastExpressionInteger.toString(36)
+      var id = lastExpressionInteger.toString(36)
+      return "expr-"+id
     }
 
     anExpression.id = anId

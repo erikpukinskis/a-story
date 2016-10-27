@@ -20,7 +20,7 @@ module.exports = library.export(
     function scrollToSelect(options) {
       showCallback = options.show
       hideCallback = options.hide
-      possibleIds = options.getIds()
+      possibleIds = options.possibleIds
 
       window.onscroll = updateSelection
       addHtml(element(".selector", "EZJS").html())

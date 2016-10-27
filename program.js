@@ -2,10 +2,13 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "program",
-  ["an-expression"],
-  function(anExpression) {
+  ["an-expression", "function-call"],
+  function(anExpression, functionCall) {
 
-    function Program() {
+    var lastProgramId = 0
+    function Program(data) {
+      lastProgramId++
+      this.id = lastProgramId
       this.expressionIds = []
       this.expressionsById = {}
       this.keyPairsByValueId = {}
@@ -13,6 +16,12 @@ module.exports = library.export(
       this.onchangedCallbacks = []
       this.onnewexpressionCallbacks = []
       this.getIds = getIds.bind(this)
+
+      if (data) { this.load(data) }
+    }
+
+    Program.prototype.asBinding = function() {
+      return functionCall("library.get(\"program\")").methodCall("get").withArgs(this.id)
     }
 
     Program.prototype.rootExpression = function() {
@@ -249,13 +258,16 @@ module.exports = library.export(
 
     Program.prototype.insertExpression = function(newExpression, relationship, relativeToThisId) {
 
-      if (!relationship) {
-        this.expressionsById[newExpression.id] = newExpression
+      var parentExpression = program.getParentOf(relativeToThisId)
 
-        this.expressionIds.push(newExpression.id)
+      var relativeExpression = program.get(relativeToThisId)
 
-        return
-      }
+      addExpressionToNeighbors(
+        newExpression,
+        parentExpression.body,
+        relationship,
+        relativeExpression
+      )
 
       if (relationship == "before") {
 
@@ -274,9 +286,37 @@ module.exports = library.export(
 
       } else { throw new Error() }
 
+
       this.parentExpressionsByChildId[newExpression.id] = parentExpression
 
       this.expressionIds.splice(splicePosition, deleteThisMany, newElement.id)
+    }
+
+
+    function addExpressionToNeighbors(newExpression, neighbors, relationship, relativeExpression) {
+      
+      for(var i = 0; i < neighbors.length; i++) {
+        var neighborExpression = neighbors[i]
+
+        if (neighborExpression == relativeExpression) {
+
+          lineIndex = i
+
+          if (relationship == "after") {
+            lineIndex++
+          }
+
+          break
+        }
+      }
+
+      if (relationship == "inPlaceOf") {
+        var deleteThisMany = 1
+      } else {
+        var deleteThisMany = 0
+      }
+
+      neighbors.splice(lineIndex, deleteThisMany,  newExpression)
     }
 
     function lastDescendantAfter(program, ids, startIndex) {

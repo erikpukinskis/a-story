@@ -164,6 +164,8 @@ module.exports = library.export(
       }
     }
 
+    anExpression.kinds = Object.keys(codeGenerators)
+
 
     // RUN
 

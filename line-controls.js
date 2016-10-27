@@ -2,18 +2,22 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  ["web-element", "function-call", "add-html"],
-  function(element, functionCall, addHtml) {
+  ["web-element", "function-call", "add-html", "add-line", "add-key-pair"],
+  function(element, functionCall, addHtml, addLine, addKeyPair) {
     var selectionIsHidden = true
     var controlsAreVisible
     var controlsSelector
 
-    function LineControls(program, bindings) {
+    function LineControls(program) {
 
       this.program = program
-      this.bindings = bindings
-      this.show = showControls.bind(this)
-      this.hide = hideControls.bind(this)
+
+      scrollToSelect({
+        possibleIds: program.getIds(),
+        show: showControls.bind(this),
+        hide: hideControls.bind(this)
+      })
+
     }
 
     function showControls(selectedElement) {
@@ -40,7 +44,15 @@ module.exports = library.export(
         lineElement,
         function addClickHandler(plusButton, relativeToThisId, relationship) {
 
-          var add = bindings.addLine.withArgs(
+          // hacky:
+
+          var add = functionCall("library.get(\"add-line\"")
+
+          // could be something like:
+          //
+          // var add = library.buildSingletonCall("add-line")
+
+          add = addLine.withArgs(
             bindings.program,
             plusButton.assignId(),
             relativeToThisId,
@@ -65,7 +77,9 @@ module.exports = library.export(
         pairElement,
         function addClickHandler(plusButton, relativeToThisId, relationship) {
 
-          var add = addKeyPair.withArgs(
+          var add = functionCall("library.get(\"add-key-pair\"")
+
+          add = addKeyPair.withArgs(
             plusButton.assignId(),
             relationship,
             objectExpression.id,

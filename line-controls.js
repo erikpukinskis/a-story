@@ -2,8 +2,8 @@ var library = require("nrtv-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  ["web-element", "function-call", "add-html", "add-line", "add-key-pair"],
-  function(element, functionCall, addHtml, addLine, addKeyPair) {
+  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "./scroll-to-select"],
+  function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect) {
     var selectionIsHidden = true
     var controlsAreVisible
     var controlsSelector

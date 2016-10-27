@@ -11,7 +11,7 @@ library.define(
   function(Module, lineControls, Program) {
 
 
-    return function bootProgram(programName, programData) {
+    function bootProgram(programName, programData) {
 
       var program = new Program(programData)
 
@@ -31,6 +31,12 @@ library.define(
         module.updateDependencies(parent, line, mod.run)
       })
     }
+
+    bootProgram.prepareBridge = function(bridge) {
+      Module.prepareBridge(bridge)
+    }
+
+    return bootProgram
 
   }
 )
@@ -69,11 +75,11 @@ library.using(
 
     var programName = loadedExpression.name || "unnamed"
 
-    Module.prepareBridge(bridge)
-
     bridge.asap(
       bridgeModule(library, "boot-program", bridge).withArgs(programName, program.data())
     )
+
+    bootProgram.prepareBridge(bridge)
 
     var head = element("head")
 

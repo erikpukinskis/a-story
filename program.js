@@ -13,6 +13,7 @@ module.exports = library.export(
     }
 
     function Program(data) {
+      this.expressionIdWritePosition = 0
       this.id = makeId()
       programs[this.id] = this
       this.expressionIds = []
@@ -27,12 +28,19 @@ module.exports = library.export(
       if (data) { this.load(data) }
     }
 
+    Program.prototype.reservePosition = function() {
+      var i = 
+      this.expressionIdWritePosition
+      this.expressionIdWritePosition++
+      return i
+    }
+
     Program.findById = function(id) {
       return programs[id]
     }
 
     Program.prototype.asBinding = function() {
-      return functionCall("library.get(\"program\")").methodCall("get").withArgs(this.id)
+      return functionCall("library.get(\"program\").findById(\""+this.id+"\")").singleton()
     }
 
     Program.prototype.rootExpression = function() {
@@ -161,7 +169,7 @@ module.exports = library.export(
               objectExpression,
               key,
               program.get(valueIds[key]),
-              pairId
+              {id: pairId}
             )
           }
           break
@@ -171,6 +179,8 @@ module.exports = library.export(
     Program.prototype.load = function(data) {
 
       this.expressionIds = data.expressionIds
+
+      this.expressionIdWritePosition = data.expressionIds.length
 
       this.pairIds = data.pairIds
 
@@ -233,6 +243,10 @@ module.exports = library.export(
 
       pairExpression.key = newKey
       object[newKey] = object[oldKey]
+
+      var baseId = pairExpression.objectExpression.id
+      this.pairIds[baseId+"/"+oldKey] = undefined
+      this.pairIds[baseId+"/"+newKey] = pairId
 
       delete object[oldKey]
       this.changed()
@@ -307,6 +321,10 @@ module.exports = library.export(
 
 
       this.parentExpressionsByChildId[newExpression.id] = parentExpression
+
+      var d = 1 - deleteThisMany
+
+      this.expressionIdWritePosition += d
 
       this.expressionIds.splice(splicePosition, deleteThisMany, newExpression.id)
     }
@@ -407,24 +425,32 @@ module.exports = library.export(
       this.expressionsById[expression.id] = expression
     }
 
-    Program.prototype.addKeyPair = function(objectExpression, key, valueExpression, id) {
+    Program.prototype.addKeyPair = function(objectExpression, key, valueExpression, options) {
+
+      if (!options) { options = {} }
 
       if (!objectExpression.keys) {
         objectExpression.keys = []
       }
       
-      objectExpression.keys.push(key)
+      if (options.index) {
+        objectExpression.keys.splice(options.index, 0, key)
+      } else {
+        objectExpression.keys.push(key)
+      }
 
       var pair = {
         kind: "key pair",
         key: key,
         objectExpression: objectExpression,
-        id: id || anExpression.id()
+        id: options.id || anExpression.id()
       }
 
       var pairIdentifier = objectExpression.id+"/"+key
 
       this.pairIds[pairIdentifier] = pair.id
+
+      this.expressionsById[pair.id] = pair
 
       objectExpression.valuesByKey[key] = valueExpression
 
@@ -452,9 +478,9 @@ module.exports = library.export(
         delete program.keyPairsByValueId[oldExpression.id]
       }
 
-      program.parentExpressionsByChildId[newExpression.id] = pairExpression.objectExpression
+      this.parentExpressionsByChildId[newExpression.id] = pairExpression.objectExpression
 
-      program.keyPairsByValueId[newExpression.id] = pairExpression
+      this.keyPairsByValueId[newExpression.id] = pairExpression
 
     }
 

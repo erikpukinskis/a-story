@@ -5,12 +5,9 @@ library.define(
   ["stringify-expression"],
   function(stringify) {
 
-    var expressionIdWritePosition = 0
-
     function expressionToElement(expression, program) {
 
-      var i = expressionIdWritePosition
-      expressionIdWritePosition++
+      var i = program.reservePosition()
 
       if (typeof expression != "object" || !expression || !expression.kind) {
         throw new Error("Trying to turn "+stringify(expression)+" into an element, but it doesn't look like an expression")

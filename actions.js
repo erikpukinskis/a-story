@@ -2,8 +2,8 @@ var library = require("nrtv-library")(require)
 
 library.define(
   "add-key-pair",
-  ["render-key-pair", "an-expression", "program"],
-  function(keyPair, anExpression, Program) {
+  ["render-key-pair", "an-expression", "program", "add-html"],
+  function(keyPair, anExpression, Program, addHtml) {
 
     return function(programId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
 
@@ -12,36 +12,21 @@ library.define(
       var objectExpression = program.get(objectExpressionId)
 
       var index = objectExpression.keys.indexOf(relativeToKey)
-
       if (relationship == "after") {
         index = index + 1
       }
 
-      objectExpression.keys.splice(index, 0, "")
-
       var valueExpression = anExpression.emptyExpression()
 
-      valueExpression.role = "key value"
-
-      objectExpression.valuesByKey[""] = valueExpression
-
-      var neighbor = document.getElementById(insertByThisId)
-
-      var pairExpression = {
-        key: "",
-        objectExpression: objectExpression,
-        id: anExpression.id()
-      }
-
-      expressionsById[pairExpression.id] = pairExpression
+      var pairExpression = program.addKeyPair(objectExpression, "", valueExpression, {index: index})
 
       var el = keyPair(
         pairExpression, program
       )
 
-      addHtml[relationship](neighbor, el.html())
+      var neighbor = document.getElementById(insertByThisId)
 
-      updateSelection({controls: "none"})
+      addHtml[relationship](neighbor, el.html())
 
       el.startEditing()
     }

@@ -1,4 +1,4 @@
-var library = require("nrtv-library")(require)
+var library = require("module-library")(require)
 
 library.using([
   "./bridge-to" // need this until we can unify this with browser-bridge or make it its own module or something.
@@ -17,7 +17,7 @@ library.define(
 
       var controls = lineControls(program)
 
-      var mod = new Module(program, name)
+      var mod = new Module(program, programName)
 
       var dependencies = program.rootExpression().argumentNames
 
@@ -45,7 +45,7 @@ library.define(
 
 library.using(
   [
-    "nrtv-server",
+    "web-site",
     "browser-bridge",
     "bridge-module",
     "web-element",
@@ -55,7 +55,7 @@ library.using(
     "./module",
     "boot-program",
   ],
-  function(server, BrowserBridge, bridgeModule, element, drawExpression, anExpression, sampleHomePage, Module, bootProgram) {
+  function(site, BrowserBridge, bridgeModule, element, drawExpression, anExpression, sampleHomePage, Module, bootProgram) {
 
 
     var emptyProgram = anExpression({
@@ -101,7 +101,7 @@ library.using(
       href: "styles.css"
     })
 
-    server.addRoute(
+    site.addRoute(
       "get",
       "/",
       bridge.sendPage(
@@ -109,7 +109,7 @@ library.using(
       )
     )
 
-    server.addRoute(
+    site.addRoute(
       "get",
       "/styles.css",
       function(xxxx, response) {
@@ -117,7 +117,7 @@ library.using(
       }
     )
 
-    server.addRoute(
+    site.addRoute(
       "get",
       "/library/:name.js",
       function(request, response) {
@@ -137,6 +137,6 @@ library.using(
       }
     )
 
-    server.start(4050)
+    site.start(4050)
   }
 )

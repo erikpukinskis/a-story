@@ -14,10 +14,12 @@ body {
 body, button {
   font-family: sans-serif;
   font-size: 11pt;
+  padding-bottom: 1000px;
+  padding-top: 150px;
 }
 
 .two-columns {
-  margin: 150px auto 200% auto;
+  margin: 20px auto;
   width: 700px;
 }
 

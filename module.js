@@ -1,4 +1,4 @@
-var library = require("nrtv-library")(require)
+var library = require("module-library")(require)
 
 module.exports = library.export(
   "module",
@@ -21,7 +21,7 @@ module.exports = library.export(
 
       var moduleExpression = packageExpression(this.program.rootExpression())
 
-      anExpression.run(moduleExpression, name)
+      anExpression.run(moduleExpression, this.name)
       window.__nrtvFocusSelector = null
 
     }

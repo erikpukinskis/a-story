@@ -179,10 +179,6 @@ module.exports = library.export(
 
     function offsetCameraUp(lines) {
       return
-      var orig = verticalCameraOffset
-
-      verticalCameraOffset += lines
-
       var containerElement = document.querySelector(".two-columns")
 
       var transform = "translateY("+(verticalCameraOffset*-32)+"px)"
@@ -190,11 +186,14 @@ module.exports = library.export(
       containerElement.style.transform = transform
     }
 
-
-    return function() {
+    function lineControls() {
       var args = Array.prototype.slice.call(arguments)
 
       return new (Function.prototype.bind.apply(LineControls, [null].concat(args)))
     }
+
+    lineControls.offsetCameraUp = offsetCameraUp
+
+    return lineControls
   }
 )

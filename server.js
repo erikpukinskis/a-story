@@ -25,10 +25,16 @@ library.define(
         mod.run() 
       })
 
-      program.onchanged(mod.run)
+      program.onchanged(function(changes) {
+        if (changes.linesAdded) {
+          lineControls.offsetCameraUp(linesAdded)
+        }
+
+        mod.run()
+      })
 
       program.onnewexpression(function(parent, line) {
-        module.updateDependencies(parent, line, mod.run)
+        mod.updateDependencies(parent, line, mod.run)
       })
     }
 

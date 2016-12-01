@@ -86,11 +86,9 @@ library.define(
 
       program.newexpression(parentExpression, newExpression)
 
-      program.changed()
-
-      if (relationship != "inPlaceOf") {
-        offsetCameraUp(1)
-      }
+      program.changed({
+        linesAdded: relationship == "inPlaceOf" ? 0 : 1
+      })
     }
 
     addLine.asBinding = function() {

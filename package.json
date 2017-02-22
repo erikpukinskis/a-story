@@ -1,6 +1,6 @@
 {
   "name": "render-module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Web app for editing and running a javascript expression with dependencies",
   "dependencies": {
     "module-library": "*",

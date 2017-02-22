@@ -1,7 +1,7 @@
 {
-  "name": "a-story",
+  "name": "render-module",
   "version": "0.0.0",
-  "description": "Javascript programs anyone can edit",
+  "description": "Web app for editing and running a javascript expression with dependencies",
   "dependencies": {
     "module-library": "*",
     "web-element": "*",
@@ -16,6 +16,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/erikpukinskis/a-story.git"
+    "url": "https://github.com/erikpukinskis/render-expression.git"
   }
 }

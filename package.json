@@ -12,7 +12,11 @@
     "make-it-editable": "*"
   },
   "scripts": {
-    "start": "node server"
+    "start": "node server",
+    "test": "node test"
+  },
+  "devDependencies": {
+    "run-test": "*"
   },
   "repository": {
     "type": "git",

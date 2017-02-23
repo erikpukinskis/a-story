@@ -56,8 +56,6 @@ module.exports = library.export(
         body: body,
       }
 
-      debugger
-
       return anExpression(functionLiteral)
     }
 
@@ -339,8 +337,6 @@ module.exports = library.export(
 
       return args
     }
-
-    console.log("{balance: 0} as expression: ", sourceToExpression("{balance: 0}"))
 
     return anExpression
   }

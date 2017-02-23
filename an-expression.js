@@ -16,7 +16,7 @@ module.exports = library.export(
     var lastExpressionInteger = typeof window == "undefined" ? 1000*1000 : 1000
 
     function anExpression(json) {
-      if (!json) { return }
+      if (!json) { throw new Error("what are you trying to make an expression of?") }
 
       if (!json.id) {
         json.id = anId()
@@ -32,6 +32,133 @@ module.exports = library.export(
 
       return json
     }
+
+    anExpression.fromFunction = function(func) {
+      var lines = func.toString().split("\n")
+
+      var body = []
+
+      for(var i=1; i<lines.length-1; i++) {
+
+        var expression = sourceToExpression(lines[i])
+
+        if (expression) {
+          body.push(expression)
+        }
+      }
+
+      var stack = []
+      var top
+
+      var functionLiteral = {
+        kind: "function literal",
+        argumentNames: argumentNames(lines[0]),
+        body: body,
+      }
+
+      debugger
+
+      return anExpression(functionLiteral)
+    }
+
+    function sourceToExpression(source) {
+
+      var returnStatement = source.match(/^ *return (.*)/)
+
+      var functionStart = !returnStatement && source.match(/^ *function ?[^(]*[(]([^)]*)[)]/)
+
+      var assignment = !functionStart && source.match(/^ *(var)? ?([^=]+) ?= ?(.*)/)
+
+      var object = !assignment && source.match(/^ *{.*} *$/)
+
+      var functionCall = !object && source.match(/^ *([^( ]+)[(](.*)[)] *$/)
+
+      var variable = !functionCall && source.match(/^ *([^(){}.+-]+) *$/)
+
+      var string = !variable && source.match(/^ *"(.*)" *$/)
+
+      var isClosingBracket = !string && !!source.match(/^ *} *$/)
+
+      var isWhitespace = !isClosingBracket && !!source.match(/^ *$/)
+
+      if (isClosingBracket || isWhitespace) {
+        return
+      } else if (returnStatement) {
+        var rhs = returnStatement[1]
+
+        var expression = {
+          kind: "return",
+          expression: sourceToExpression(rhs),
+        }
+
+        return expression
+      } else if (functionStart) {
+
+        var args = functionStart[1].split(/, */)
+
+        var expression = {
+          kind: "function literal",
+          argumentNames: args,
+          body: []
+        }
+
+        return expression
+
+      } else if (assignment) {
+
+        var name = assignment[2].trim()
+
+        if (!name) { throw new Error("no name on line: "+source) }
+
+        var rhs = assignment[3].trim()
+
+        if (!rhs) {
+          throw new Error("not assigning anything to "+JSON.stringify(expression, null, 2))
+        }
+
+        var expression = {
+          kind: "variable assignment",
+          isDeclaration: !!assignment[1],
+          variableName: name,
+          expression: sourceToExpression(rhs),
+        }
+
+        return expression
+
+      } else if (object) {
+        var expression = anExpression.objectLiteral(eval(object[0]))
+
+        debugger
+        return expression
+      } else if (functionCall) {
+
+        var args = functionCall[2].split(",").map(sourceToExpression)
+
+        var expression = {
+          kind: "function call",
+          functionName: functionCall[1],
+          arguments: args,
+        }
+
+        return expression
+      } else if (variable) {
+        var expression = {
+          kind: "variable reference",
+          variableName: variable[1],
+        }
+
+        return expression
+      } else if (string) {
+        var expression = anExpression.stringLiteral(string[1])
+        return expression
+      } else {
+        debugger
+        throw new Error("what now? "+source)
+      }
+    }
+
+
+
 
     function anId() {
       lastExpressionInteger++
@@ -142,10 +269,16 @@ module.exports = library.export(
         return "null"
       },
       "variable assignment": function(expression) {
-        return "var "
-          +expression.variableName
+
+        source = expression.variableName
           +" = "
           +expressionToJavascript(expression.expression)
+
+        if (expression.isDeclaration) {
+          source = "var "+source
+        }
+
+        return source
       },
       "variable reference": function(expression) {
         return expression.variableName
@@ -191,6 +324,23 @@ module.exports = library.export(
 
       return makeCode(expression)
     }
+
+
+    function argumentNames(func) {
+      if (typeof func == "string") {
+        var firstLine = func
+      } else {
+        var firstLine = func.toString().match(/.*/)[0]
+      }
+
+      var argString = firstLine.match(/[(]([^)]*)/)[1]
+
+      var args = argString.split(/, */)
+
+      return args
+    }
+
+    console.log("{balance: 0} as expression: ", sourceToExpression("{balance: 0}"))
 
     return anExpression
   }

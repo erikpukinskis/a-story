@@ -21,9 +21,9 @@ library.define(
 
 
     return element.template(
-      ".empty-expression.button",
+      ".empty-expression.code-button",
       "empty",
-      function(expression) {
+      function emptyExpressionRenderer(expression) {
         this.id = expression.id
 
         // this stuff is really weird. It seems like I have to do it because expressionToElement is recursive. But really I could do the same thing with expressionRoles and valueExpressionKeys objects.
@@ -55,11 +55,11 @@ library.define(
 
     return element.template(
       ".function-call",
-      function(expression, program) {
+      function functionCallRenderer(expression, program) {
         this.id = expression.id
 
         var button = element(
-          ".button.function-call-name.indenter",
+          ".code-button.function-call-name.indenter",
           expression.functionName
         )
 
@@ -118,9 +118,13 @@ library.define(
   function(element, makeItEditable) {
 
     return element.template(
-      ".button.literal",
-      function(expression, program) {
+      ".code-button.literal",
+      function stringLiteralRenderer(expression, program) {
         this.id = expression.id
+
+        if (!expression.string || !expression.string.replace) {
+          throw new Error("Expected expression to have a string attribute: "+JSON.stringify(expression, null, 2))
+        }
 
         var stringElement = element("span", element.raw(expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")))
 
@@ -151,8 +155,8 @@ library.define(
   function(element, makeItEditable) {
 
     return element.template(
-      ".button.literal",
-      function(expression, program) {
+      ".code-button.literal",
+      function numberLiteralRenderer(expression, program) {
         this.id = expression.id
 
         this.children.push(element.raw(expression.number.toString()))
@@ -173,19 +177,19 @@ library.define(
 
 library.define(
   "render-function-literal",
-  ["web-element", "render-function-literal-body", "stringify-expression", "render-argument-name"],
-  function(element, functionLiteralBody, stringify, argumentName) {
+  ["web-element", "render-function-literal-body", "render-argument-name"],
+  function(element, functionLiteralBody, argumentName) {
 
-    return element.template(
+    var renderFunctionLiteral =  element.template(
       ".function-literal",
-      function(expression, program) {
+      function functionLiteralRenderer(expression, program) {
         this.id = expression.id
 
         var children = this.children
 
         children.push(
           element(
-            ".button.function-literal-label.indenter",
+            ".code-button.function-literal-label.indenter",
             "function"
           )
         )
@@ -208,6 +212,17 @@ library.define(
         children.push(functionLiteralBody(expression, program))
       }
     )
+
+
+    function stringify(thing) {
+      if (typeof thing == "function") {
+        return thing.toString()
+      } else {
+        return JSON.stringify(thing)
+      }
+    }
+
+    return renderFunctionLiteral
   }
 )
 
@@ -219,8 +234,8 @@ library.define(
   function(element, makeItEditable) {
 
     return element.template(
-      ".button.argument-name",
-      function(expressionId, name, argumentIndex) {
+      ".code-button.argument-name",
+      function argumentNameRenderer(expressionId, name, argumentIndex) {
 
         this.children.push(
           element.raw(name)
@@ -250,7 +265,7 @@ library.define(
 
     return element.template(
       ".function-literal-body",
-      function(parent, program) {
+      function functionLiteralBodyRenderer(parent, program) {
 
         previous = null
         
@@ -296,21 +311,41 @@ library.define(
 
 
 library.define(
+  "render-return",
+  ["web-element", "expression-to-element"],
+  function(element, expressionToElement) {
+
+    return element.template(
+      ".return-statement",
+      element(".code-button", "return"),
+      function returnStatementRenderer(expression, program) {
+        this.addChild(expressionToElement(expression.expression, program))
+      }
+    )
+
+  }
+)
+
+library.define(
   "render-variable-assignment",
   ["web-element", "expression-to-element", "make-it-editable"],
   function(element, expressionToElement, makeItEditable) {
 
     return element.template(
       ".variable-assignment",
-      function(expression, program) {
+      function variableAssignmentRenderer(expression, program) {
         this.id = expression.id
+
+        if (!expression.variableName) {
+          throw new Error("can't render a variable assignment without a variable name. Expression: "+JSON.stringify(expression, null, 2))
+        }
 
         var nameSpan = element("span",
           expression.variableName
         )
 
         var lhs = element(
-          ".button.variable-name.indenter",
+          ".code-button.variable-name.indenter",
           [
             element("span", "var&nbsp;"),
             nameSpan,
@@ -324,6 +359,10 @@ library.define(
           program.asBinding().methodCall("setProperty").withArgs("variableName", expression.id),
           {updateElement: nameSpan}
         )
+
+        if (!expression.expression.kind) {
+          throw new Error("rhs of assignment is fucked: "+JSON.stringify(expression, null, 2))
+        }
 
         var rhs = expressionToElement(
           expression.expression, program)
@@ -348,7 +387,7 @@ library.define(
 
     return element.template(
       ".object-literal",
-      function(expression, program) {
+      function objectLiteralRenderer(expression, program) {
         this.id = expression.id
 
         for(var key in expression.valuesByKey) {
@@ -379,7 +418,7 @@ library.define(
 
     var keyPair = element.template(
       ".key-pair",
-      function(pairExpression, program) {
+      function keyPairRenderer(pairExpression, program) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
@@ -390,7 +429,7 @@ library.define(
         )
 
         var keyButton = element(
-          ".button.key",
+          ".code-button.key",
           [
             textElement,
             element("span", ":")
@@ -435,8 +474,8 @@ library.define(
   function(element) {
 
     return element.template(
-      ".button.variable-reference",
-      function(expression) {
+      ".code-button.variable-reference",
+      function variableReferenceRenderer(expression) {
         this.children.push(element.raw(
           expression.variableName
         ))
@@ -455,7 +494,7 @@ library.define(
     return element.template(
       ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
 
-      function(expression, program) {
+      function arrayLiteralRenderer(expression, program) {
         this.id = expression.id
 
         var items = expression.items

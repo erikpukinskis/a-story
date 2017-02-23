@@ -5,48 +5,6 @@ library.using([
 ], function() {})
 
 
-library.define(
-  "boot-program",
-  ["./module", "./line-controls", "./program"],
-  function(Module, lineControls, Program) {
-
-
-    function bootProgram(programName, programData) {
-
-      var program = new Program(programData)
-
-      var controls = lineControls(program)
-
-      var mod = new Module(program, programName)
-
-      var dependencies = program.rootExpression().argumentNames
-
-      mod.loadDependencies(dependencies, function() {
-        mod.run() 
-      })
-
-      program.onchanged(function(changes) {
-        if (changes.linesAdded) {
-          lineControls.offsetCameraUp(linesAdded)
-        }
-
-        mod.run()
-      })
-
-      program.onnewexpression(function(parent, line) {
-        mod.updateDependencies(parent, line, mod.run)
-      })
-    }
-
-    bootProgram.prepareBridge = function(bridge) {
-      Module.prepareBridge(bridge)
-    }
-
-    return bootProgram
-
-  }
-)
-
 
 
 library.using(
@@ -59,7 +17,7 @@ library.using(
     "./an-expression",
     "./load-sample-home-page",
     "./module",
-    "boot-program",
+    "./boot-program",
   ],
   function(site, BrowserBridge, bridgeModule, element, drawExpression, anExpression, sampleHomePage, Module, bootProgram) {
 
@@ -81,11 +39,7 @@ library.using(
 
     var programName = loadedExpression.name || "unnamed"
 
-    bridge.asap(
-      bridgeModule(library, "boot-program", bridge).withArgs(programName, program.data())
-    )
-
-    bootProgram.prepareBridge(bridge)
+    bootProgram.on(bridge, program, programName)
 
     var head = element("head")
 
@@ -113,34 +67,6 @@ library.using(
       bridge.sendPage(
         [head, body, stylesheet]
       )
-    )
-
-    site.addRoute(
-      "get",
-      "/styles.css",
-      function(xxxx, response) {
-        response.sendFile(__dirname+"/styles.css")
-      }
-    )
-
-    site.addRoute(
-      "get",
-      "/library/:name.js",
-      function(request, response) {
-        var name = request.params.name
-
-        if (name.match(/[^a-z-]/)) {
-          throw new Error("Dependencies can only have lowercase letters and dash. You asked for "+name)
-        }
-
-        var bridge = new BrowserBridge()
-
-        var source = bridgeModule.definitionWithDeps(library, name, bridge)
-
-        response.setHeader('content-type', 'text/javascript')
-
-        response.send(source)
-      }
     )
 
     site.start(4050)

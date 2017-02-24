@@ -9,7 +9,7 @@ module.exports = library.export(
 
       var module = singleton.__nrtvModule
 
-      var functionLiteral = anExpression.fromFunction(module.func)
+      var functionLiteral = anExpression.functionLiteral(module.func)
 
       var program = drawExpression(functionLiteral, bridge)
 

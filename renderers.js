@@ -59,7 +59,7 @@ library.define(
         this.id = expression.id
 
         var button = element(
-          ".code-button.function-call-name.indenter",
+          ".code-button.function-call-name",
           expression.functionName
         )
 
@@ -182,17 +182,24 @@ library.define(
 
     var renderFunctionLiteral =  element.template(
       ".function-literal",
-      function functionLiteralRenderer(expression, program) {
+      function functionLiteralRenderer(expression, program, options) {
+        options = options || {}
         this.id = expression.id
 
         var children = this.children
 
-        children.push(
-          element(
-            ".code-button.function-literal-label.indenter",
-            "function"
-          )
+        var labelEl = element(
+          ".code-button.function-literal-label",
+          "function"
         )
+
+        if (options.inline) {
+          labelEl.addSelector(".inline")
+        } else {
+          labelEl.addSelector(".indenter")
+        }
+
+        children.push(labelEl)
 
         if (!expression.argumentNames) {
           throw new Error("Your function literal ("+stringify(expression)+") needs an argumentNames array. At least an empty one.")
@@ -311,15 +318,20 @@ library.define(
 
 
 library.define(
-  "render-return",
+  "render-return-statement",
   ["web-element", "expression-to-element"],
   function(element, expressionToElement) {
 
     return element.template(
       ".return-statement",
-      element(".code-button", "return"),
       function returnStatementRenderer(expression, program) {
-        this.addChild(expressionToElement(expression.expression, program))
+
+        var returnButton = element(".code-button.return-label.indenter", "return")
+        this.addChild(returnButton)
+
+        var rhs = expressionToElement(expression.expression, program, {inline: true})
+        rhs.addSelector(".rhs")
+        this.addChild(rhs)
       }
     )
 
@@ -345,7 +357,7 @@ library.define(
         )
 
         var lhs = element(
-          ".code-button.variable-name.indenter",
+          ".code-button.variable-name",
           [
             element("span", "var&nbsp;"),
             nameSpan,
@@ -369,7 +381,7 @@ library.define(
 
         // parentExpressionsByChildId[rhs.id] = expression
 
-        rhs.classes.push("rhs")
+        rhs.addSelector(".rhs")
         this.children.push(lhs)
         this.children.push(rhs)
       }

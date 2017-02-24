@@ -70,7 +70,7 @@ module.exports = library.export(
         var rhs = returnStatement[1]
 
         var expression = {
-          kind: "return",
+          kind: "return statement",
           expression: sourceToExpression(stack, rhs),
         }
 

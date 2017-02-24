@@ -74,7 +74,7 @@ body, button {
   transform: rotate(-20deg);
 }
 
-.function-literal-label::before {
+.function-literal-label::before{
   border-color: #666;
 }
 
@@ -85,6 +85,24 @@ body, button {
 .function-call-name::before {
   border-color: #88f;
 }
+
+
+
+
+
+.return-label::before {
+  border-color: #5de;
+}
+
+.return-label {
+  color: #5de;
+  /*font-weight: bold;*/
+}
+
+.return-label {
+  border-left: 2px solid #5de;
+}
+
 
 
 
@@ -115,7 +133,7 @@ body, button {
 }
 
 .function-call-args {
-  margin-left: 12px;
+  display: inline;
 }
 
 .call-in-call .function-call-name {
@@ -130,7 +148,8 @@ body, button {
 .code-button.function-call-name,
 .ghost-expression,
 .variable-name,
-.function-literal-label {
+.function-literal-label,
+.return-label {
   max-width: 70%;
   box-sizing: border-box;
 }
@@ -215,7 +234,12 @@ body, button {
 
 
 .rhs {
-  margin-left: 12px;
+  display: inline;
+}
+
+.code-button.inline {
+  padding-left: 0;
+  border-left: 0;
 }
 
 .leads-to-function-call > .rhs {

@@ -4,7 +4,7 @@ module.exports = library.export(
   "expression-to-element",
   function() {
 
-    function expressionToElement(expression, program) {
+    function expressionToElement(expression, program, options) {
 
       var i = program.reservePosition()
 
@@ -23,7 +23,7 @@ module.exports = library.export(
       }
 
       if (!program) {throw new Error()}
-      var el = render(expression, program)
+      var el = render(expression, program, options)
 
       if (el.id && el.id != expression.id) {
         console.log("expression:", expression)

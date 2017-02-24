@@ -2,6 +2,7 @@
   "name": "render-module",
   "version": "0.2.0",
   "description": "Web app for editing and running a javascript expression with dependencies",
+  "main": "render-module.js",
   "dependencies": {
     "module-library": "*",
     "web-element": "*",

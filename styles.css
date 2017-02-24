@@ -45,14 +45,14 @@ body, button {
   padding: 10px;
 }
 
-.button {
+.code-button {
   padding: 8px 4px 10px 12px;
   border-left-width: 0;
   border-right-width: 0;
   display: inline-block;
 }
 
-.button.literal, .button.being-edited-by-human {
+.code-button.literal, .code-button.being-edited-by-human {
   padding-right: 12px;
 }
 
@@ -127,7 +127,7 @@ body, button {
   margin-bottom: 0;
 }
 
-.button.function-call-name,
+.code-button.function-call-name,
 .ghost-expression,
 .variable-name,
 .function-literal-label {
@@ -155,7 +155,7 @@ body, button {
   margin-top: 8px;
 }
 
-.ghost.button {
+.ghost.code-button {
   background: #ccf;
   padding: 1px;
   min-width: 18px;
@@ -225,7 +225,7 @@ body, button {
 
 /* LITERALS */
 
-.button.literal {
+.code-button.literal {
   background: #fafafa;
 }
 
@@ -237,7 +237,7 @@ body, button {
   background: white;
 }
 
-.button.literal,
+.code-button.literal,
 .key,
 .function-literal-label {
   color: #666;
@@ -307,7 +307,7 @@ body, button {
   border-left-color: #8ff;
 }
 
-.selected, .button.selected {
+.selected, .code-button.selected {
   background: #cff;
   position: relative;
   z-index: 1;
@@ -321,7 +321,7 @@ body, button {
   background: #D4F1F5;
 }
 
-.selected .object-literal .button.literal {
+.selected .object-literal .code-button.literal {
   background: #E7FAFB;
 }
 

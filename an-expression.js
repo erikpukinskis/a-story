@@ -33,37 +33,16 @@ module.exports = library.export(
       return json
     }
 
-    anExpression.fromFunction = function(func) {
-      var lines = func.toString().split("\n")
 
-      var body = []
-
-      for(var i=1; i<lines.length-1; i++) {
-
-        var expression = sourceToExpression(lines[i])
-
-        if (expression) {
-          body.push(expression)
-        }
+    function sourceToExpression(stack, source, addToParent) {
+      if (typeof stack == "number") {
+        throw new Error("stack should be array")
       }
-
-      var stack = []
-      var top
-
-      var functionLiteral = {
-        kind: "function literal",
-        argumentNames: argumentNames(lines[0]),
-        body: body,
-      }
-
-      return anExpression(functionLiteral)
-    }
-
-    function sourceToExpression(source) {
+      var parent = stack[stack.length-1]
 
       var returnStatement = source.match(/^ *return (.*)/)
 
-      var functionStart = !returnStatement && source.match(/^ *function ?[^(]*[(]([^)]*)[)]/)
+      var functionStart = !returnStatement && source.match(/^ *function ?([^(]*) ?([(][^)]*[)])/)
 
       var assignment = !functionStart && source.match(/^ *(var)? ?([^=]+) ?= ?(.*)/)
 
@@ -71,7 +50,7 @@ module.exports = library.export(
 
       var functionCall = !object && source.match(/^ *([^( ]+)[(](.*)[)] *$/)
 
-      var variable = !functionCall && source.match(/^ *([^(){}.+-]+) *$/)
+      var variable = !functionCall && source.match(/^ *([^(){}."'+-]+) *$/)
 
       var string = !variable && source.match(/^ *"(.*)" *$/)
 
@@ -79,31 +58,36 @@ module.exports = library.export(
 
       var isWhitespace = !isClosingBracket && !!source.match(/^ *$/)
 
-      if (isClosingBracket || isWhitespace) {
+
+      if (isClosingBracket) {
+        stack.pop()
         return
+
+      } else if (isWhitespace) {
+        return
+
       } else if (returnStatement) {
         var rhs = returnStatement[1]
 
         var expression = {
           kind: "return",
-          expression: sourceToExpression(rhs),
+          expression: sourceToExpression(stack, rhs),
         }
 
-        return expression
       } else if (functionStart) {
+        var name = functionStart[1]
 
-        var args = functionStart[1].split(/, */)
+        var expression = {kind: "function literal"}
 
-        var expression = {
-          kind: "function literal",
-          argumentNames: args,
-          body: []
+        if (name.length > 0) {
+          expression.functionName = name
         }
 
-        return expression
+        expression.argumentNames = argumentNames(functionStart[2])
+
+        expression.body = []
 
       } else if (assignment) {
-
         var name = assignment[2].trim()
 
         if (!name) { throw new Error("no name on line: "+source) }
@@ -118,44 +102,61 @@ module.exports = library.export(
           kind: "variable assignment",
           isDeclaration: !!assignment[1],
           variableName: name,
-          expression: sourceToExpression(rhs),
+          expression: sourceToExpression(stack, rhs),
+          id: anId(),
         }
-
-        return expression
 
       } else if (object) {
         var expression = anExpression.objectLiteral(eval(object[0]))
 
-        debugger
-        return expression
       } else if (functionCall) {
+        var argSources = functionCall[2].split(",")
+        var args = []
 
-        var args = functionCall[2].split(",").map(sourceToExpression)
+        for(var i=0; i<argSources.length; i++) {
+          var arg = sourceToExpression(stack, argSources[i])
+          if (arg) {
+            args.push(arg)
+          }
+        }
 
         var expression = {
           kind: "function call",
           functionName: functionCall[1],
           arguments: args,
+          id: anId(),
         }
 
-        return expression
       } else if (variable) {
         var expression = {
           kind: "variable reference",
           variableName: variable[1],
+          id: anId(),
         }
 
-        return expression
       } else if (string) {
         var expression = anExpression.stringLiteral(string[1])
-        return expression
+
       } else {
         debugger
         throw new Error("what now? "+source)
       }
+
+
+      if (addToParent) {
+        if (!parent) {
+          debugger
+          throw new Error("no parent")
+        }
+        parent.body.push(expression)
+      }
+
+      if (expression.kind == "function literal") {
+        stack.push(expression)
+      }
+
+      return expression
     }
-
-
 
 
     function anId() {
@@ -166,12 +167,33 @@ module.exports = library.export(
 
     anExpression.id = anId
 
+    anExpression.functionLiteral =function(func) {
+
+      var lines = func.toString().split("\n")
+
+      var stack = []
+      var functionLiteral
+
+      for(var i=0; i<lines.length-1; i++) {
+
+        var newExpression = sourceToExpression(stack, lines[i], i>0)
+
+        if (i == 0) {
+          functionLiteral = newExpression
+        }
+
+      }
+
+      return functionLiteral
+    }
+
+
     anExpression.stringLiteral =
       function(string) {
         return {
           kind: "string literal",
           string: string,
-          id: anId()
+          id: anId(),
         }
       }
 
@@ -180,7 +202,7 @@ module.exports = library.export(
         return {
           kind: "number literal",
           number: number,
-          id: anId()
+          id: anId(),
         }
       }
 
@@ -188,7 +210,7 @@ module.exports = library.export(
       function() {
         return {
           kind: "empty expression",
-          id: anId()
+          id: anId(),
         }
       }
 
@@ -197,7 +219,7 @@ module.exports = library.export(
         var expression = {
           kind: "object literal",
           valuesByKey: {},
-          id: anId()
+          id: anId(),
         }
 
         for (var key in object) {
@@ -212,7 +234,7 @@ module.exports = library.export(
         return {
           kind: "array literal",
           items: array.map(toExpression),
-          id: anId()
+          id: anId(),
         }
       }
 
@@ -335,7 +357,14 @@ module.exports = library.export(
 
       var args = argString.split(/, */)
 
-      return args
+      var names = []
+      for(var i=0; i<args.length; i++) {
+        if (args[i].length > 0) {
+          names.push(args[i])
+        }
+      }
+
+      return names
     }
 
     return anExpression

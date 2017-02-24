@@ -101,6 +101,9 @@ library.define(
           arg.classes.push("call-in-call")
         }
 
+        if (i>0) {
+          elements.push(", ")
+        }
         elements.push(arg)
       }
 

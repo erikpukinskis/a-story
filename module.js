@@ -17,7 +17,12 @@ module.exports = library.export(
     function run() {
       window.__nrtvFocusSelector = ".output"
 
-      document.querySelector(".output").innerHTML = ""
+      var out = document.querySelector(".output")
+
+      if (!out) {
+        throw new Error("Looked for a .output element to render program into, but didn't find one.")
+      }
+      out.innerHTML = ""
 
       var moduleExpression = packageExpression(this.program.rootExpression())
 

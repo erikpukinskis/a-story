@@ -42,24 +42,28 @@ module.exports = library.export(
 
       var returnStatement = source.match(/^ *return (.*)/)
 
-      var functionStart = !returnStatement && source.match(/^ *function ?([^(]*) ?([(][^)]*[)])/)
+      var functionLiteralStart = !returnStatement && source.match(/^ *function ?([^(]*) ?([(][^)]*[)])/)
 
-      var assignment = !functionStart && source.match(/^ *(var)? ?([^=]+) ?= ?(.*)/)
+      var assignment = !functionLiteralStart && source.match(/^ *(var)? ?([^=]+) ?= ?(.*)/)
 
       var object = !assignment && source.match(/^ *{.*} *$/)
 
-      var functionCall = !object && source.match(/^ *([^( ]+)[(](.*)[)] *$/)
+      var functionCall = !object && source.match(/^ *([^( ]+)[(]([^)]*)[)] *$/)
 
-      var variable = !functionCall && source.match(/^ *([^(){}."'+-]+) *$/)
+      var functionCallStart = !functionCall && source.match(/^ *([^( ]+)[(]([^)]*) *$/)
+
+      var variable = !functionCallStart && source.match(/^ *([^(){}."'+-]+) *$/)
 
       var string = !variable && source.match(/^ *"(.*)" *$/)
 
       var isClosingBracket = !string && !!source.match(/^ *} *$/)
 
+      var isFunctionCallEnd = !string && !!source.match(/^ *[)] *$/)
+
       var isWhitespace = !isClosingBracket && !!source.match(/^ *$/)
 
 
-      if (isClosingBracket) {
+      if (isClosingBracket || isFunctionCallEnd) {
         stack.pop()
         return
 
@@ -72,18 +76,22 @@ module.exports = library.export(
         var expression = {
           kind: "return statement",
           expression: sourceToExpression(stack, rhs),
+          id: anId(),
         }
 
-      } else if (functionStart) {
-        var name = functionStart[1]
+      } else if (functionLiteralStart) {
+        var name = functionLiteralStart[1]
 
-        var expression = {kind: "function literal"}
+        var expression = {
+          kind: "function literal",
+          id: anId(),
+        }
 
         if (name.length > 0) {
           expression.functionName = name
         }
 
-        expression.argumentNames = argumentNames(functionStart[2])
+        expression.argumentNames = argumentNames(functionLiteralStart[2])
 
         expression.body = []
 
@@ -110,22 +118,12 @@ module.exports = library.export(
         var expression = anExpression.objectLiteral(eval(object[0]))
 
       } else if (functionCall) {
-        var argSources = functionCall[2].split(",")
-        var args = []
+        var expression = matchToFunctionCall(functionCall)
 
-        for(var i=0; i<argSources.length; i++) {
-          var arg = sourceToExpression(stack, argSources[i])
-          if (arg) {
-            args.push(arg)
-          }
-        }
+      } else if (functionCallStart) {
+        var expression = matchToFunctionCall(functionCallStart)
 
-        var expression = {
-          kind: "function call",
-          functionName: functionCall[1],
-          arguments: args,
-          id: anId(),
-        }
+        stack.push(expression)
 
       } else if (variable) {
         var expression = {
@@ -139,7 +137,28 @@ module.exports = library.export(
 
       } else {
         debugger
-        throw new Error("what now? "+source)
+        throw new Error("render-module's sourceToExpression function doesn't understand this line: "+source)
+      }
+
+      function matchToFunctionCall(match) {
+        var argSources = match[2].split(",")
+        var args = []
+
+        for(var i=0; i<argSources.length; i++) {
+          var arg = sourceToExpression(stack, argSources[i])
+          if (arg) {
+            args.push(arg)
+          }
+        }
+
+        var expression = {
+          kind: "function call",
+          functionName: match[1],
+          arguments: args,
+          id: anId(),
+        }
+
+        return expression
       }
 
 
@@ -148,11 +167,21 @@ module.exports = library.export(
           debugger
           throw new Error("no parent")
         }
-        parent.body.push(expression)
+        if (parent.kind == "function literal") {
+          parent.body.push(expression)
+        } else if (parent.kind == "function call") {
+          parent.arguments.push(expression)
+        } else {
+          throw new Error("Don't know how to add child expressions to a "+parent.kind)
+        }
       }
 
       if (expression.kind == "function literal") {
         stack.push(expression)
+      }
+
+      if (expression && !expression.id) {
+        throw new Error("Didn't give expression an id")
       }
 
       return expression
@@ -315,7 +344,10 @@ module.exports = library.export(
           )
         }
         return "{\n"+keyPairs.join(",\n")+"\n}"
-      }
+      },
+      "return statement": function(expression) {
+        return "return "+expressionToJavascript(expression.expression)
+      },
     }
 
     anExpression.kinds = Object.keys(codeGenerators)

@@ -25,6 +25,10 @@ module.exports = library.export(
       this.getIds = getIds.bind(this)
       this.pairIds = {}
 
+      if (data && data.expressionIds.length > 0 && !data.expressionIds[0]) {
+        throw new Error("no ida!")
+      }
+
       if (data) { this.load(data) }
     }
 
@@ -285,6 +289,9 @@ module.exports = library.export(
 
       this.expressionsById[newExpression.id] = newExpression
 
+      if (!newExpression.id) {
+        throw new Error("expr "+JSON.stringify(newExpression, null, 2)+" doesn't have an id!")
+      }
       this.expressionIds[i] = newExpression.id
     }
 

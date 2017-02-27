@@ -13,6 +13,7 @@ body {
 
 body, button {
   font-family: sans-serif;
+  font-size: 13pt;
   padding-bottom: 1000px;
   padding-top: 150px;
 }
@@ -49,6 +50,7 @@ body, button {
   border-left-width: 0;
   border-right-width: 0;
   display: inline-block;
+  margin-bottom: 2px;
 }
 
 .code-button.literal, .code-button.being-edited-by-human {
@@ -66,10 +68,10 @@ body, button {
   content: " ";
   display: block;
   position: absolute;
-  border-left: 2px solid black;
-  height: 105%;
-  top: 98%;
-  left: 4px;
+  border-left: 0.13em solid black;
+  height: 2.3em;
+  top: 2.1em;
+  left: 0.3em;
   transform: rotate(-20deg);
 }
 
@@ -90,16 +92,12 @@ body, button {
 
 
 .return-label::before {
-  border-color: #5de;
+  border-color: #aaa;
 }
 
 .return-label {
-  color: #5de;
-  /*font-weight: bold;*/
-}
-
-.return-label {
-  border-left: 2px solid #5de;
+  color: #aaa;
+  border-left: 2px solid #aaa;
 }
 
 
@@ -141,14 +139,6 @@ body, button {
 .call-in-call .function-call-name {
   border-bottom-width: 0;
   margin-bottom: -2px;
-}
-
-.function-argument {
-  margin-bottom: 2px;
-}
-
-.function-argument:last-child {
-  margin-bottom: 0;
 }
 
 .code-button.function-call-name,
@@ -214,8 +204,9 @@ body, button {
   border-left: 2px solid #666;
 }
 
-.function-literal-body {
-  padding-left: 12px;
+.function-literal-body,
+.function-literal.function-argument {
+  padding-left: 0.8em;
 }
 
 .leads-to-function-call {
@@ -250,10 +241,10 @@ body, button {
   border-left: 0;
 }
 
-.leads-to-function-call > .rhs {
+/*.leads-to-function-call > .rhs {
   margin-left: 10px;
 }
-
+*/
 
 /* LITERALS */
 

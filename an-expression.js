@@ -362,7 +362,7 @@ module.exports = library.export(
 
         js = js + "\n//# sourceURL="+fileName+".js"
 
-        eval(js)
+        return eval(js)
       }
 
     function expressionToJavascript(expression) {

@@ -535,7 +535,7 @@ module.exports = library.export(
   "renderers",
   rendererModules,
   function() {
-    return true
+    return {}
   }
 )
 

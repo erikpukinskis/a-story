@@ -28,7 +28,16 @@ module.exports = library.export(
         })
       )
 
-      bridge.send(program.element)
+      var title = element(
+        module.name,
+        element.style({
+          "font-size": "1.6em",
+          "line-height": "2em",
+          "margin-top": "-2em",
+        })
+      )
+
+      bridge.send(element(title, program.element))
     }
 
     renderModule.prepareSite = function(site) {

@@ -31,7 +31,9 @@ module.exports = library.export(
       var title = element(
         module.name,
         element.style({
-          "font-size": "1.6em",
+          "color": "cyan",
+          "font-weight": "bold",
+          "font-size": "1.2em",
           "line-height": "2em",
           "margin-top": "-2em",
         })

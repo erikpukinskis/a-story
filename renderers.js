@@ -2,17 +2,12 @@ var library = require("module-library")(require)
 
 require("./actions")
 
-var rendererModules = library.using(
-  ["./an-expression"],
-  function(anExpression) {
+var rendererModules = ["function call","array literal","function literal","string literal","number literal","empty expression","variable assignment","variable reference","object literal","return statement"].map(toModuleName)
 
-    function toModuleName(kind) {
-      return "render-"+kind.replace(" ", "-")
-    }
+function toModuleName(kind) {
+  return "render-"+kind.replace(" ", "-")
+}
 
-    return anExpression.kinds.map(toModuleName)
-  }
-)
 
 library.define(
   "render-empty-expression",

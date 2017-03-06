@@ -1,23 +1,17 @@
 {
-  "name": "render-module",
-  "version": "0.9.0",
-  "description": "Web app for editing and running a javascript expression with dependencies",
-  "main": "render-module.js",
+  "name": "render-expression",
+  "version": "0.10.0",
+  "description": "Web editor for a single unit of javascript code",
+  "main": "render-expression.js",
   "dependencies": {
     "module-library": "*",
     "web-element": "*",
-    "web-site": "*",
-    "browser-bridge": "*",
+    "basic-styles": "*",
+    "add-html": "*",
     "bridge-module": "*",
     "function-call": "*",
-    "make-it-editable": "*"
-  },
-  "scripts": {
-    "start": "node server",
-    "test": "node test"
-  },
-  "devDependencies": {
-    "run-test": "*"
+    "make-it-editable": "*",
+    "an-expression": "*"
   },
   "repository": {
     "type": "git",

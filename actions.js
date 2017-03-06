@@ -3,7 +3,7 @@ var library = require("module-library")(require)
 library.define(
   "add-key-pair",
   ["render-key-pair", "an-expression", "program", "add-html"],
-  function(keyPair, anExpression, Program, addHtml) {
+  function(keyPair, Program, addHtml) {
 
     return function(programId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
 
@@ -64,12 +64,13 @@ library.define(
 
 library.define(
   "add-line",
-  ["expression-to-element", "add-html", "program"],
-  function(expressionToElement, addHtml, Program) {
+  ["expression-to-element", "add-html", "an-expression"],
+  function(expressionToElement, addHtml, anExpression) {
 
     function addLine(programId, ghostElementId, relativeToThisId, relationship, newExpression) {
     
-      var program = Program.findById(programId)
+      throw new Error("anExpression doesn't implement getProgram yet!")
+      var program = anExpression.getProgram(programId)
 
       var parentExpression = program.getParentOf(relativeToThisId)
 

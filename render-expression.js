@@ -2,17 +2,15 @@ var library = require("module-library")(require)
 
 
 module.exports = library.export(
-  "draw-expression",
-  ["make-it-editable", "./expression-to-element", "./program", "./renderers", "bridge-module"],
+  "render-expression",
+  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module"],
   function(makeItEditable, expressionToElement, Program, renderers, bridgeModule) {
 
-    function drawExpression(expression, bridge) {
+    function renderExpression(program, expression, bridge) {
 
       bridgeModule(library, "renderers", bridge)
 
       makeItEditable.prepareBridge(bridge)
-
-      program = new Program()
 
       var el = expressionToElement(expression, program)
 
@@ -21,8 +19,7 @@ module.exports = library.export(
       return program
     }
 
-    return drawExpression
-
+    return renderExpression
   }
 )
 

@@ -3,20 +3,38 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "render-expression",
-  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module"],
-  function(makeItEditable, expressionToElement, Program, renderers, bridgeModule) {
+  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module", "web-element"],
+  function(makeItEditable, expressionToElement, renderers, bridgeModule, element) {
 
-    function renderExpression(program, expression, bridge) {
+    function renderExpression(bridge, expression, program) {
 
-      bridgeModule(library, "renderers", bridge)
+      if (!bridge.remember("render-expression")) {
 
-      makeItEditable.prepareBridge(bridge)
+        bridgeModule(library, "renderers", bridge)
+
+        bridge.addToHead(
+          element("link", {
+            rel: "stylesheet",
+            href: "/render-module/styles.css"
+          })
+        )
+
+        makeItEditable.prepareBridge(bridge)
+      }
 
       var el = expressionToElement(expression, program)
 
       program.element = el
+    }
 
-      return program
+    renderExpression.prepareSite = function(site) {
+
+      site.addRoute(
+        "get",
+        "/render-module/styles.css",
+        site.sendFile(__dirname, "styles.css")
+      )
+
     }
 
     return renderExpression

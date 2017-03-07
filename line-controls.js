@@ -2,7 +2,7 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "./scroll-to-select", "./choose-expression"],
+  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "scroll-to-select", "./choose-expression"],
   function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect) {
     var selectionIsHidden = true
     var controlsAreVisible

@@ -11,7 +11,11 @@
     "bridge-module": "*",
     "function-call": "*",
     "make-it-editable": "*",
-    "an-expression": "*"
+    "an-expression": "*",
+    "scroll-to-select": "*"
+  },
+  "devDependencies": {
+    "web-host": "*"
   },
   "repository": {
     "type": "git",

@@ -24,7 +24,7 @@ module.exports = library.export(
 
       var el = expressionToElement(expression, program)
 
-      program.element = el
+      bridge.send(el)
     }
 
     renderExpression.prepareSite = function(site) {

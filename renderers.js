@@ -175,8 +175,25 @@ library.define(
 
 library.define(
   "render-function-literal",
-  ["web-element", "render-function-literal-body", "render-argument-name"],
-  function(element, functionLiteralBody, argumentName) {
+  ["web-element", "render-function-literal-body", "make-it-editable"],
+  function(element, functionLiteralBody, makeItEditable) {
+
+    var renderArgumentName = element.template(
+      ".code-button.argument-name",
+      function(expressionId, name, argumentIndex, program) {
+
+        this.children.push(
+          element.raw(name)
+        )
+        
+        makeItEditable(
+          this,
+          program.asBinding().methodCall("getArgumentName").withArgs(expressionId, argumentIndex),
+          program.asBinding().methodCall("renameArgument").withArgs(expressionId, argumentIndex)
+        )
+
+      }
+    )
 
     var renderFunctionLiteral =  element.template(
       ".function-literal",
@@ -207,7 +224,7 @@ library.define(
           ".function-argument-names",
           expression.argumentNames.map(
             function(name, index) {
-              return argumentName(expression.id, name, index)
+              return renderArgumentName(expression.id, name, index, program)
             }
           )
         )
@@ -230,34 +247,6 @@ library.define(
     return renderFunctionLiteral
   }
 )
-
-
-
-library.define(
-  "render-argument-name",
-  ["web-element", "make-it-editable"],
-  function(element, makeItEditable) {
-
-    return element.template(
-      ".code-button.argument-name",
-      function argumentNameRenderer(expressionId, name, argumentIndex) {
-
-        this.children.push(
-          element.raw(name)
-        )
-        
-        makeItEditable(
-          this,
-          program.asBinding().methodCall("getArgumentName").withArgs(expressionId, argumentIndex),
-          program.asBinding().methodCall("renameArgument").withArgs(expressionId, argumentIndex)
-        )
-
-      }
-    )
-
-  }
-)
-
 
 
 

@@ -17,6 +17,9 @@
   "devDependencies": {
     "web-host": "*"
   },
+  "scripts": {
+    "start": "node demo"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/erikpukinskis/render-expression.git"

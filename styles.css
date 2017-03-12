@@ -7,42 +7,9 @@ No transparency. Everything is a solid color.
 */
 
 
-body {
-  padding: 30px 20px;
-}
-
 body, button {
   font-family: sans-serif;
   font-size: 13pt;
-  padding-bottom: 1000px;
-  padding-top: 150px;
-}
-
-.two-columns {
-  margin: 20px auto;
-  width: 700px;
-}
-
-.column {
-  width: 340px;
-  margin-left: 10px;
-  float: right;
-}
-
-@media (max-width: 700px) {
-  .two-columns {
-    margin-top: 10px;
-  }
-
-  .column {
-    float: none;
-  }
-}
-
-.output {
-  height: 200px;
-  background: #fafafa;
-  padding: 10px;
 }
 
 .code-button {
@@ -56,7 +23,6 @@ body, button {
 .code-button.literal, .code-button.being-edited-by-human {
   /*padding-right: 12px;*/
 }
-
 
 .indenter {
   position: relative;

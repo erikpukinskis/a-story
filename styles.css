@@ -187,6 +187,20 @@ body, button {
 }
 
 
+
+
+.source-code {
+  background: black;
+  color: lime;
+  white-space: pre;
+  font-family: Lucida Console, Monaco, monospace;
+  display: inline;
+  font-size: 0.7em;
+  padding: 3px 0;
+}
+
+
+
 .empty-expression {
   display: inline-block;
   color: #ccc;

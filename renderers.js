@@ -43,6 +43,23 @@ library.define(
 )
 
 
+
+library.define(
+  "render-source",
+  ["web-element"],
+  function(element) {
+
+    return element.template(
+      ".source-code",
+      function emptyExpressionRenderer(expression) {
+        this.addChild(expression.source.trim())
+      }
+    )
+
+  }
+)
+
+
 library.define(
   "render-function-call",
   ["web-element", "expression-to-element", "make-it-editable"],

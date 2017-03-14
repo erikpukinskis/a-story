@@ -133,7 +133,7 @@ library.define(
   function(element, makeItEditable) {
 
     return element.template(
-      ".code-button.literal",
+      ".code-button.literal.string-literal",
       function stringLiteralRenderer(expression, program) {
         this.id = expression.id
 

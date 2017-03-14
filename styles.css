@@ -232,6 +232,11 @@ body, button {
   background: #fafafa;
 }
 
+.string-literal {
+  display: inline;
+  line-height: 2.5em;
+}
+
 .object-literal {
   background: #fafafa;
 }

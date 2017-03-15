@@ -2,14 +2,14 @@ var library = require("module-library")(require)
 
 library.define(
   "add-key-pair",
-  ["render-key-pair", "an-expression", "program", "add-html"],
-  function(keyPair, Program, addHtml) {
+  ["render-key-pair", "an-expression", "add-html"],
+  function(keyPair, anExpression, addHtml) {
 
-    return function(programId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
+    return function(treeId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
 
-      var program = Program.findById(programId)
+      var tree = anExpression.getTree(treeId)
 
-      var objectExpression = program.get(objectExpressionId)
+      var objectExpression = tree.get(objectExpressionId)
 
       var index = objectExpression.keys.indexOf(relativeToKey)
       if (relationship == "after") {
@@ -18,10 +18,10 @@ library.define(
 
       var valueExpression = anExpression.emptyExpression()
 
-      var pairExpression = program.addKeyPair(objectExpression, "", valueExpression, {index: index})
+      var pairExpression = tree.addKeyPair(objectExpression, "", valueExpression, {index: index})
 
       var el = keyPair(
-        pairExpression, program
+        pairExpression, tree
       )
 
       var neighbor = document.getElementById(insertByThisId)
@@ -67,10 +67,10 @@ library.define(
   ["expression-to-element", "add-html", "an-expression"],
   function(expressionToElement, addHtml, anExpression) {
 
-    function addLine(programId, ghostElementId, relativeToThisId, relationship, newExpression) {
+    function addLine(treeId, ghostElementId, relativeToThisId, relationship, newExpression) {
     
       throw new Error("anExpression doesn't implement getProgram yet!")
-      var program = anExpression.getProgram(programId)
+      var program = anExpression.getTree(treeId)
 
       var parentExpression = program.getParentOf(relativeToThisId)
 

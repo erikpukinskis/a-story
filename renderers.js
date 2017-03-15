@@ -174,6 +174,9 @@ library.define(
       function numberLiteralRenderer(expression, program) {
         this.id = expression.id
 
+        if (typeof expression.number != "number") {
+          throw new Error("Number on expression "+JSON.stringify(expression)+" isn't a number")
+        }
         this.children.push(element.raw(expression.number.toString()))
 
         makeItEditable(

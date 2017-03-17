@@ -1,14 +1,15 @@
 var library = require("module-library")(require)
 
 library.using(
-  ["web-host", "an-expression", "./"],
-  function(host, anExpression, renderExpression) {
+  ["web-host", "an-expression", "./", "javascript-to-ezjs"],
+  function(host, anExpression, renderExpression, javascriptToEzjs) {
 
     var func = function() {
       return function(bridge) {
         bridge.send("hello, world")
       }
     }
+
 
     host.onSite(function(site) {
       renderExpression.prepareSite(site)
@@ -18,12 +19,13 @@ library.using(
 
       var bridge = getBridge()
 
-      var expression = anExpression.functionLiteral(func)
+      var functionLiteral = javascriptToEzjs(func.toString())
 
-      var program = anExpression.program()
+      var tree = anExpression()
 
-      renderExpression(bridge, expression, program)
+      renderExpression(bridge, functionLiteral, tree)
     })
 
   }
 )
+

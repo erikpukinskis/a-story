@@ -15,7 +15,8 @@
     "scroll-to-select": "*"
   },
   "devDependencies": {
-    "web-host": "*"
+    "web-host": "*",
+    "javascript-to-ezjs": "*"
   },
   "scripts": {
     "start": "node demo"

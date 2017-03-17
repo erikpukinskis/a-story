@@ -70,9 +70,12 @@ library.define(
       function functionCallRenderer(expression, program) {
         this.id = expression.id
 
+        var label =           expression.functionName+"("
+        if (expression.arguments.length < 1) { label += ")" }
+
         var button = element(
           ".code-button.function-call-name",
-          expression.functionName
+          label
         )
 
         makeItEditable(

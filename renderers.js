@@ -67,7 +67,7 @@ library.define(
 
     return element.template(
       ".function-call",
-      function functionCallRenderer(expression, program) {
+      function functionCallRenderer(expression, tree) {
         this.id = expression.id
 
         var label =           expression.functionName+"("
@@ -80,8 +80,8 @@ library.define(
 
         makeItEditable(
           button,
-          program.asBinding().methodCall("getProperty").withArgs("functionName", expression.id),
-          program.asBinding().methodCall("setProperty").withArgs("functionName", expression.id)
+          tree.asBinding().methodCall("getProperty").withArgs("functionName", expression.id),
+          tree.asBinding().methodCall("setProperty").withArgs("functionName", expression.id)
         )
 
         this.children.push(button)
@@ -93,21 +93,21 @@ library.define(
         container.children =
           argumentsToElements(
             expression.arguments,
-            expression, program
+            expression, tree
           )
 
         this.children.push(container)
       }
     )
 
-    function argumentsToElements(args, parent, program) {
+    function argumentsToElements(args, parent, tree) {
 
       var elements = []
       for(var i=0; i<args.length; i++) {
 
         var expression = args[i]
         var isFunctionCall = expression.kind == "function call"
-        var arg = expressionToElement(expression, program)
+        var arg = expressionToElement(expression, tree)
 
         arg.classes.push(
           "function-argument")
@@ -137,7 +137,7 @@ library.define(
 
     return element.template(
       ".code-button.literal.string-literal",
-      function stringLiteralRenderer(expression, program) {
+      function stringLiteralRenderer(expression, tree) {
         this.id = expression.id
 
         if (!expression.string || !expression.string.replace) {
@@ -154,8 +154,8 @@ library.define(
 
         makeItEditable(
           this,
-          program.asBinding().methodCall("getProperty").withArgs("string", expression.id),
-          program.asBinding().methodCall("setProperty").withArgs("string", expression.id),
+          tree.asBinding().methodCall("getProperty").withArgs("string", expression.id),
+          tree.asBinding().methodCall("setProperty").withArgs("string", expression.id),
           {updateElement: stringElement}
         )
       }
@@ -174,7 +174,7 @@ library.define(
 
     return element.template(
       ".code-button.literal",
-      function numberLiteralRenderer(expression, program) {
+      function numberLiteralRenderer(expression, tree) {
         this.id = expression.id
 
         if (typeof expression.number != "number") {
@@ -184,8 +184,8 @@ library.define(
 
         makeItEditable(
           this,
-          program.asBinding().methodCall("getProperty").withArgs("number", expression.id),
-          program.asBinding().methodCall("setFloatProperty").withArgs("number", expression.id)
+          tree.asBinding().methodCall("getProperty").withArgs("number", expression.id),
+          tree.asBinding().methodCall("setFloatProperty").withArgs("number", expression.id)
         )
       }
     )
@@ -203,7 +203,7 @@ library.define(
 
     var renderArgumentName = element.template(
       ".code-button.argument-name",
-      function(expressionId, name, argumentIndex, program) {
+      function(expressionId, name, argumentIndex, tree) {
 
         this.children.push(
           element.raw(name)
@@ -211,8 +211,8 @@ library.define(
         
         makeItEditable(
           this,
-          program.asBinding().methodCall("getArgumentName").withArgs(expressionId, argumentIndex),
-          program.asBinding().methodCall("renameArgument").withArgs(expressionId, argumentIndex)
+          tree.asBinding().methodCall("getArgumentName").withArgs(expressionId, argumentIndex),
+          tree.asBinding().methodCall("renameArgument").withArgs(expressionId, argumentIndex)
         )
 
       }
@@ -220,8 +220,8 @@ library.define(
 
     var renderFunctionLiteral =  element.template(
       ".function-literal",
-      function functionLiteralRenderer(expression, program, options) {
-        options = options || {}
+      function functionLiteralRenderer(expression, tree, options) {
+
         this.id = expression.id
 
         var children = this.children
@@ -231,7 +231,7 @@ library.define(
           "function"
         )
 
-        if (options.inline) {
+        if (options && options.inline) {
           labelEl.addSelector(".inline")
         } else {
           labelEl.addSelector(".indenter")
@@ -247,14 +247,14 @@ library.define(
           ".function-argument-names",
           expression.argumentNames.map(
             function(name, index) {
-              return renderArgumentName(expression.id, name, index, program)
+              return renderArgumentName(expression.id, name, index, tree)
             }
           )
         )
 
         children.push(argumentNames)
 
-        children.push(functionLiteralBody(expression, program))
+        children.push(functionLiteralBody(expression, tree))
       }
     )
 
@@ -282,26 +282,26 @@ library.define(
 
     return element.template(
       ".function-literal-body",
-      function functionLiteralBodyRenderer(parent, program) {
+      function functionLiteralBodyRenderer(parent, tree) {
 
         previous = null
         
-        this.children = parent.body.map(renderChild.bind(null, parent, program))
+        this.children = parent.body.map(renderChild.bind(null, parent, tree))
       }
     )
 
-    function renderChild(parent, program, child) {
+    function renderChild(parent, tree, child) {
 
       // do we need this after we pull fillEmptyFunction in here?
 
       child.role = "function literal line"
 
-      var el = expressionToElement(child, program)
+      var el = expressionToElement(child, tree)
 
       if (child.kind == "empty expression") {
 
         var addIt = addLine.asBinding().withArgs(
-          program.id,
+          tree.id,
           child.id,
           child.id,
           "inPlaceOf"
@@ -310,7 +310,7 @@ library.define(
         el.attributes.onclick = getExpression.withArgs(addIt).evalable()
       }
 
-      program.setParent(child.id, parent)
+      tree.setParent(child.id, parent)
 
       el.classes.push("function-literal-line")
 
@@ -334,12 +334,12 @@ library.define(
 
     return element.template(
       ".return-statement",
-      function returnStatementRenderer(expression, program) {
+      function returnStatementRenderer(expression, tree) {
 
         var returnButton = element(".code-button.return-label.indenter", "return")
         this.addChild(returnButton)
 
-        var rhs = expressionToElement(expression.expression, program, {inline: true})
+        var rhs = expressionToElement(expression.expression, tree, {inline: true})
         rhs.addSelector(".rhs")
         this.addChild(rhs)
       }
@@ -355,7 +355,7 @@ library.define(
 
     return element.template(
       ".variable-assignment",
-      function variableAssignmentRenderer(expression, program) {
+      function variableAssignmentRenderer(expression, tree) {
         this.id = expression.id
 
         if (!expression.variableName) {
@@ -377,8 +377,8 @@ library.define(
 
         makeItEditable(
           lhs,
-          program.asBinding().methodCall("getProperty").withArgs("variableName", expression.id),
-          program.asBinding().methodCall("setProperty").withArgs("variableName", expression.id),
+          tree.asBinding().methodCall("getProperty").withArgs("variableName", expression.id),
+          tree.asBinding().methodCall("setProperty").withArgs("variableName", expression.id),
           {updateElement: nameSpan}
         )
 
@@ -387,7 +387,7 @@ library.define(
         }
 
         var rhs = expressionToElement(
-          expression.expression, program)
+          expression.expression, tree)
 
         // parentExpressionsByChildId[rhs.id] = expression
 
@@ -409,18 +409,18 @@ library.define(
 
     return element.template(
       ".object-literal",
-      function objectLiteralRenderer(expression, program) {
+      function objectLiteralRenderer(expression, tree) {
         this.id = expression.id
 
         for(var key in expression.valuesByKey) {
 
           var valueExpression = expression.valuesByKey[key]
 
-          var pair = program.addKeyPair(expression, key, valueExpression)
+          var pair = tree.addKeyPair(expression, key, valueExpression)
 
           var el = keyPair(
             pair,
-            program
+            tree
           )
 
           this.children.push(el)
@@ -440,7 +440,7 @@ library.define(
 
     var keyPair = element.template(
       ".key-pair",
-      function keyPairRenderer(pairExpression, program) {
+      function keyPairRenderer(pairExpression, tree) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
@@ -460,8 +460,8 @@ library.define(
 
         makeItEditable(
           keyButton,
-          program.asBinding().methodCall("getKeyName").withArgs(pairExpression.id),
-          program.asBinding().methodCall("onKeyRename").withArgs(pairExpression.id),
+          tree.asBinding().methodCall("getKeyName").withArgs(pairExpression.id),
+          tree.asBinding().methodCall("onKeyRename").withArgs(pairExpression.id),
           {updateElement: textElement}
         )
 
@@ -471,9 +471,9 @@ library.define(
 
         var valueElement =
           expressionToElement(
-            valueExpression, program)
+            valueExpression, tree)
 
-        program.setKeyValue(pairExpression, valueExpression, valueElement)
+        tree.setKeyValue(pairExpression, valueExpression, valueElement)
 
         valueElement.classes.push("key-value")
 
@@ -516,7 +516,7 @@ library.define(
     return element.template(
       ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
 
-      function arrayLiteralRenderer(expression, program) {
+      function arrayLiteralRenderer(expression, tree) {
         this.id = expression.id
 
         var items = expression.items
@@ -526,7 +526,7 @@ library.define(
         function itemToElement(item) {
           return element(
             ".array-item",
-            expressionToElement(item, program)
+            expressionToElement(item, tree)
           )
         }
       }

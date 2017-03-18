@@ -62,12 +62,12 @@ library.define(
 
 library.define(
   "render-function-call",
-  ["web-element", "expression-to-element", "make-it-editable"],
+  ["web-element", "./expression-to-element", "make-it-editable"],
   function(element, expressionToElement, makeItEditable) {
 
     return element.template(
       ".function-call",
-      function functionCallRenderer(expression, tree) {
+      function functionCallRenderer(expression, tree, options) {
         this.id = expression.id
 
         var label =           expression.functionName+"("
@@ -107,7 +107,7 @@ library.define(
 
         var expression = args[i]
         var isFunctionCall = expression.kind == "function call"
-        var arg = expressionToElement(expression, tree)
+        var arg = expressionToElement(expression, tree, options)
 
         arg.classes.push(
           "function-argument")
@@ -137,7 +137,7 @@ library.define(
 
     return element.template(
       ".code-button.literal.string-literal",
-      function stringLiteralRenderer(expression, tree) {
+      function stringLiteralRenderer(expression, tree, options) {
         this.id = expression.id
 
         if (!expression.string || !expression.string.replace) {
@@ -174,7 +174,7 @@ library.define(
 
     return element.template(
       ".code-button.literal",
-      function numberLiteralRenderer(expression, tree) {
+      function numberLiteralRenderer(expression, tree, options) {
         this.id = expression.id
 
         if (typeof expression.number != "number") {
@@ -254,7 +254,7 @@ library.define(
 
         children.push(argumentNames)
 
-        children.push(functionLiteralBody(expression, tree))
+        children.push(functionLiteralBody(expression, tree, options))
       }
     )
 
@@ -275,7 +275,7 @@ library.define(
 
 library.define(
   "render-function-literal-body",
-  ["web-element", "add-line", "expression-to-element"],
+  ["web-element", "add-line", "./expression-to-element"],
   function(element, addLine, expressionToElement) {
 
     var previous
@@ -296,7 +296,7 @@ library.define(
 
       child.role = "function literal line"
 
-      var el = expressionToElement(child, tree)
+      var el = expressionToElement(child, tree, options)
 
       if (child.kind == "empty expression") {
 
@@ -329,17 +329,18 @@ library.define(
 
 library.define(
   "render-return-statement",
-  ["web-element", "expression-to-element"],
+  ["web-element", "./expression-to-element"],
   function(element, expressionToElement) {
 
     return element.template(
       ".return-statement",
-      function returnStatementRenderer(expression, tree) {
+      function returnStatementRenderer(expression, tree, options) {
 
         var returnButton = element(".code-button.return-label.indenter", "return")
         this.addChild(returnButton)
 
-        var rhs = expressionToElement(expression.expression, tree, {inline: true})
+        options.inline = true
+        var rhs = expressionToElement(expression.expression, tree, options)
         rhs.addSelector(".rhs")
         this.addChild(rhs)
       }
@@ -350,12 +351,12 @@ library.define(
 
 library.define(
   "render-variable-assignment",
-  ["web-element", "expression-to-element", "make-it-editable"],
+  ["web-element", "./expression-to-element", "make-it-editable"],
   function(element, expressionToElement, makeItEditable) {
 
     return element.template(
       ".variable-assignment",
-      function variableAssignmentRenderer(expression, tree) {
+      function variableAssignmentRenderer(expression, tree, options) {
         this.id = expression.id
 
         if (!expression.variableName) {
@@ -387,7 +388,7 @@ library.define(
         }
 
         var rhs = expressionToElement(
-          expression.expression, tree)
+          expression.expression, tree, options)
 
         // parentExpressionsByChildId[rhs.id] = expression
 
@@ -409,7 +410,7 @@ library.define(
 
     return element.template(
       ".object-literal",
-      function objectLiteralRenderer(expression, tree) {
+      function objectLiteralRenderer(expression, tree, options) {
         this.id = expression.id
 
         for(var key in expression.valuesByKey) {
@@ -435,12 +436,12 @@ library.define(
 
 library.define(
   "render-key-pair",
-  ["web-element", "make-it-editable", "expression-to-element"],
+  ["web-element", "make-it-editable", "./expression-to-element"],
   function(element, makeItEditable, expressionToElement) {
 
     var keyPair = element.template(
       ".key-pair",
-      function keyPairRenderer(pairExpression, tree) {
+      function keyPairRenderer(pairexpression, tree, options) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
@@ -471,7 +472,7 @@ library.define(
 
         var valueElement =
           expressionToElement(
-            valueExpression, tree)
+            valueexpression, tree, options)
 
         tree.setKeyValue(pairExpression, valueExpression, valueElement)
 
@@ -510,13 +511,13 @@ library.define(
 
 library.define(
   "render-array-literal",
-  ["web-element", "expression-to-element"],
+  ["web-element", "./expression-to-element"],
   function(element, expressionToElement) {
 
     return element.template(
       ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
 
-      function arrayLiteralRenderer(expression, tree) {
+      function arrayLiteralRenderer(expression, tree, options) {
         this.id = expression.id
 
         var items = expression.items
@@ -526,7 +527,7 @@ library.define(
         function itemToElement(item) {
           return element(
             ".array-item",
-            expressionToElement(item, tree)
+            expressionToElement(item, tree, options)
           )
         }
       }

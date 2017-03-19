@@ -51,7 +51,7 @@ library.using(
 
       var bridge = getBridge()
 
-      var functionLiteral = javascriptToEzjs(buildAHouse.toString())
+      var functionLiteral = javascriptToEzjs(func.toString())
 
       var tree = anExpression()
 

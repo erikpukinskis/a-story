@@ -228,7 +228,6 @@ library.define(
             args.addChild(symbols.br)
           }
 
-
           var argEl = expressionToElement(arg, tree, options)
 
           args.addChild(argEl)
@@ -399,6 +398,7 @@ library.define(
         "font-size": "15pt",
         "color": colors.black,
         "line-height": "1.2em",
+        "display": "inline",
       }),
 
       element.style(".function-name", {
@@ -471,14 +471,12 @@ library.define(
 
           var child = renderChild(expression, tree, options, expression.body[i])
 
-          options.addSymbolsHere = child
-
           body.addChild(child)
         }
 
-        this.addChild(body)
-
         options.addSymbolsHere.addChild(symbols.closeFunction)
+
+        this.addChild(body)
       }
     )
 

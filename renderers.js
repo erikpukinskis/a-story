@@ -221,15 +221,17 @@ library.define(
 
         for(var i=0; i<expression.arguments.length; i++) {
 
-          var arg = expressionToElement(expression.arguments[i], tree, options)
+          var arg = expression.arguments[i]
 
-          options.addSymbolsHere = arg
-
-          if (i>0) {
-            args.addChildren(symbols.comma, symbols.br)
+          if (i > 0) {
+            options.addSymbolsHere.addChild(symbols.comma)
+            args.addChild(symbols.br)
           }
 
-          args.addChildren(arg)
+
+          var argEl = expressionToElement(arg, tree, options)
+
+          args.addChild(argEl)
         }
 
 
@@ -273,6 +275,8 @@ library.define(
           tree.asBinding().methodCall("setProperty").withArgs("string", expression.id)
         )
 
+        options.addSymbolsHere = this
+
       }
     )
 
@@ -288,8 +292,14 @@ library.define(
   ["web-element", "make-it-editable"],
   function(element, makeItEditable) {
 
-    return element.template(
-      ".code-button.literal",
+    var stylesheet = element.stylesheet([
+      element.style(".number-literal", {
+        "display": "inline",
+      }),
+    ])
+
+    var renderNumberLiteral = element.template(
+      ".number-literal",
       function numberLiteralRenderer(expression, tree, options) {
         this.id = expression.id
 
@@ -303,9 +313,17 @@ library.define(
           tree.asBinding().methodCall("getProperty").withArgs("number", expression.id),
           tree.asBinding().methodCall("setFloatProperty").withArgs("number", expression.id)
         )
+
+        options.addSymbolsHere = this
+
       }
     )
 
+    renderNumberLiteral.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
+
+    return renderNumberLiteral
   }
 )
 
@@ -573,32 +591,64 @@ library.define(
 
 library.define(
   "render-object-literal",
-  ["web-element", "render-key-pair"],
-  function(element, keyPair) {
-    return function() {
-      return element("[[[ object ]]]")
-    }
-    return element.template(
+  ["web-element", "render-key-pair", "symbols", "colors"],
+  function(element, renderKeyPair, symbols, colors) {
+
+    var stylesheet = element.stylesheet([
+      element.style(".object-literal", {
+        "display": "inline",
+      }),
+
+      element.style(".object-pairs", {
+        "border-left": "0.15em solid "+colors.electric,
+        "padding-left": "0.5em",
+      }),
+
+      element.style(".key-pair", {
+        "display": "inline",
+      }),
+    ])
+
+    var renderObjectLiteral = element.template(
       ".object-literal",
-      function objectLiteralRenderer(expression, tree, options) {
+      function(expression, tree, options) {
         this.id = expression.id
+
+        options.addSymbolsHere.addChild(symbols.openObject)
+
+        var pairs = element(".object-pairs")
+
+        var first = true
 
         for(var key in expression.valuesByKey) {
 
           var valueExpression = expression.valuesByKey[key]
 
+          if (!first) {
+            pairs.addChildren(symbols.br)
+          }
+          first = false
+
           var pair = tree.addKeyPair(expression, key, valueExpression)
 
-          var el = keyPair(
-            pair,
-            tree
-          )
+          var el = renderKeyPair(pair, tree, options)
 
-          this.children.push(el)
+          options.addSymbolsHere = el
+
+          pairs.addChild(el)
         }
+
+        this.addChild(pairs)
+
+        options.addSymbolsHere.addChild(symbols.closeObject)
       }
     )
+
+    renderObjectLiteral.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
      
+    return renderObjectLiteral
   }
 )
 
@@ -606,49 +656,40 @@ library.define(
 
 library.define(
   "render-key-pair",
-  ["web-element", "make-it-editable", "./expression-to-element"],
-  function(element, makeItEditable, expressionToElement) {
+  ["web-element", "make-it-editable", "./expression-to-element", "symbols"],
+  function(element, makeItEditable, expressionToElement, symbols) {
 
     var keyPair = element.template(
       ".key-pair",
-      function keyPairRenderer(pairexpression, tree, options) {
+      function keyPairRenderer(pairExpression, tree, options) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
 
-        var textElement = element(
+        var keyEl = element(
           "span",
           element.raw(key)
         )
 
-        var keyButton = element(
-          ".code-button.key",
-          [
-            textElement,
-            element("span", ":")
-          ]
-        )
-
         makeItEditable(
-          keyButton,
+          keyEl,
           tree.asBinding().methodCall("getKeyName").withArgs(pairExpression.id),
-          tree.asBinding().methodCall("onKeyRename").withArgs(pairExpression.id),
-          {updateElement: textElement}
+          tree.asBinding().methodCall("onKeyRename").withArgs(pairExpression.id)
         )
 
-        this.children.push(keyButton)
+        this.addChildren(keyEl, symbols.colon)
 
         var valueExpression = pairExpression.objectExpression.valuesByKey[key]
 
         var valueElement =
           expressionToElement(
-            valueexpression, tree, options)
+            valueExpression, tree, options)
 
         tree.setKeyValue(pairExpression, valueExpression, valueElement)
 
         valueElement.classes.push("key-value")
 
-        this.children.push(valueElement)
+        this.addChild(valueElement)
 
         this.startEditing = function() {
           eval(keyButton.attributes.onclick)
@@ -674,10 +715,12 @@ library.define(
 
     var renderVariableReference = element.template(
       ".variable-reference",
-      function(expression) {
+      function(expression, tree, options) {
         this.addChild(element.raw(
           expression.variableName
         ))
+
+        options.addSymbolsHere = this
       }
     )
 

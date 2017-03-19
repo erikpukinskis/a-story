@@ -11,6 +11,38 @@ library.using(
     }
 
 
+    function buildAHouse(issueBond, showSource, library, renderBond) {
+      var buildPanel = issueBond([
+        "cut studs to length",
+        "cut track to length",
+        "crimp",
+        "add sheathing",
+        "flipsulate",
+        "add sheathing"]
+      )
+
+      issueBond.expense(
+        buildPanel,
+        "labor",
+        "$100"
+      )
+
+      checkBook(
+        "someString",
+        {"one of": 1001, "two-w3":2222}
+      )
+
+      showSource.hostModule(
+        library,
+        "render-bond",
+        buildPanel
+      )
+
+      return buildPanel
+    }
+
+
+    console.log("HAM!", buildAHouse.toString())
     host.onSite(function(site) {
       renderExpression.prepareSite(site)
     })
@@ -19,7 +51,7 @@ library.using(
 
       var bridge = getBridge()
 
-      var functionLiteral = javascriptToEzjs(func.toString())
+      var functionLiteral = javascriptToEzjs(buildAHouse.toString())
 
       var tree = anExpression()
 

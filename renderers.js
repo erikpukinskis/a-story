@@ -507,37 +507,39 @@ library.define(
 
 library.define(
   "render-variable-assignment",
-  ["web-element", "./expression-to-element", "make-it-editable"],
-  function(element, expressionToElement, makeItEditable) {
+  ["web-element", "./expression-to-element", "make-it-editable", "symbols"],
+  function(element, expressionToElement, makeItEditable, symbols) {
 
-    return element.template(
+    var stylesheet = element.stylesheet([
+      element.style(".variable-assignment", {
+        "display": "inline",
+      }),
+    ])
+
+    var renderVariableAssignment = element.template(
       ".variable-assignment",
-      function variableAssignmentRenderer(expression, tree, options) {
+      function(expression, tree, options) {
         this.id = expression.id
 
         if (!expression.variableName) {
           throw new Error("can't render a variable assignment without a variable name. Expression: "+JSON.stringify(expression, null, 2))
         }
 
+        this.addChild(symbols.var)
+
         var nameSpan = element("span",
           expression.variableName
         )
 
-        var lhs = element(
-          ".code-button.variable-name",
-          [
-            element("span", "var&nbsp;"),
-            nameSpan,
-            element("span", "&nbsp;=")
-          ]
+        makeItEditable(
+          nameSpan,
+          tree.asBinding().methodCall("getProperty").withArgs("variableName", expression.id),
+          tree.asBinding().methodCall("setProperty").withArgs("variableName", expression.id)
         )
 
-        makeItEditable(
-          lhs,
-          tree.asBinding().methodCall("getProperty").withArgs("variableName", expression.id),
-          tree.asBinding().methodCall("setProperty").withArgs("variableName", expression.id),
-          {updateElement: nameSpan}
-        )
+        this.addChild(nameSpan)
+
+        this.addChild(symbols.equals)
 
         if (!expression.expression.kind) {
           throw new Error("rhs of assignment is fucked: "+JSON.stringify(expression, null, 2))
@@ -546,14 +548,19 @@ library.define(
         var rhs = expressionToElement(
           expression.expression, tree, options)
 
-        // parentExpressionsByChildId[rhs.id] = expression
+        // tree.setParent(rhs.id, expression)
 
         rhs.addSelector(".rhs")
-        this.children.push(lhs)
-        this.children.push(rhs)
+
+        this.addChild(rhs)
       }
     )
 
+    renderVariableAssignment.defineOn =function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
+
+    return renderVariableAssignment
   }
 )
 
@@ -563,7 +570,9 @@ library.define(
   "render-object-literal",
   ["web-element", "render-key-pair"],
   function(element, keyPair) {
-
+    return function() {
+      return element("[[[ object ]]]")
+    }
     return element.template(
       ".object-literal",
       function objectLiteralRenderer(expression, tree, options) {

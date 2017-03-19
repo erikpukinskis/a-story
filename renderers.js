@@ -216,7 +216,7 @@ library.define(
           var arg = expressionToElement(expression.arguments[i], tree, options)
 
           options.addSymbolsHere = arg
-          
+
           if (i>0) {
             args.addChild(symbols.comma)
           }
@@ -674,29 +674,46 @@ library.define(
 
 library.define(
   "render-array-literal",
-  ["web-element", "./expression-to-element"],
-  function(element, expressionToElement) {
+  ["web-element", "./expression-to-element", "symbols"],
+  function(element, expressionToElement, symbols) {
+    
+    var stylesheet = element.stylesheet([
+      element.style(".array-literal", {
+        "border-left": "0.15em solid #a9a9ff",
+        "margin-left": "1em",
+        "padding-left": "0.5em",
+      }),
+    ])
 
-    return element.template(
-      ".array-literal", // temporarily not .indenter until we can see what that would need to look like.
-
-      function arrayLiteralRenderer(expression, tree, options) {
+    var renderArrayLiteral = element.template(
+      ".array-literal",
+      function(expression, tree, options) {
         this.id = expression.id
 
-        var items = expression.items
+        options.addSymbolsHere.addChild(symbols.openArray)
 
-        this.children = items.map(itemToElement)
+        for (var i=0; i< expression.items.length; i++) {
 
-        function itemToElement(item) {
-          return element(
-            ".array-item",
-            expressionToElement(item, tree, options)
-          )
+          if (i > 0) {
+            this.addChildren(symbols.comma, symbols.br)
+          }
+
+          var item = expressionToElement(expression.items[i], tree, options)
+
+          options.addSymbolsHere = item
+
+          this.addChildren(item)
         }
+
+        options.addSymbolsHere.addChild(symbols.closeArray)
       }
     )
 
+    renderArrayLiteral.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
 
+    return renderArrayLiteral
   }
 )
 

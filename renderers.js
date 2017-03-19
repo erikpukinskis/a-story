@@ -41,6 +41,7 @@ library.define("symbols",
       "closeArguments": element(".call-symbol", ")"),
       "openArray": element(".array-symbol", "["),
       "closeArray": element(".array-symbol", "]"),
+      "emptyLine": element(".break"),
     }
 
     var stylesheet = element.stylesheet([
@@ -111,6 +112,12 @@ library.define("symbols",
         "display": "inline-block",
         "padding-left": "0.5em",
         "font-weight": "bold",
+      }),
+
+      element.style(".break", {
+        "height": "0.75em",
+        "width": "1.5em",
+        "background": "#fff"
       }),
 
     ])
@@ -219,7 +226,7 @@ library.define(
           options.addSymbolsHere = arg
 
           if (i>0) {
-            args.addChild(symbols.comma)
+            args.addChildren(symbols.comma, symbols.br)
           }
 
           args.addChildren(arg)
@@ -265,7 +272,7 @@ library.define(
           tree.asBinding().methodCall("getProperty").withArgs("string", expression.id),
           tree.asBinding().methodCall("setProperty").withArgs("string", expression.id)
         )
-        
+
       }
     )
 
@@ -330,16 +337,6 @@ library.define(
 
     var previous
 
-    var functionLiteralBody = element.template(
-      ".function-literal-body",
-      function(parent, tree, options) {
-
-        previous = null
-        
-        this.children = parent.body.map(renderChild.bind(null, parent, tree, options))
-      }
-    )
-
     function renderChild(parent, tree, options, child) {
 
       // do we need this after we pull fillEmptyFunction in here?
@@ -402,7 +399,7 @@ library.define(
         }
       }),
 
-      element.style(".function-literal-body", {
+      element.style(".function-body", {
         "margin-left": "1em",
         "border-left": "0.15em solid "+colors.canary,
         "padding-left": "0.5em",
@@ -446,11 +443,24 @@ library.define(
 
         options.addSymbolsHere.addChild(symbols.openFunction)
 
-        var body = functionLiteralBody(expression, tree, options)
 
-        options.addSymbolsHere.addChild(symbols.closeFunction)
+        var body = element(".function-body")
+
+        for(var i=0; i<expression.body.length; i++) {
+          if (i > 0) {
+            body.addChild(symbols.emptyLine)
+          }
+
+          var child = renderChild(expression, tree, options, expression.body[i])
+
+          options.addSymbolsHere = child
+
+          body.addChild(child)
+        }
 
         this.addChild(body)
+
+        options.addSymbolsHere.addChild(symbols.closeFunction)
       }
     )
 
@@ -477,8 +487,6 @@ library.define(
 
         var rhs = expressionToElement(expression.expression, tree, options)
 
-        rhs.addSelector(".rhs")
-
         this.addChild(rhs)
       }
     )
@@ -490,6 +498,7 @@ library.define(
 
       element.style(".rhs", {
         "margin-left": "1em",
+        "display": "block",
       }),
     ])
 
@@ -657,15 +666,26 @@ library.define(
   ["web-element"],
   function(element) {
 
-    return element.template(
-      ".code-button.variable-reference",
-      function variableReferenceRenderer(expression) {
-        this.children.push(element.raw(
+    var stylesheet = element.stylesheet([
+      element.style(".variable-reference", {
+        "display": "inline",
+      }),
+    ])
+
+    var renderVariableReference = element.template(
+      ".variable-reference",
+      function(expression) {
+        this.addChild(element.raw(
           expression.variableName
         ))
       }
     )
 
+    renderVariableReference.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
+
+    return renderVariableReference
   }
 )
 
@@ -678,7 +698,6 @@ library.define(
     var stylesheet = element.stylesheet([
       element.style(".array-literal", {
         "border-left": "0.15em solid #a9a9ff",
-        "margin-left": "1em",
         "padding-left": "0.5em",
       }),
     ])

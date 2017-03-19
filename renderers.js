@@ -30,7 +30,7 @@ library.define("symbols",
       "equals": element(".equals-symbol", "="),
       "var": element(".variable-symbol", "var"),
       "return": element(".return-symbol", "return"),
-      "function": element(".function-symbol", "function"),
+      "function": element(".function-symbol", "function "),
       "openFunction": element(".scope-symbol", "{"),
       "closeFunction": element(".scope-symbol", "}"),
       "openObject": element(".object-delimiter", "{"),
@@ -80,7 +80,6 @@ library.define("symbols",
       element.style(".function-symbol", {
         "color": colors.gunmetal,
         "display": "inline-block",
-        "padding-right": "0.5em",
         "font-weight": "bold",
       }),
 
@@ -312,8 +311,8 @@ library.define(
 
 library.define(
   "render-function-literal",
-  ["web-element", "render-function-literal-body", "make-it-editable", "symbols", "colors"],
-  function(element, functionLiteralBody, makeItEditable, symbols, colors) {
+  ["web-element", "make-it-editable", "symbols", "colors", "expression-to-element"],
+  function(element, makeItEditable, symbols, colors, expressionToElement) {
 
     var renderArgumentName = element.template(
       ".function-argument",
@@ -332,98 +331,12 @@ library.define(
       }
     )
 
-    var stylesheet = element.stylesheet([
-      element.style(".function-argument", {
-        "display": "inline",
-      }),
-
-      element.style(".function-literal", {
-        "font-family": "sans-serif",
-        "font-size": "15pt",
-        "color": colors.black,
-        "line-height": "1.2em",
-      }),
-
-      element.style(".function-name", {
-        "color": colors.gunmetal,
-        "display": "inline",
-      }),
-
-      element.style(".function-signature", {
-        "color": colors.gunmetal,
-        "margin-left": "1em",
-
-        ".comma-symbol": {
-          "color": colors.gunmetal,
-          "font-weight": "bold",
-        }
-      }),
-    ])
-
-
-    var renderFunctionLiteral =  element.template(
-      ".function-literal",
-      function functionLiteralRenderer(expression, tree, options) {
-
-        this.id = expression.id
-
-        this.addChild(symbols.function)
-
-        if (expression.functionName) {
-          this.addChild(element(".function-name", expression.functionName))
-        }
-
-        options.addSymbolsHere = this
-
-        options.addSymbolsHere.addChild(symbols.openArguments)
-
-        var sig = element(
-          ".function-signature")
-
-        expression.argumentNames.forEach(function(name, i) {
-            var el = renderArgumentName(expression.id, name, i, tree)
-            if (i > 0) {
-              sig.addChild(symbols.comma, symbols.br)
-            }
-            sig.addChild(el)
-          }
-        )
-
-        options.addSymbolsHere = sig
-
-        options.addSymbolsHere.addChild(symbols.closeArguments)
-
-        this.addChild(sig)
-
-        options.addSymbolsHere.addChild(symbols.openFunction)
-
-
-        // var body = functionLiteralBody(expression, tree, options)
-
-        options.addSymbolsHere.addChild(symbols.closeFunction)
-      }
-    )
-
-    renderFunctionLiteral.defineOn = function(bridge) {
-      bridge.addToHead(stylesheet)
-    }
-
-    return renderFunctionLiteral
-  }
-)
-
-
-
-library.define(
-  "render-function-literal-body",
-  ["web-element", "add-line", "./expression-to-element"],
-  function(element, addLine, expressionToElement) {
 
     var previous
 
-    return element.template(
+    var functionLiteralBody = element.template(
       ".function-literal-body",
-      function functionLiteralBodyRenderer(parent, tree, options) {
+      function(parent, tree, options) {
 
         previous = null
         
@@ -464,30 +377,131 @@ library.define(
 
       return el
     }
+
+    var stylesheet = element.stylesheet([
+      element.style(".function-argument", {
+        "display": "inline",
+      }),
+
+      element.style(".function-literal", {
+        "font-family": "sans-serif",
+        "font-size": "15pt",
+        "color": colors.black,
+        "line-height": "1.2em",
+      }),
+
+      element.style(".function-name", {
+        "color": colors.gunmetal,
+        "display": "inline",
+        "margin-left": "0.5em",
+      }),
+
+      element.style(".function-signature", {
+        "color": colors.gunmetal,
+        "margin-left": "1em",
+
+        ".comma-symbol": {
+          "color": colors.gunmetal,
+          "font-weight": "bold",
+        }
+      }),
+
+      element.style(".function-literal-body", {
+        "margin-left": "1em",
+        "border-left": "0.15em solid "+colors.canary,
+        "padding-left": "0.5em",
+      }),
+    ])
+
+
+    var renderFunctionLiteral =  element.template(
+      ".function-literal",
+      function functionLiteralRenderer(expression, tree, options) {
+
+        this.id = expression.id
+
+        this.addChild(symbols.function)
+
+        if (expression.functionName) {
+          this.addChild(element(".function-name", expression.functionName))
+        }
+
+        options.addSymbolsHere = this
+
+        options.addSymbolsHere.addChild(symbols.openArguments)
+
+        var sig = element(
+          ".function-signature")
+
+        expression.argumentNames.forEach(function(name, i) {
+            var el = renderArgumentName(expression.id, name, i, tree)
+            if (i > 0) {
+              sig.addChild(symbols.comma, symbols.br)
+            }
+            sig.addChild(el)
+          }
+        )
+
+        options.addSymbolsHere = sig
+
+        options.addSymbolsHere.addChild(symbols.closeArguments)
+
+        this.addChild(sig)
+
+        options.addSymbolsHere.addChild(symbols.openFunction)
+
+        var body = functionLiteralBody(expression, tree, options)
+
+        options.addSymbolsHere.addChild(symbols.closeFunction)
+
+        this.addChild(body)
+      }
+    )
+
+    renderFunctionLiteral.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
+
+    return renderFunctionLiteral
   }
 )
 
 
+
 library.define(
   "render-return-statement",
-  ["web-element", "./expression-to-element"],
-  function(element, expressionToElement) {
+  ["web-element", "./expression-to-element", "symbols"],
+  function(element, expressionToElement, symbols) {
 
-    return element.template(
+    var renderReturnStatement = element.template(
       ".return-statement",
       function returnStatementRenderer(expression, tree, options) {
 
-        var returnButton = element(".code-button.return-label.indenter", "return")
-        this.addChild(returnButton)
+        this.addChild(symbols.return)
 
-        if (!options) { options = {} }
-        options.inline = true
         var rhs = expressionToElement(expression.expression, tree, options)
+
         rhs.addSelector(".rhs")
+
         this.addChild(rhs)
       }
     )
 
+    var stylesheet = element.stylesheet([
+      element.style(".render-statement", {
+        "display": "inline",
+      }),
+
+      element.style(".rhs", {
+        "margin-left": "1em",
+      }),
+    ])
+
+    renderReturnStatement.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
+
+    return renderReturnStatement
   }
 )
 

@@ -418,6 +418,7 @@ library.define(
       element.style(".function-signature", {
         "color": colors.gunmetal,
         "margin-left": "1em",
+        "margin-bottom": "0.5em",
 
         ".comma-symbol": {
           "color": colors.gunmetal,

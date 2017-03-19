@@ -606,7 +606,7 @@ library.define(
       }),
 
       element.style(".object-pairs", {
-        "margin-left": "1em",
+        // "margin-left": "1em",
       }),
 
       element.style(".object-key", {

@@ -41,6 +41,7 @@ library.define("symbols",
       "closeArguments": element(".call-symbol", ")"),
       "openArray": element(".array-symbol", "["),
       "closeArray": element(".array-symbol", "]"),
+      "arrayDelimiter": element(".array-delimiter", ","),
       "emptyLine": element(".break"),
     }
 
@@ -49,6 +50,13 @@ library.define("symbols",
       element.style(".comma-symbol", {
         "display": "inline-block",
         "font-weight": "bold",
+      }),
+
+      element.style(".array-delimiter", {
+        "display": "inline-block",
+        "font-weight": "bold",
+        "color": colors.electric,
+        "margin-left": "0.5em",
       }),
 
       element.style(".colon-symbol", {
@@ -598,8 +606,12 @@ library.define(
       }),
 
       element.style(".object-pairs", {
-        "border-left": "0.15em solid "+colors.electric,
-        "padding-left": "0.5em",
+        "margin-left": "1em",
+      }),
+
+      element.style(".object-key", {
+        "font-weight": "bold",
+        "color": colors.electric,
       }),
 
       element.style(".key-pair", {
@@ -631,8 +643,6 @@ library.define(
 
           var el = renderKeyPair(pair, tree, options)
 
-          options.addSymbolsHere = el
-
           pairs.addChild(el)
         }
 
@@ -657,15 +667,15 @@ library.define(
   ["web-element", "make-it-editable", "./expression-to-element", "symbols"],
   function(element, makeItEditable, expressionToElement, symbols) {
 
-    var keyPair = element.template(
+    var renderKeyPair = element.template(
       ".key-pair",
-      function keyPairRenderer(pairExpression, tree, options) {
+      function(pairExpression, tree, options) {
         this.id = pairExpression.id
 
         var key = pairExpression.key
 
         var keyEl = element(
-          "span",
+          "span.object-key",
           element.raw(key)
         )
 
@@ -696,7 +706,7 @@ library.define(
 
     )
 
-    return keyPair
+    return renderKeyPair
   }
 )
 
@@ -753,12 +763,12 @@ library.define(
         for (var i=0; i< expression.items.length; i++) {
 
           if (i > 0) {
-            this.addChildren(symbols.comma, symbols.br)
+            options.addSymbolsHere.addChild(symbols.arrayDelimiter)
+
+            this.addChild(symbols.br)
           }
 
           var item = expressionToElement(expression.items[i], tree, options)
-
-          options.addSymbolsHere = item
 
           this.addChildren(item)
         }

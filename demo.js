@@ -4,7 +4,7 @@ library.using(
   ["web-host", "an-expression", "./", "javascript-to-ezjs"],
   function(host, anExpression, renderExpression, javascriptToEzjs) {
 
-    var func = function juice(bar) {
+    function juice(bar) {
       return function(bridge) {
         bridge.send("hello, world")
       }
@@ -51,7 +51,7 @@ library.using(
 
       var bridge = getBridge()
 
-      var functionLiteral = javascriptToEzjs(func.toString())
+      var functionLiteral = javascriptToEzjs(buildAHouse.toString())
 
       var tree = anExpression()
 

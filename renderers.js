@@ -2,7 +2,9 @@ var library = require("module-library")(require)
 
 require("./actions")
 
-var rendererModules = ["function call","array literal","function literal","string literal","number literal","empty expression","variable assignment","variable reference","object literal","return statement"].map(toModuleName)
+var expressionKinds = ["function call","array literal","function literal","string literal","number literal","empty expression","variable assignment","variable reference","object literal","return statement"]
+
+var rendererModules = expressionKinds.map(toModuleName)
 
 function toModuleName(kind) {
   return "render-"+kind.replace(" ", "-")
@@ -44,7 +46,6 @@ library.define("symbols",
     var stylesheet = element.stylesheet([
 
       element.style(".comma-symbol", {
-        "color": colors.gunmetal,
         "display": "inline-block",
         "font-weight": "bold",
       }),
@@ -246,8 +247,8 @@ library.define(
   ["web-element", "make-it-editable"],
   function(element, makeItEditable) {
 
-    return element.template(
-      ".code-button.literal.string-literal",
+    var renderStringLiteral = element.template(
+      "span",
       function stringLiteralRenderer(expression, tree, options) {
         this.id = expression.id
 
@@ -255,23 +256,20 @@ library.define(
           throw new Error("Expected expression to have a string attribute: "+JSON.stringify(expression, null, 2))
         }
 
-        var stringElement = element("span", element.raw(expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")))
+        var escaped = expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")
 
-        this.children.push(
-          element("span", "\""),
-          stringElement,
-          element("span", "\"")
-        )
+        this.addChild(element.raw(escaped))
 
         makeItEditable(
           this,
           tree.asBinding().methodCall("getProperty").withArgs("string", expression.id),
-          tree.asBinding().methodCall("setProperty").withArgs("string", expression.id),
-          {updateElement: stringElement}
+          tree.asBinding().methodCall("setProperty").withArgs("string", expression.id)
         )
+        
       }
     )
 
+    return renderStringLiteral
   }
 )
 
@@ -676,7 +674,7 @@ library.define(
   "render-array-literal",
   ["web-element", "./expression-to-element", "symbols"],
   function(element, expressionToElement, symbols) {
-    
+
     var stylesheet = element.stylesheet([
       element.style(".array-literal", {
         "border-left": "0.15em solid #a9a9ff",

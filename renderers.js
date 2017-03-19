@@ -173,71 +173,69 @@ library.define(
 
 library.define(
   "render-function-call",
-  ["web-element", "./expression-to-element", "make-it-editable"],
-  function(element, expressionToElement, makeItEditable) {
+  ["web-element", "./expression-to-element", "make-it-editable", "symbols"],
+  function(element, expressionToElement, makeItEditable, symbols) {
 
-    return element.template(
+
+    var stylesheet = element.stylesheet([
+      element.style(".function-call", {
+        "display": "inline",
+      }),
+
+      element.style(".function-reference", {
+        "display": "inline",
+      }),
+
+      element.style(".arguments", {
+        "margin-left": "1em",
+      })
+    ])
+
+    var renderFunctionCall = element.template(
       ".function-call",
       function functionCallRenderer(expression, tree, options) {
         this.id = expression.id
 
-        var label =           expression.functionName+"("
-        if (expression.arguments.length < 1) { label += ")" }
-
-        var button = element(
-          ".code-button.function-call-name",
-          label
-        )
+        var label = element(".function-reference", expression.functionName)
 
         makeItEditable(
-          button,
+          label,
           tree.asBinding().methodCall("getProperty").withArgs("functionName", expression.id),
           tree.asBinding().methodCall("setProperty").withArgs("functionName", expression.id)
         )
 
-        this.children.push(button)
+        this.addChildren(label, symbols.openArguments)
+
+        options.addSymbolsHere = this
+
+        var args = element(
+          ".arguments")
+
+        for(var i=0; i<expression.arguments.length; i++) {
+
+          var arg = expressionToElement(expression.arguments[i], tree, options)
+
+          options.addSymbolsHere = arg
+          
+          if (i>0) {
+            args.addChild(symbols.comma)
+          }
+
+          args.addChildren(arg)
+        }
 
 
-        var container = element(
-          ".function-call-args")
+        options.addSymbolsHere.addChild(symbols.closeArguments)
 
-        container.children =
-          argumentsToElements(
-            expression,
-            tree,
-            options,
-            expression.arguments
-          )
-
-        this.children.push(container)
+        this.addChild(args)
       }
     )
 
-    function argumentsToElements( parent, tree, options, args) {
-
-      var elements = []
-      for(var i=0; i<args.length; i++) {
-
-        var expression = args[i]
-        var isFunctionCall = expression.kind == "function call"
-        var arg = expressionToElement(expression, tree, options)
-
-        arg.classes.push(
-          "function-argument")
-
-        if (isFunctionCall) {
-          arg.classes.push("call-in-call")
-        }
-
-        if (i>0) {
-          elements.push(", ")
-        }
-        elements.push(arg)
-      }
-
-      return elements
+    renderFunctionCall.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
     }
 
+    return renderFunctionCall
   }
 )
 

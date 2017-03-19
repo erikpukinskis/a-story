@@ -403,7 +403,6 @@ library.define(
 
       element.style(".function-literal", {
         "font-family": "sans-serif",
-        "font-size": "15pt",
         "color": colors.black,
         "line-height": "1.2em",
         "display": "inline",

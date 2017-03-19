@@ -10,14 +10,9 @@ module.exports = library.export(
 
       if (!bridge.remember("render-expression")) {
 
-        bridgeModule(library, "renderers", bridge)
+        renderers(bridge)
 
-        bridge.addToHead(
-          element("link", {
-            rel: "stylesheet",
-            href: "/render-module/styles.css"
-          })
-        )
+        bridgeModule(library, "renderers", bridge)
 
         makeItEditable.prepareBridge(bridge)
       }

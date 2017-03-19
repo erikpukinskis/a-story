@@ -4,7 +4,7 @@ library.using(
   ["web-host", "an-expression", "./", "javascript-to-ezjs"],
   function(host, anExpression, renderExpression, javascriptToEzjs) {
 
-    var func = function() {
+    var func = function juice(bar) {
       return function(bridge) {
         bridge.send("hello, world")
       }

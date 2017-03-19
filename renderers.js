@@ -9,6 +9,118 @@ function toModuleName(kind) {
 }
 
 
+library.define("colors", function() {
+  return {
+    canary: "#f5df2f",
+    gunmetal: "#bec9d6",
+    black:  "#557",
+    electric: "#a9a9ff",
+  }
+})
+
+
+library.define("symbols",
+  ["web-element", "colors"],
+  function(element, colors) {
+
+    var elements = {
+      "br": element("br"),
+      "comma": element(".comma-symbol", ", "),
+      "colon": element(".colon-symbol", ":"),
+      "equals": element(".equals-symbol", "="),
+      "var": element(".variable-symbol", "var"),
+      "return": element(".return-symbol", "return"),
+      "function": element(".function-symbol", "function"),
+      "openFunction": element(".scope-symbol", "{"),
+      "closeFunction": element(".scope-symbol", "}"),
+      "openObject": element(".object-delimiter", "{"),
+      "closeObject": element(".object-delimiter", "}"),
+      "openArguments": element(".call-symbol", "("),
+      "closeArguments": element(".call-symbol", ")"),
+      "openArray": element(".array-symbol", "["),
+      "closeArray": element(".array-symbol", "]"),
+    }
+
+    var stylesheet = element.stylesheet([
+
+      element.style(".comma-symbol", {
+        "color": colors.gunmetal,
+        "display": "inline-block",
+        "font-weight": "bold",
+      }),
+
+      element.style(".colon-symbol", {
+        "color": colors.electric,
+        "display": "inline-block",
+        "font-weight": "bold",
+        "margin": "0 0.5em",
+      }),
+
+      element.style(".equals-symbol", {
+        "color": colors.black,
+        "display": "inline-block",
+        "padding-left": "0.5em",
+        "font-weight": "bold",
+      }),
+
+      element.style(".variable-symbol", {
+        "color": colors.black,
+        "display": "inline-block",
+        "padding-right": "0.5em",
+        "font-weight": "bold",
+      }),
+
+      element.style(".return-symbol", {
+        "color": "#eccd6b",
+        "display": "inline-block",
+        "padding-right": "0.5em",
+        "font-weight": "bold",
+      }),
+
+      element.style(".function-symbol", {
+        "color": colors.gunmetal,
+        "display": "inline-block",
+        "padding-right": "0.5em",
+        "font-weight": "bold",
+      }),
+
+
+      element.style(".scope-symbol", {
+        "color": colors.canary,
+        "display": "inline-block",
+        "padding-left": "0.5em",
+        "font-weight": "bold",
+      }),
+
+      element.style(".object-delimiter", {
+        "color": colors.electric,
+        "display": "inline-block",
+        "padding-left": "0.5em",
+        "font-weight": "bold",
+      }),
+
+      element.style(".call-symbol", {
+        "color": colors.gunmetal,
+        "display": "inline-block",
+        "padding-left": "0.5em",
+        "font-weight": "bold",
+      }),
+
+      element.style(".array-symbol", {
+        "color": colors.electric,
+        "display": "inline-block",
+        "padding-left": "0.5em",
+        "font-weight": "bold",
+      }),
+
+    ])
+
+    elements.stylesheet = stylesheet
+
+    return elements
+  }
+)
+
 library.define(
   "render-empty-expression",
   ["web-element", "replace-value"],
@@ -92,15 +204,17 @@ library.define(
 
         container.children =
           argumentsToElements(
-            expression.arguments,
-            expression, tree
+            expression,
+            tree,
+            options,
+            expression.arguments
           )
 
         this.children.push(container)
       }
     )
 
-    function argumentsToElements(args, parent, tree) {
+    function argumentsToElements( parent, tree, options, args) {
 
       var elements = []
       for(var i=0; i<args.length; i++) {
@@ -198,11 +312,11 @@ library.define(
 
 library.define(
   "render-function-literal",
-  ["web-element", "render-function-literal-body", "make-it-editable"],
-  function(element, functionLiteralBody, makeItEditable) {
+  ["web-element", "render-function-literal-body", "make-it-editable", "symbols", "colors"],
+  function(element, functionLiteralBody, makeItEditable, symbols, colors) {
 
     var renderArgumentName = element.template(
-      ".code-button.argument-name",
+      ".function-argument",
       function(expressionId, name, argumentIndex, tree) {
 
         this.children.push(
@@ -218,53 +332,80 @@ library.define(
       }
     )
 
+    var stylesheet = element.stylesheet([
+      element.style(".function-argument", {
+        "display": "inline",
+      }),
+
+      element.style(".function-literal", {
+        "font-family": "sans-serif",
+        "font-size": "15pt",
+        "color": colors.black,
+        "line-height": "1.2em",
+      }),
+
+      element.style(".function-name", {
+        "color": colors.gunmetal,
+        "display": "inline",
+      }),
+
+      element.style(".function-signature", {
+        "color": colors.gunmetal,
+        "margin-left": "1em",
+
+        ".comma-symbol": {
+          "color": colors.gunmetal,
+          "font-weight": "bold",
+        }
+      }),
+    ])
+
+
     var renderFunctionLiteral =  element.template(
       ".function-literal",
       function functionLiteralRenderer(expression, tree, options) {
 
         this.id = expression.id
 
-        var children = this.children
+        this.addChild(symbols.function)
 
-        var labelEl = element(
-          ".code-button.function-literal-label",
-          "function"
-        )
-
-        if (options && options.inline) {
-          labelEl.addSelector(".inline")
-        } else {
-          labelEl.addSelector(".indenter")
+        if (expression.functionName) {
+          this.addChild(element(".function-name", expression.functionName))
         }
 
-        children.push(labelEl)
+        options.addSymbolsHere = this
 
-        if (!expression.argumentNames) {
-          throw new Error("Your function literal ("+stringify(expression)+") needs an argumentNames array. At least an empty one.")
-        }
+        options.addSymbolsHere.addChild(symbols.openArguments)
 
-        var argumentNames = element(
-          ".function-argument-names",
-          expression.argumentNames.map(
-            function(name, index) {
-              return renderArgumentName(expression.id, name, index, tree)
+        var sig = element(
+          ".function-signature")
+
+        expression.argumentNames.forEach(function(name, i) {
+            var el = renderArgumentName(expression.id, name, i, tree)
+            if (i > 0) {
+              sig.addChild(symbols.comma, symbols.br)
             }
-          )
+            sig.addChild(el)
+          }
         )
 
-        children.push(argumentNames)
+        options.addSymbolsHere = sig
 
-        children.push(functionLiteralBody(expression, tree, options))
+        options.addSymbolsHere.addChild(symbols.closeArguments)
+
+        this.addChild(sig)
+
+        options.addSymbolsHere.addChild(symbols.openFunction)
+
+
+        // var body = functionLiteralBody(expression, tree, options)
+
+        options.addSymbolsHere.addChild(symbols.closeFunction)
       }
     )
 
-
-    function stringify(thing) {
-      if (typeof thing == "function") {
-        return thing.toString()
-      } else {
-        return JSON.stringify(thing)
-      }
+    renderFunctionLiteral.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
     }
 
     return renderFunctionLiteral
@@ -282,15 +423,15 @@ library.define(
 
     return element.template(
       ".function-literal-body",
-      function functionLiteralBodyRenderer(parent, tree) {
+      function functionLiteralBodyRenderer(parent, tree, options) {
 
         previous = null
         
-        this.children = parent.body.map(renderChild.bind(null, parent, tree))
+        this.children = parent.body.map(renderChild.bind(null, parent, tree, options))
       }
     )
 
-    function renderChild(parent, tree, child) {
+    function renderChild(parent, tree, options, child) {
 
       // do we need this after we pull fillEmptyFunction in here?
 
@@ -339,6 +480,7 @@ library.define(
         var returnButton = element(".code-button.return-label.indenter", "return")
         this.addChild(returnButton)
 
+        if (!options) { options = {} }
         options.inline = true
         var rhs = expressionToElement(expression.expression, tree, options)
         rhs.addSelector(".rhs")
@@ -541,9 +683,21 @@ library.define(
 
 module.exports = library.export(
   "renderers",
-  rendererModules,
-  function() {
-    return {}
+  ["web-element", "symbols"].concat(rendererModules),
+  function(element, symbols, renderFunctionCall, etc) {
+    var singletons = Array.prototype.slice.call(arguments)
+
+    function defineOn(bridge) {
+      singletons.forEach(function(x) {
+        if (x.defineOn) {
+          x.defineOn(bridge)
+        }
+      })
+
+      bridge.addToHead(symbols.stylesheet)
+    }
+
+    return defineOn
   }
 )
 

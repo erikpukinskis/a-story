@@ -6,6 +6,7 @@ module.exports = library.export(
 
     function expressionToElement(expression, program, options) {
 
+      if (!options) { options = {} }
       var i = program.reservePosition()
 
       if (typeof expression != "object" || !expression || !expression.kind) {

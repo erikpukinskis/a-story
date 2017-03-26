@@ -209,7 +209,7 @@ library.define(
 
     var renderFunctionCall = element.template(
       ".function-call",
-      function functionCallRenderer(expression, tree, options) {
+      function functionCallRenderer(expression, tree, bridge, options) {
         this.id = expression.id
 
         var label = element(".function-reference", expression.functionName)
@@ -236,7 +236,7 @@ library.define(
             args.addChild(symbols.br)
           }
 
-          var argEl = expressionToElement(arg, tree, options)
+          var argEl = expressionToElement(arg, tree, bridge, options)
 
           args.addChild(argEl)
         }
@@ -264,8 +264,8 @@ library.define(
   function(element, makeItEditable) {
 
     var renderStringLiteral = element.template(
-      "span",
-      function stringLiteralRenderer(expression, tree, options) {
+      ".string-literal",
+      function stringLiteralRenderer(expression, tree, bridge, options) {
         this.id = expression.id
 
         if (!expression.string || !expression.string.replace) {
@@ -278,14 +278,24 @@ library.define(
 
         makeItEditable(
           this,
-          tree.asBinding().methodCall("getProperty").withArgs("string", expression.id),
-          tree.asBinding().methodCall("setProperty").withArgs("string", expression.id)
+          bridge.remember("render-expression/getExpressionProperty").withArgs(tree.id, expression.id, "string"),
+          bridge.remember("render-expression/setExpressionProperty").withArgs(tree.id, expression.id, "string")
         )
 
         options.addSymbolsHere = this
 
       }
     )
+
+    var stylesheet = element.stylesheet([
+      element.style(".string-literal", {
+        "display": "inline-block",
+      }),
+    ])
+
+    renderStringLiteral.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
 
     return renderStringLiteral
   }
@@ -307,7 +317,7 @@ library.define(
 
     var renderNumberLiteral = element.template(
       ".number-literal",
-      function numberLiteralRenderer(expression, tree, options) {
+      function numberLiteralRenderer(expression, tree, bridge, options) {
         this.id = expression.id
 
         if (typeof expression.number != "number") {
@@ -362,13 +372,13 @@ library.define(
 
     var previous
 
-    function renderChild(parent, tree, options, child) {
+    function renderChild(parent, tree, bridge, options, child) {
 
       // do we need this after we pull fillEmptyFunction in here?
 
       child.role = "function literal line"
 
-      var el = expressionToElement(child, tree, options)
+      var el = expressionToElement(child, tree, bridge, options)
 
       if (child.kind == "empty expression") {
 
@@ -427,7 +437,7 @@ library.define(
 
       element.style(".function-body", {
         "margin-left": "1em",
-        "border-left": "0.15em solid "+colors.canary,
+        "border-left": "2pt solid "+colors.canary,
         "padding-left": "0.5em",
       }),
     ])
@@ -435,7 +445,7 @@ library.define(
 
     var renderFunctionLiteral =  element.template(
       ".function-literal",
-      function functionLiteralRenderer(expression, tree, options) {
+      function functionLiteralRenderer(expression, tree, bridge, options) {
 
         this.id = expression.id
 
@@ -477,7 +487,7 @@ library.define(
             body.addChild(symbols.emptyLine)
           }
 
-          var child = renderChild(expression, tree, options, expression.body[i])
+          var child = renderChild(expression, tree, bridge, options, expression.body[i])
 
           body.addChild(child)
         }
@@ -505,11 +515,11 @@ library.define(
 
     var renderReturnStatement = element.template(
       ".return-statement",
-      function returnStatementRenderer(expression, tree, options) {
+      function returnStatementRenderer(expression, tree, bridge, options) {
 
         this.addChild(symbols.return)
 
-        var rhs = expressionToElement(expression.expression, tree, options)
+        var rhs = expressionToElement(expression.expression, tree, bridge, options)
 
         this.addChild(rhs)
       }
@@ -547,7 +557,7 @@ library.define(
 
     var renderVariableAssignment = element.template(
       ".variable-assignment",
-      function(expression, tree, options) {
+      function(expression, tree, bridge, options) {
         this.id = expression.id
 
         if (!expression.variableName) {
@@ -575,7 +585,7 @@ library.define(
         }
 
         var rhs = expressionToElement(
-          expression.expression, tree, options)
+          expression.expression, tree, bridge, options)
 
         // tree.setParent(rhs.id, expression)
 
@@ -621,7 +631,7 @@ library.define(
 
     var renderObjectLiteral = element.template(
       ".object-literal",
-      function(expression, tree, options) {
+      function(expression, tree, bridge, options) {
         this.id = expression.id
 
         options.addSymbolsHere.addChild(symbols.openObject)
@@ -691,7 +701,7 @@ library.define(
 
         var valueElement =
           expressionToElement(
-            valueExpression, tree, options)
+            valueExpression, tree, bridge, options)
 
         tree.setKeyValue(pairExpression, valueExpression, valueElement)
 
@@ -723,7 +733,7 @@ library.define(
 
     var renderVariableReference = element.template(
       ".variable-reference",
-      function(expression, tree, options) {
+      function(expression, tree, bridge, options) {
         this.addChild(element.raw(
           expression.variableName
         ))
@@ -748,14 +758,14 @@ library.define(
 
     var stylesheet = element.stylesheet([
       element.style(".array-literal", {
-        "border-left": "0.15em solid #a9a9ff",
+        "border-left": "2pt solid #a9a9ff",
         "padding-left": "0.5em",
       }),
     ])
 
     var renderArrayLiteral = element.template(
       ".array-literal",
-      function(expression, tree, options) {
+      function(expression, tree, bridge, options) {
         this.id = expression.id
 
         options.addSymbolsHere.addChild(symbols.openArray)
@@ -768,7 +778,7 @@ library.define(
             this.addChild(symbols.br)
           }
 
-          var item = expressionToElement(expression.items[i], tree, options)
+          var item = expressionToElement(expression.items[i], tree, bridge, options)
 
           this.addChildren(item)
         }

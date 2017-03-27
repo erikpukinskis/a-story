@@ -2,8 +2,9 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "scroll-to-select", "./choose-expression"],
-  function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect) {
+  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "scroll-to-select", "./choose-expression", "colors"],
+  function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect, chooseExpression, colors) {
+
     var selectionIsHidden = true
     var controlsAreVisible
     var controlsSelector
@@ -11,16 +12,22 @@ module.exports = library.export(
     function LineControls(tree) {
 
       this.tree = tree
-
+       
       scrollToSelect({
-        possibleIds: tree.getIds(),
-        show: showControls.bind(this),
-        hide: hideControls.bind(this)
+        ids: tree.getIds(),
+        onSelect: onSelect.bind(this),
+        text: "EZJS"
       })
 
     }
 
-    function showControls(selectedElement) {
+
+    function onSelect(selectedElement) {
+      hideControls()
+
+      if (!selectedElement) {
+        return
+      }      
 
       var selectedExpressionId = selectedElement.id
 
@@ -37,6 +44,20 @@ module.exports = library.export(
       }
 
     }
+
+
+    function hideControls() {
+      controlsAreVisible = false
+      
+      if (!controlsSelector) { return }
+
+      var controls = document.querySelectorAll(controlsSelector)
+
+      setDisplay(controls, "none")
+
+      offsetCameraUp(-1)
+    }
+
 
     function showLineControls(lineElement, tree) {
 
@@ -70,10 +91,6 @@ module.exports = library.export(
     function showKeyValueControls(pair, tree) {
 
       var pairElement = document.getElementById(pair.id)
-
-      if (!pairElement) {
-        debugger
-      }
 
       // we have expr-lf06, but we're looking for expr-ts
 
@@ -111,7 +128,7 @@ module.exports = library.export(
           function(beforeOrAfter) {
 
             var baby = element(
-              ".ghost-baby-line"+controlsSelector,
+              ".plus"+controlsSelector,
               "+"
             )
       
@@ -157,18 +174,6 @@ module.exports = library.export(
       }
     }
 
-    function hideControls() {
-      controlsAreVisible = false
-      
-      if (!controlsSelector) { return }
-
-      var controls = document.querySelectorAll(controlsSelector)
-
-      setDisplay(controls, "none")
-
-      offsetCameraUp(-1)
-    }
-
     function setDisplay(elements, value) {
       for(var i=0; i<elements.length; i++) {
         elements[i].style.display = value
@@ -194,6 +199,20 @@ module.exports = library.export(
 
     lineControls.offsetCameraUp = offsetCameraUp
 
+    var stylesheet = element.stylesheet(
+      element.style(".plus", {
+        "background-color": colors.canary,
+        "width": "30px",
+        "text-align": "center",
+        "padding": "2px 10px",
+        "margin": "0.5em 0 0.5em -0.5em",
+        "cursor": "pointer",
+      })
+    )
+
+    lineControls.defineOn = function(bridge) {
+      bridge.addToHead(stylesheet)
+    }
     return lineControls
   }
 )

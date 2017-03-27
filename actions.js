@@ -37,11 +37,13 @@ library.define(
 
 library.define(
   "add-function-argument",
-  ["render-argument-name"],
-  function(argumentName) {
+  ["render-argument-name", "an-expression"],
+  function(argumentName, anExpression) {
 
-    return function addFunctionArgument(tree, expressionId, dep) {
+    return function addFunctionArgument(treeId, expressionId, dep) {
 
+      var tree = anExpression.getTree(treeId)
+      
       var index = tree.addFunctionArgument(expressionId, dep)
 
       var el = argumentName(expressionId, dep, index)
@@ -69,7 +71,6 @@ library.define(
 
     function addLine(treeId, ghostElementId, relativeToThisId, relationship, newExpression) {
     
-      throw new Error("anExpression doesn't implement getProgram yet!")
       var tree = anExpression.getTree(treeId)
 
       var parentExpression = tree.getParentOf(relativeToThisId)
@@ -103,10 +104,12 @@ library.define(
 
 library.define(
   "replace-value",
-  ["expression-to-element"],
-  function(expressionToElement) {
+  ["expression-to-element", "an-expression"],
+  function(expressionToElement, anExpression) {
 
-    function replaceValue(tree, valueElementId, newExpression) {
+    function replaceValue(treeId, valueElementId, newExpression) {
+
+      var tree = anExpression.getTree(treeId)
 
       var pairExpression = tree.getPairForValue(valueElementId)
 

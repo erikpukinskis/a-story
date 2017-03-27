@@ -8,12 +8,12 @@ module.exports = library.export(
     var controlsAreVisible
     var controlsSelector
 
-    function LineControls(program) {
+    function LineControls(tree) {
 
-      this.program = program
+      this.tree = tree
 
       scrollToSelect({
-        possibleIds: program.getIds(),
+        possibleIds: tree.getIds(),
         show: showControls.bind(this),
         hide: hideControls.bind(this)
       })
@@ -24,21 +24,21 @@ module.exports = library.export(
 
       var selectedExpressionId = selectedElement.id
 
-      var pairExpression = getSelectedKeyPair(this.program, selectedExpressionId)
+      var pairExpression = getSelectedKeyPair(this.tree, selectedExpressionId)
 
-      var isLine = this.program.get(selectedElement.id).role == "function literal line"
+      var isLine = this.tree.get(selectedElement.id).role == "function literal line"
 
       controlsSelector = ".controls-for-"+selectedElement.id
 
       if (pairExpression) {
-        showKeyValueControls(pairExpression, this.program)
+        showKeyValueControls(pairExpression, this.tree)
       } else if (isLine) {
-        showLineControls(selectedElement, this.program)
+        showLineControls(selectedElement, this.tree)
       }
 
     }
 
-    function showLineControls(lineElement, program) {
+    function showLineControls(lineElement, tree) {
 
       showPlusses(
         lineElement,
@@ -53,7 +53,7 @@ module.exports = library.export(
           // var add = library.buildSingletonCall("add-line")
 
           add = add.withArgs(
-            program.id,
+            tree.id,
             plusButton.assignId(),
             relativeToThisId,
             relationship
@@ -67,7 +67,7 @@ module.exports = library.export(
 
     }
 
-    function showKeyValueControls(pair, program) {
+    function showKeyValueControls(pair, tree) {
 
       var pairElement = document.getElementById(pair.id)
 
@@ -86,7 +86,7 @@ module.exports = library.export(
           var add = functionCall("library.get(\"add-key-pair\")")
 
           add = add.withArgs(
-            program.id,
+            tree.id,
             plusButton.assignId(),
             relationship,
             objectExpression.id,
@@ -138,17 +138,17 @@ module.exports = library.export(
 
     }
 
-    function getSelectedKeyPair(program, expressionId) {
+    function getSelectedKeyPair(tree, expressionId) {
 
-      var expression = program.get(expressionId)
+      var expression = tree.get(expressionId)
 
       var nextId = expressionId
       var parent
       var possibleValueExpression = expression
 
-      while(parent = program.getParentOf(nextId)) {
+      while(parent = tree.getParentOf(nextId)) {
         if (parent.kind == "object literal") {
-          var keyPair = program.getPairForValueId(possibleValueExpression.id)
+          var keyPair = tree.getPairForValueId(possibleValueExpression.id)
 
           return keyPair
         }

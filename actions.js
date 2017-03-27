@@ -40,9 +40,9 @@ library.define(
   ["render-argument-name"],
   function(argumentName) {
 
-    return function addFunctionArgument(program, expressionId, dep) {
+    return function addFunctionArgument(tree, expressionId, dep) {
 
-      var index = program.addFunctionArgument(expressionId, dep)
+      var index = tree.addFunctionArgument(expressionId, dep)
 
       var el = argumentName(expressionId, dep, index)
 
@@ -70,24 +70,24 @@ library.define(
     function addLine(treeId, ghostElementId, relativeToThisId, relationship, newExpression) {
     
       throw new Error("anExpression doesn't implement getProgram yet!")
-      var program = anExpression.getTree(treeId)
+      var tree = anExpression.getTree(treeId)
 
-      var parentExpression = program.getParentOf(relativeToThisId)
+      var parentExpression = tree.getParentOf(relativeToThisId)
 
       newExpression.role = "function literal line"
 
       var newElement = expressionToElement(
-          newExpression, program)
+          newExpression, tree)
 
-      program.insertExpression(newExpression, relationship, relativeToThisId)
+      tree.insertExpression(newExpression, relationship, relativeToThisId)
 
       var ghostElement = document.getElementById(ghostElementId)
 
       addHtml[relationship](ghostElement, newElement.html())
 
-      program.newexpression(parentExpression, newExpression)
+      tree.newexpression(parentExpression, newExpression)
 
-      program.changed({
+      tree.changed({
         linesAdded: relationship == "inPlaceOf" ? 0 : 1
       })
     }
@@ -106,15 +106,15 @@ library.define(
   ["expression-to-element"],
   function(expressionToElement) {
 
-    function replaceValue(program, valueElementId, newExpression) {
+    function replaceValue(tree, valueElementId, newExpression) {
 
-      var pairExpression = program.getPairForValue(valueElementId)
+      var pairExpression = tree.getPairForValue(valueElementId)
 
       var oldElement = document.getElementById(valueElementId)
 
-      var newElement = expressionToElement(newExpression, program)
+      var newElement = expressionToElement(newExpression, tree)
 
-      program.replaceKeyValue(pairExpression, newExpression, newElement)
+      tree.replaceKeyValue(pairExpression, newExpression, newElement)
 
       newElement.classes.push("key-value")
 

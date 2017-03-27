@@ -374,7 +374,7 @@ library.define(
 
 library.define(
   "render-function-literal",
-  ["web-element", "make-it-editable", "symbols", "colors", "expression-to-element"],
+  ["web-element", "make-it-editable", "symbols", "colors", "expression-to-element", "render-argument-name"],
   function(element, makeItEditable, symbols, colors, expressionToElement, renderArgumentName) {
 
     var previous

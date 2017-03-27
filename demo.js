@@ -42,7 +42,7 @@ library.using(
     }
 
 
-    console.log("HAM!", buildAHouse.toString())
+    console.log("rendering", buildAHouse.toString())
     host.onSite(function(site) {
       renderExpression.prepareSite(site)
     })
@@ -53,7 +53,7 @@ library.using(
 
       var functionLiteral = javascriptToEzjs(buildAHouse.toString())
 
-      var tree = anExpression()
+      var tree = anExpression.tree()
 
       renderExpression(bridge, functionLiteral, tree)
     })

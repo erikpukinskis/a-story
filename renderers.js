@@ -125,7 +125,6 @@ library.define("symbols",
       element.style(".break", {
         "height": "0.75em",
         "width": "1.5em",
-        "background": "#fff"
       }),
 
     ])
@@ -346,11 +345,10 @@ library.define(
 
 
 
-
 library.define(
-  "render-function-literal",
-  ["web-element", "make-it-editable", "symbols", "colors", "expression-to-element"],
-  function(element, makeItEditable, symbols, colors, expressionToElement) {
+  "render-argument-name",
+  ["web-element", "make-it-editable"],
+  function(element, makeItEditable) {
 
     var renderArgumentName = element.template(
       ".function-argument",
@@ -369,6 +367,15 @@ library.define(
       }
     )
 
+    return renderArgumentName
+  }
+)
+
+
+library.define(
+  "render-function-literal",
+  ["web-element", "make-it-editable", "symbols", "colors", "expression-to-element"],
+  function(element, makeItEditable, symbols, colors, expressionToElement, renderArgumentName) {
 
     var previous
 
@@ -813,7 +820,7 @@ module.exports = library.export(
       bridge.addToHead(symbols.stylesheet)
     }
 
-    return defineOn
+    return {defineOn: defineOn}
   }
 )
 

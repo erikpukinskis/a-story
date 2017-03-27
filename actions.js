@@ -5,7 +5,7 @@ library.define(
   ["render-key-pair", "an-expression", "add-html"],
   function(keyPair, anExpression, addHtml) {
 
-    return function(treeId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
+    return function addKeyPair(treeId, insertByThisId, relationship, objectExpressionId, relativeToKey) {
 
       var tree = anExpression.getTree(treeId)
 

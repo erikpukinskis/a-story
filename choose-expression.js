@@ -48,9 +48,7 @@ module.exports = library.export(
 
       menu.choice(
         "Number",
-        anExpression.numberLiteral({
-          number: 0
-        })
+        anExpression.numberLiteral(0)
       ),
 
       menu.choice(

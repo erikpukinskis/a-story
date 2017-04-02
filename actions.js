@@ -84,7 +84,7 @@ library.define(
 
       var ghostElement = document.getElementById(ghostElementId)
 
-      addHtml[relationship](ghostElement, newElement.html())
+      addHtml[relationship](ghostElement, newElement.html()+"<div class=\"break\"></div>")
 
       tree.newexpression(parentExpression, newExpression)
 

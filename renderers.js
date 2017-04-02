@@ -125,6 +125,7 @@ library.define("symbols",
       element.style(".break", {
         "height": "0.75em",
         "width": "1.5em",
+        "visibility": "hidden",
       }),
 
     ])
@@ -194,7 +195,7 @@ library.define(
 
     var stylesheet = element.stylesheet([
       element.style(".function-call", {
-        "display": "inline",
+        "display": "block",
       }),
 
       element.style(".function-reference", {
@@ -420,7 +421,7 @@ library.define(
         "font-family": "sans-serif",
         "color": colors.black,
         "line-height": "1.2em",
-        "display": "inline",
+        "display": "block",
       }),
 
       element.style(".function-name", {
@@ -556,7 +557,7 @@ library.define(
 
     var stylesheet = element.stylesheet([
       element.style(".variable-assignment", {
-        "display": "inline",
+        "display": "block",
       }),
     ])
 

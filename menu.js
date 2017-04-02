@@ -82,6 +82,20 @@ module.exports = library.export(
       return {label: label, value: value}
     }
 
+    var stylesheet = element.stylesheet([
+      element.style(".menu-item", {
+        "display": "block",
+        "width": "200px",
+      }),
+    ])
+
+    showMenu.prepareBridge = function(bridge) {
+      if (bridge.remember("menu")) {
+        return
+      }
+      bridge.addToHead(stylesheet)
+      bridge.see("menu", true)
+    }
 
     return showMenu
 

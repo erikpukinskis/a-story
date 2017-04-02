@@ -16,6 +16,7 @@ module.exports = library.export(
       scrollToSelect({
         ids: tree.getIds(),
         onSelect: onSelect.bind(this),
+        onUnselect: hideControls,
         text: "EZJS"
       })
 
@@ -23,7 +24,6 @@ module.exports = library.export(
 
 
     function onSelect(selectedElement) {
-      hideControls()
 
       if (!selectedElement) {
         return
@@ -199,16 +199,25 @@ module.exports = library.export(
 
     lineControls.offsetCameraUp = offsetCameraUp
 
-    var stylesheet = element.stylesheet(
+    var stylesheet = element.stylesheet([
       element.style(".plus", {
-        "background-color": colors.canary,
-        "width": "30px",
-        "text-align": "center",
-        "padding": "2px 10px",
-        "margin": "0.5em 0 0.5em -0.5em",
+        "color": colors.canary,
+        "width": "2em",
+        "font-weight": "bold",
+        "padding": "0.2em 0",
+        "margin-left": "-0.2em",
         "cursor": "pointer",
-      })
-    )
+      }),
+
+      element.style(".menu-item.button", {
+        "background-color": colors.canary,
+        "color": "black",
+
+        ":hover": {
+          "background-color": "#ff9"
+        },
+      }),
+    ])
 
     lineControls.defineOn = function(bridge) {
       bridge.addToHead(stylesheet)

@@ -3,8 +3,8 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "render-expression",
-  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module", "web-element", "an-expression", "./line-controls"],
-  function(makeItEditable, expressionToElement, renderers, bridgeModule, element, anExpression, lineControls) {
+  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module", "web-element", "an-expression", "./line-controls", "basic-styles", "./menu"],
+  function(makeItEditable, expressionToElement, renderers, bridgeModule, element, anExpression, lineControls, basicStyles, menu) {
 
     function renderExpression(bridge, expression, tree) {
 
@@ -38,9 +38,10 @@ module.exports = library.export(
 
       if (bridge.remember("render-expression")) { return }
 
+      basicStyles.addTo(bridge)
       renderers.defineOn(bridge)
-
       lineControls.defineOn(bridge)
+      menu.prepareBridge(bridge)
 
       var anExpressionBinding = bridgeModule(library, "an-expression", bridge)
 
@@ -50,7 +51,7 @@ module.exports = library.export(
         [anExpressionBinding, bridgeModule(library, "./line-controls", bridge)],
         function bootExpression(anExpression, lineControls, treeId) {
           var tree = anExpression.getTree(treeId)
-          console.log("booted tree "+tree.expressionIds)
+          console.log("booted tree", tree.expressionIds)
           lineControls(tree)
         }
       )

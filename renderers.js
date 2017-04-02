@@ -399,8 +399,6 @@ library.define(
         el.attributes.onclick = getExpression.withArgs(addIt).evalable()
       }
 
-      tree.setParent(child.id, parent)
-
       el.classes.push("function-literal-line")
 
       if (previous) {
@@ -647,18 +645,17 @@ library.define(
 
         var first = true
 
-        for(var key in expression.valuesByKey) {
-
-          var valueExpression = expression.valuesByKey[key]
+        for(var i=0; i<expression.keys.length; i++) {
+          var key = expression.keys[i]
+          var pairId = expression.pairIds[i]
+          var valueExpression = expression.values[i]
 
           if (!first) {
             pairs.addChildren(symbols.br)
           }
           first = false
 
-          var pair = tree.addKeyPair(expression, key, valueExpression)
-
-          var el = renderKeyPair(pair, tree, options)
+          var el = renderKeyPair(pairId, key, valueExpression, tree, options)
 
           pairs.addChild(el)
         }
@@ -686,10 +683,7 @@ library.define(
 
     var renderKeyPair = element.template(
       ".key-pair",
-      function(pairExpression, tree, options) {
-        this.id = pairExpression.id
-
-        var key = pairExpression.key
+      function(pairId, key, valueExpression, tree, options) {
 
         var keyEl = element(
           "span.object-key",
@@ -698,19 +692,15 @@ library.define(
 
         makeItEditable(
           keyEl,
-          tree.asBinding().methodCall("getKeyName").withArgs(pairExpression.id),
-          tree.asBinding().methodCall("onKeyRename").withArgs(pairExpression.id)
+          tree.asBinding().methodCall("getKeyName").withArgs(pairId),
+          tree.asBinding().methodCall("onKeyRename").withArgs(pairId)
         )
 
         this.addChildren(keyEl, symbols.colon)
 
-        var valueExpression = pairExpression.objectExpression.valuesByKey[key]
-
         var valueElement =
           expressionToElement(
             valueExpression, tree, bridge, options)
-
-        tree.setKeyValue(pairExpression, valueExpression, valueElement)
 
         valueElement.classes.push("key-value")
 

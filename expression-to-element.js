@@ -7,7 +7,6 @@ module.exports = library.export(
     function expressionToElement(expression, tree, bridge, options) {
 
       if (!options) { options = {} }
-      var i = tree.reservePosition()
 
       if (typeof expression != "object" || !expression || !expression.kind) {
         throw new Error("Trying to turn "+stringify(expression)+" into an element, but it doesn't look like an expression")
@@ -33,8 +32,6 @@ module.exports = library.export(
       }
 
       el.id = expression.id
-
-      tree.addExpressionAt(expression, i)
 
       return el
     }

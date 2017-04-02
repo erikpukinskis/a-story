@@ -8,8 +8,7 @@ module.exports = library.export(
     var expressionChoices = [
       menu.choice(
         "drawScene(...)",
-        anExpression({
-          kind: "function call",
+        anExpression.functionCall({
           functionName: "drawScene",
           arguments: [
             triangle()
@@ -19,8 +18,7 @@ module.exports = library.export(
 
       menu.choice(
         "addHtml(\"<...>\")",
-        anExpression({
-          kind: "function call",
+        anExpression.functionCall({
           functionName: "addHtml",
           arguments: [
             anExpression.stringLiteral("")
@@ -50,38 +48,33 @@ module.exports = library.export(
 
       menu.choice(
         "Number",
-        anExpression({
-          kind: "number literal",
+        anExpression.numberLiteral({
           number: 0
         })
       ),
 
       menu.choice(
         "bridgeTo.browser(...)",
-        anExpression({
-          kind: "function call",
+        anExpression.functionCall({
           functionName: "bridgeTo.browser",
           arguments: [
-            {
-              kind: "function literal",
+            anExpression
+            .functionLiteral({
               argumentNames: [],
-              body: [anExpression.emptyExpression()]}
+              body: [anExpression.emptyExpression()]
+            })
           ]
         })
       ),
 
       menu.choice(
         "\"some text\"",
-        anExpression({
-          kind: "string literal",
-          string: ""
-        })
+        anExpression.stringLiteral("")
       ),
 
       menu.choice(
         "var yourVariable =",
-        anExpression({
-          kind: "variable assignment",
+        anExpression.variableAssignment({
           expression: anExpression.emptyExpression(),
           variableName: "fraggleRock"
         })
@@ -89,26 +82,23 @@ module.exports = library.export(
     ]
 
     function triangle() {
-      return anExpression({
-        kind: "array literal",
-        items: [
-          anExpression.objectLiteral({
-            name: "triangle",
-            position: [-1.5, 0.0, -7.0],
-            verticies: [
-               0.0,  1.0,  0.0,
-              -1.0, -1.0,  0.0,
-               1.0, -1.0,  0.0
-            ],
-            pointCount: 3,
-            colors: [
-              1.0, 0.4, 0.6, 1.0,
-              0.9, 0.4, 0.7, 1.0,
-              0.8, 0.4, 0.9, 1.0
-            ]
-          }),
-        ]
-      })
+      return anExpression.arrayLiteral([
+        anExpression.objectLiteral({
+          name: "triangle",
+          position: [-1.5, 0.0, -7.0],
+          verticies: [
+             0.0,  1.0,  0.0,
+            -1.0, -1.0,  0.0,
+             1.0, -1.0,  0.0
+          ],
+          pointCount: 3,
+          colors: [
+            1.0, 0.4, 0.6, 1.0,
+            0.9, 0.4, 0.7, 1.0,
+            0.8, 0.4, 0.9, 1.0
+          ]
+        }),
+      ])
     }
 
     return function chooseExpression(callback) {

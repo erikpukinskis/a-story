@@ -1,15 +1,8 @@
 var library = require("module-library")(require)
 
 library.using(
-  ["web-host", "an-expression", "./", "javascript-to-ezjs"],
-  function(host, anExpression, renderExpression, javascriptToEzjs) {
-
-    function juice(bar) {
-      return function(bridge) {
-        bridge.send("hello, world")
-      }
-    }
-
+  ["web-host", "an-expression", "./", "javascript-to-ezjs", "tell-the-universe", "browser-bridge", "web-element"],
+  function(host, anExpression, renderExpression, javascriptToEzjs, tellTheUniverse, BrowserBridge, element) {
 
     function buildAHouse(issueBond, showSource, library, renderBond) {
       var buildPanel = issueBond([
@@ -42,7 +35,6 @@ library.using(
     }
 
 
-    console.log("rendering", buildAHouse.toString())
     host.onSite(function(site) {
       renderExpression.prepareSite(site)
     })
@@ -51,11 +43,44 @@ library.using(
 
       var bridge = getBridge()
 
-      var functionLiteral = javascriptToEzjs(buildAHouse.toString())
+      var universe = tellTheUniverse.called("demo-module").withNames({anExpression: "an-expression"})
 
-      var tree = anExpression.tree()
+      // javascriptToEzjs.loud = true
 
-      renderExpression(bridge, functionLiteral, tree)
+      var tree = javascriptToEzjs(buildAHouse.toString(), universe)
+
+      console.log("literal has "+tree.root().body.length+" lines")
+
+      var partial = bridge.partial()
+
+      renderExpression(partial, tree.root(), tree)
+
+      console.log("literal has "+tree.root().body.length+" lines")
+
+      setTimeout(function() {
+        anExpression.forgetTrees()
+
+        var id = tree.id
+        tree = anExpression.getTree(id)
+
+        console.log("forgot trees. "+id+" = "+JSON.stringify(tree))
+
+        universe.playItBack()
+
+        tree = anExpression.getTree(id)
+        var source = anExpression.toJavascript(tree.root())
+
+        console.log("===\nSOURCE:\n", source+"\n===\n")
+
+        _wtf(tree)
+      }, 5000)
+
+      bridge.send(element(
+        element.style({
+          "margin-top": "175px"}),
+        partial
+      ))
+
     })
 
   }

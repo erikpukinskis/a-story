@@ -12,8 +12,13 @@ module.exports = library.export(
 
       var el = expressionToElement(expression, tree, bridge)
 
+      bridge.asap(
+        [bridgeModule(library, "an-expression", bridge)],
+        tree.builder()
+      )
+
       bridge.domReady(
-        bridge.remember("render-expression/loadTree").withArgs(tree.data())
+        bridge.remember("render-expression/boot").withArgs(tree.id)
       )
 
       bridge.send(el)
@@ -41,16 +46,16 @@ module.exports = library.export(
 
       bridgeModule(library, "renderers", bridge)
 
-      var loadTree = bridge.defineFunction(
+      var boot = bridge.defineFunction(
         [anExpressionBinding, bridgeModule(library, "./line-controls", bridge)],
-        function loadExpressionTree(anExpression, lineControls, data) {
-          var tree = anExpression.tree(data)
-          console.log("booted tree "+tree.id)
+        function bootExpression(anExpression, lineControls, treeId) {
+          var tree = anExpression.getTree(treeId)
+          console.log("booted tree "+tree.expressionIds)
           lineControls(tree)
         }
       )
 
-      bridge.see("render-expression/loadTree", loadTree)
+      bridge.see("render-expression/boot", boot)
 
       var get = bridge.defineFunction(
         [anExpressionBinding],

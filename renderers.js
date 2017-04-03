@@ -49,6 +49,7 @@ library.define("symbols",
 
       element.style(".comma-symbol", {
         "display": "inline-block",
+        "margin-left": "0.5em",
         "font-weight": "bold",
       }),
 
@@ -195,7 +196,7 @@ library.define(
 
     var stylesheet = element.stylesheet([
       element.style(".function-call", {
-        "display": "block",
+        // "display": "block",
       }),
 
       element.style(".function-reference", {
@@ -268,7 +269,7 @@ library.define(
       function stringLiteralRenderer(expression, tree, bridge, options) {
         this.id = expression.id
 
-        if (!expression.string || !expression.string.replace) {
+        if (typeof expression.string != "string") {
           throw new Error("Expected expression to have a string attribute: "+JSON.stringify(expression, null, 2))
         }
 
@@ -290,6 +291,12 @@ library.define(
     var stylesheet = element.stylesheet([
       element.style(".string-literal", {
         "display": "inline-block",
+        "background-color": "#f8f8f8"
+      }),
+
+      element.style(".selected .string-literal", {
+        "display": "inline-block",
+        "background-color": "#bef0ff"
       }),
     ])
 
@@ -311,12 +318,12 @@ library.define(
 
     var stylesheet = element.stylesheet([
       element.style(".number-literal", {
-        "display": "inline",
+        // "display": "inline",
       }),
     ])
 
     var renderNumberLiteral = element.template(
-      ".number-literal",
+      "span.number-literal",
       function numberLiteralRenderer(expression, tree, bridge, options) {
         this.id = expression.id
 
@@ -400,8 +407,6 @@ library.define(
         el.attributes.onclick = getExpression.withArgs(addIt).evalable()
       }
 
-      el.classes.push("function-literal-line")
-
       if (previous) {
         previous.classes.push("leads-to-"+child.kind.replace(" ", "-"))
 
@@ -426,6 +431,7 @@ library.define(
 
       element.style(".function-literal-line", {
         "margin-bottom": "0.5em",
+        "display": "block",
       }),
 
       element.style(".function-name", {
@@ -443,6 +449,10 @@ library.define(
           "color": colors.gunmetal,
           "font-weight": "bold",
         }
+      }),
+
+      element.style(".selected .function-signature, .selected .function-symbol, .selected .function-name", {
+        "color": "#99bbe4",
       }),
 
       element.style(".function-body", {
@@ -763,6 +773,10 @@ library.define(
         "border-left": "2pt solid #a9a9ff",
         "padding-left": "0.5em",
       }),
+
+      element.style(".array-item", {
+        "display": "block",
+      })
     ])
 
     var renderArrayLiteral = element.template(
@@ -774,15 +788,24 @@ library.define(
 
         for (var i=0; i< expression.items.length; i++) {
 
+          var itemExpression = expression.items[i]
+
+          var itemEl = element(".array-item")
+
           if (i > 0) {
             options.addSymbolsHere.addChild(symbols.arrayDelimiter)
-
-            this.addChild(symbols.br)
           }
 
-          var item = expressionToElement(expression.items[i], tree, bridge, options)
+          var expressionEl = expressionToElement(itemExpression, tree, bridge, options)
 
-          this.addChildren(item)
+          itemEl.id = itemExpression.id
+          delete expressionEl.id
+
+          itemEl.addChild(expressionEl)
+
+          this.addChild(itemEl)
+
+          options.addSymbolsHere = itemEl
         }
 
         options.addSymbolsHere.addChild(symbols.closeArray)

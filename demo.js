@@ -5,30 +5,28 @@ library.using(
   function(host, anExpression, renderExpression, javascriptToEzjs, tellTheUniverse, BrowserBridge, element) {
 
     function buildAHouse(issueBond, showSource, library, renderBond) {
-      var buildPanel = issueBond([
+      issueBond("floor panel")
+
+      issueBond.addTasks([
         "cut studs to length",
         "cut track to length",
         "crimp",
         "add sheathing",
         "flipsulate",
-        "add sheathing"]
-      )
+        "add sheathing",
+      ])
 
-      issueBond.expense(
-        buildPanel,
+      issueBond.expense(buildPanel,
         "labor",
         "$100"
       )
-
-      checkBook(
-        "someString",
-        {"one of": 1001, "two-w3":2222}
+      issueBond.expense(buildPanel,
+        "steel studs",
+        "$20"
       )
-
-      showSource.hostModule(
-        library,
-        "render-bond",
-        buildPanel
+      issueBond.expense(buildPanel,
+        "plywood",
+        "$10"
       )
 
       return buildPanel

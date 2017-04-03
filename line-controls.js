@@ -42,11 +42,11 @@ module.exports = library.export(
       controlsSelector = ".controls-for-"+selectedElement.id
 
       if (pairExpression) {
-        showKeyValueControls(pairExpression, this.tree, "object literal")
+        showKeyValueControls(pairExpression, this.tree)
       } else if (isLine) {
-        showLineControls(selectedElement, this.tree, "function literal")
+        showLineControls(selectedElement, this.tree)
       } else if (isItem) {
-        showLineControls(selectedElement, this.tree, "array literal")
+        showArrayItemControls(selectedElement, this.tree)
       }
 
     }
@@ -64,8 +64,39 @@ module.exports = library.export(
       offsetCameraUp(-1)
     }
 
+    function showArrayItemControls(lineElement, tree) {
 
-    function showLineControls(lineElement, tree, parentKind) {
+      showPlusses(
+        lineElement,
+        ".array-item",
+        function addClickHandler(plusButton, relativeToThisId, relationship) {
+
+          // hacky:
+
+          var add = functionCall("library.get(\"add-line\")")
+
+          // could be something like:
+          //
+          // var add = library.buildSingletonCall("add-line")
+
+          add = add.withArgs(
+            tree.id,
+            plusButton.assignId(),
+            relativeToThisId,
+            relationship
+          )
+
+          var showMenu = functionCall("library.get(\"choose-expression\")")
+
+          plusButton.onclick(showMenu.withArgs(add))
+        }
+      )
+
+    }
+
+
+
+    function showLineControls(lineElement, tree) {
 
       showPlusses(
         lineElement,
@@ -215,6 +246,10 @@ module.exports = library.export(
         "font-weight": "bold",
         "margin-left": "-0.2em",
         "cursor": "pointer",
+
+        ".array-item": {
+          "color": colors.electric,
+        }
       }),
 
       element.style(".menu-item.button", {

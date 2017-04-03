@@ -24,16 +24,6 @@ module.exports = library.export(
       bridge.send(el)
     }
 
-    renderExpression.prepareSite = function(site) {
-
-      site.addRoute(
-        "get",
-        "/render-module/styles.css",
-        site.sendFile(__dirname, "styles.css")
-      )
-
-    }
-
     function prepareBridge(bridge) {
 
       if (bridge.remember("render-expression")) { return }

@@ -33,10 +33,6 @@ library.using(
     }
 
 
-    host.onSite(function(site) {
-      renderExpression.prepareSite(site)
-    })
-
     host.onRequest(function(getBridge) {
 
       var bridge = getBridge()
@@ -47,13 +43,10 @@ library.using(
 
       var tree = javascriptToEzjs(buildAHouse.toString(), universe)
 
-      console.log("literal has "+tree.root().body.length+" lines")
-
       var partial = bridge.partial()
 
       renderExpression(partial, tree.root(), tree)
 
-      console.log("literal has "+tree.root().body.length+" lines")
 
       setTimeout(function() {
         anExpression.forgetTrees()

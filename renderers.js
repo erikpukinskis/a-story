@@ -424,6 +424,10 @@ library.define(
         "display": "block",
       }),
 
+      element.style(".function-literal-line", {
+        "margin-bottom": "0.5em",
+      }),
+
       element.style(".function-name", {
         "color": colors.gunmetal,
         "display": "inline",
@@ -489,9 +493,9 @@ library.define(
         var body = element(".function-body")
 
         for(var i=0; i<expression.body.length; i++) {
-          if (i > 0) {
-            body.addChild(symbols.emptyLine)
-          }
+          // if (i > 0) {
+          //   body.addChild(symbols.emptyLine)
+          // }
 
           var child = renderChild(expression, tree, bridge, options, expression.body[i])
 

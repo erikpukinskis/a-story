@@ -33,14 +33,20 @@ module.exports = library.export(
 
       var pairExpression = getSelectedKeyPair(this.tree, selectedExpressionId)
 
-      var isLine = this.tree.get(selectedElement.id).role == "function literal line"
+      var expression = this.tree.get(selectedElement.id)
+
+      var isLine = expression.role == "function literal line"
+
+      var isItem = expression.role == "array item"
 
       controlsSelector = ".controls-for-"+selectedElement.id
 
       if (pairExpression) {
-        showKeyValueControls(pairExpression, this.tree)
+        showKeyValueControls(pairExpression, this.tree, "object literal")
       } else if (isLine) {
-        showLineControls(selectedElement, this.tree)
+        showLineControls(selectedElement, this.tree, "function literal")
+      } else if (isItem) {
+        showLineControls(selectedElement, this.tree, "array literal")
       }
 
     }
@@ -59,10 +65,11 @@ module.exports = library.export(
     }
 
 
-    function showLineControls(lineElement, tree) {
+    function showLineControls(lineElement, tree, parentKind) {
 
       showPlusses(
         lineElement,
+        ".function-literal-line",
         function addClickHandler(plusButton, relativeToThisId, relationship) {
 
           // hacky:
@@ -98,6 +105,7 @@ module.exports = library.export(
 
       showPlusses(
         pairElement,
+        "",
         function addClickHandler(plusButton, relativeToThisId, relationship) {
 
           var add = functionCall("library.get(\"add-key-pair\")")
@@ -116,7 +124,7 @@ module.exports = library.export(
 
     }
 
-    function showPlusses(selectedNode, addClickHandler) {
+    function showPlusses(selectedNode, styleSelector, addClickHandler) {
 
       var controls = document.querySelectorAll(controlsSelector)
 
@@ -127,20 +135,20 @@ module.exports = library.export(
         ["before", "after"].forEach(
           function(beforeOrAfter) {
 
-            var baby = element(
-              ".plus"+controlsSelector,
+            var plusButton = element(
+              ".plus"+controlsSelector+styleSelector,
               "+"
             )
       
             addClickHandler(
-              baby,
+              plusButton,
               selectedNode.id,
               beforeOrAfter
             )
 
             addHtml[beforeOrAfter](
               selectedNode,
-              baby.html()
+              plusButton.html()
             )
 
           }
@@ -202,9 +210,9 @@ module.exports = library.export(
     var stylesheet = element.stylesheet([
       element.style(".plus", {
         "color": colors.canary,
+        "display": "inline-block",
         "width": "2em",
         "font-weight": "bold",
-        "padding": "0.2em 0",
         "margin-left": "-0.2em",
         "cursor": "pointer",
       }),

@@ -33,6 +33,10 @@ module.exports = library.export(
 
       el.id = expression.id
 
+      if (expression.role == "function literal line") {
+        el.addSelector(".function-literal-line")
+      }
+
       return el
     }
 

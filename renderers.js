@@ -33,31 +33,44 @@ library.define("symbols",
       "var": element(".variable-symbol", "var"),
       "return": element(".return-symbol", "return"),
       "function": element(".function-symbol", "function "),
-      "openFunction": element(".scope-symbol", "{"),
-      "closeFunction": element(".scope-symbol", "}"),
-      "openObject": element(".object-delimiter", "{"),
-      "closeObject": element(".object-delimiter", "}"),
-      "openArguments": element(".call-symbol", "("),
-      "closeArguments": element(".call-symbol", ")"),
-      "openArray": element(".array-symbol", "["),
-      "closeArray": element(".array-symbol", "]"),
+      "openFunction": element(".scope-symbol.symbol", "{"),
+      "closeFunction": element(".scope-symbol.symbol", "}"),
+      "openObject": element(".object-delimiter.symbol", "{"),
+      "closeObject": element(".object-delimiter.symbol", "}"),
+      "openArguments": element(".call-symbol.symbol", "("),
+      "closeArguments": element(".call-symbol.symbol", ")"),
+      "openArray": element(".array-symbol.symbol", "["),
+      "closeArray": element(".array-symbol.symbol", "]"),
       "arrayDelimiter": element(".array-delimiter", ","),
       "emptyLine": element(".break"),
     }
 
     var stylesheet = element.stylesheet([
 
+      // element.style(".symbol", {
+      //   "display": "none !important",
+      // }),
+
+      // element.style(".function-body, .array-literal", {
+      //   "border-left": "none !important",
+      // }),
+
       element.style(".comma-symbol", {
         "display": "inline-block",
         "margin-left": "0.5em",
         "font-weight": "bold",
+        "font-size": "1.25em",
+        "line-height": "0.8em",
+        "color": colors.gunmetal,
       }),
 
       element.style(".array-delimiter", {
         "display": "inline-block",
         "font-weight": "bold",
-        "color": colors.electric,
-        "margin-left": "0.5em",
+        "font-size": "1.25em",
+        "line-height": "0.8em",
+        "color": "#808eff",
+        "margin-left": "0.4em",
       }),
 
       element.style(".colon-symbol", {
@@ -261,8 +274,8 @@ library.define(
 
 library.define(
   "render-string-literal",
-  ["web-element", "make-it-editable", "colors"],
-  function(element, makeItEditable, colors) {
+  ["web-element", "make-it-editable"],
+  function(element, makeItEditable) {
 
     var renderStringLiteral = element.template(
       ".string-literal",
@@ -294,13 +307,13 @@ library.define(
       }),
 
       element.style(".string-literal .string", {
-        "background-color": "#fff8e5",
-        "color": "#595977",
+        // "background-color": "#f7f7f7", //"#fffde6",
+        "border-bottom": "1px solid #eee",
+        "color": "#496953",
       }),
 
       element.style(".selected .string", {
-        "background-color": "#bef0ff",
-        "color": colors.black,
+        "border-bottom-color": "#ade4ff",
       }),
     ])
 
@@ -428,6 +441,7 @@ library.define(
 
       element.style(".function-literal", {
         "font-family": "sans-serif",
+        "font-size": "1.1em",
         "color": colors.black,
         "line-height": "1.2em",
         "display": "block",
@@ -465,7 +479,6 @@ library.define(
         "padding-left": "0.5em",
       }),
     ])
-
 
     var renderFunctionLiteral =  element.template(
       ".function-literal",

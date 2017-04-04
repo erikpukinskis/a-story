@@ -261,8 +261,8 @@ library.define(
 
 library.define(
   "render-string-literal",
-  ["web-element", "make-it-editable"],
-  function(element, makeItEditable) {
+  ["web-element", "make-it-editable", "colors"],
+  function(element, makeItEditable, colors) {
 
     var renderStringLiteral = element.template(
       ".string-literal",
@@ -275,7 +275,7 @@ library.define(
 
         var escaped = expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")
 
-        this.addChild(element.raw(escaped))
+        this.addChild(element("span.string", escaped))
 
         makeItEditable(
           this,
@@ -291,12 +291,16 @@ library.define(
     var stylesheet = element.stylesheet([
       element.style(".string-literal", {
         "display": "inline-block",
-        "background-color": "#f8f8f8"
       }),
 
-      element.style(".selected .string-literal", {
-        "display": "inline-block",
-        "background-color": "#bef0ff"
+      element.style(".string-literal .string", {
+        "background-color": "#fff8e5",
+        "color": "#595977",
+      }),
+
+      element.style(".selected .string", {
+        "background-color": "#bef0ff",
+        "color": colors.black,
       }),
     ])
 

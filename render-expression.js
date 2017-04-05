@@ -41,7 +41,6 @@ module.exports = library.export(
         [anExpressionBinding, bridgeModule(library, "./line-controls", bridge)],
         function bootExpression(anExpression, lineControls, treeId) {
           var tree = anExpression.getTree(treeId)
-          console.log("booted tree", tree.expressionIds)
           lineControls(tree)
         }
       )

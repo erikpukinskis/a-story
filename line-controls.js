@@ -17,7 +17,7 @@ module.exports = library.export(
         ids: tree.getIds(),
         onSelect: onSelect.bind(this),
         onUnselect: hideControls,
-        text: "EZJS"
+        text: "EZJS",
       })
 
     }
@@ -263,6 +263,7 @@ module.exports = library.export(
     ])
 
     lineControls.defineOn = function(bridge) {
+      scrollToSelect.defineOn(bridge)
       bridge.addToHead(stylesheet)
     }
     return lineControls

@@ -445,7 +445,7 @@ library.define(
 
       element.style(".function-literal", {
         "font-family": "sans-serif",
-        "font-size": "1.1em",
+        "font-size": "1em",
         "color": colors.black,
         "line-height": "1.2em",
         "display": "block",
@@ -561,7 +561,7 @@ library.define(
         this.addChild(symbols.return)
 
         var rhs = expressionToElement(expression.expression, tree, bridge, options)
-
+        rhs.addSelector(".returned-expression")
         this.addChild(rhs)
       }
     )
@@ -571,10 +571,11 @@ library.define(
         "display": "inline",
       }),
 
-      element.style(".rhs", {
-        "margin-left": "1em",
-        "display": "block",
+      element.style(".returned-expression", {
+        "display": "inline",
       }),
+
+
     ])
 
     renderReturnStatement.defineOn = function(bridge) {
@@ -594,6 +595,10 @@ library.define(
       element.style(".variable-assignment", {
         "display": "block",
       }),
+
+      element.style(".rhs", {
+        "margin-left": "0.5em",
+      })
     ])
 
     var renderVariableAssignment = element.template(

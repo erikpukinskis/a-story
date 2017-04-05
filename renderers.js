@@ -288,13 +288,15 @@ library.define(
 
         var escaped = expression.string.replace(/\</g, "&lt;").replace(/\>/g, "&gt;")
 
-        this.addChild(element("span.string", escaped))
+        var textEl = element("span.string", escaped)
 
         makeItEditable(
-          this,
+          textEl,
           bridge.remember("render-expression/getExpressionProperty").withArgs(tree.id, expression.id, "string"),
           bridge.remember("render-expression/setExpressionProperty").withArgs(tree.id, expression.id, "string")
         )
+
+        this.addChild(textEl)
 
         options.addSymbolsHere = this
 
@@ -303,12 +305,14 @@ library.define(
 
     var stylesheet = element.stylesheet([
       element.style(".string-literal", {
-        "display": "inline-block",
+        "display": "inline",
       }),
 
       element.style(".string-literal .string", {
         // "background-color": "#f7f7f7", //"#fffde6",
+        "display": "inline",
         "border-bottom": "1px solid #eee",
+        "line-height": "1.2em",
         "color": "#496953",
       }),
 

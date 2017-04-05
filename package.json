@@ -1,6 +1,6 @@
 {
   "name": "render-expression",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "Web editor for a single unit of javascript code",
   "main": "render-expression.js",
   "dependencies": {

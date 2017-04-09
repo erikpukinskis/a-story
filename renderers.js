@@ -11,19 +11,21 @@ function toModuleName(kind) {
 }
 
 
-library.define("colors", function() {
+library.define("theme", function() {
   return {
     canary: "#f5df2f",
     gunmetal: "#bec9d6",
-    black:  "#557",
+    black:  "#779", //"#557",
     electric: "#a9a9ff",
+    borderWidth: "2pt",
+    tab: "0.5em",
   }
 })
 
 
 library.define("symbols",
-  ["web-element", "colors"],
-  function(element, colors) {
+  ["web-element", "theme"],
+  function(element, theme) {
 
     var elements = {
       "br": element("br"),
@@ -57,11 +59,11 @@ library.define("symbols",
 
       element.style(".comma-symbol", {
         "display": "inline-block",
-        "margin-left": "0.5em",
+        "margin-left": theme.tab,
         "font-weight": "bold",
         "font-size": "1.25em",
         "line-height": "0.8em",
-        "color": colors.gunmetal,
+        "color": theme.gunmetal,
       }),
 
       element.style(".array-delimiter", {
@@ -69,26 +71,26 @@ library.define("symbols",
         "font-weight": "bold",
         "font-size": "1.25em",
         "line-height": "0.8em",
-        "color": "#808eff",
+        "color": "#808eff",me
         "margin-left": "0.4em",
       }),
 
       element.style(".colon-symbol", {
-        "color": colors.electric,
+        "color": theme.electric,
         "display": "inline-block",
         "font-weight": "bold",
-        "margin": "0 0.5em",
+        "margin": "0 "+theme.tab,
       }),
 
       element.style(".equals-symbol", {
-        "color": colors.black,
+        "color": theme.black,
         "display": "inline-block",
         "padding-left": "0.5em",
         "font-weight": "bold",
       }),
 
       element.style(".variable-symbol", {
-        "color": colors.black,
+        "color": theme.black,
         "display": "inline-block",
         "padding-right": "0.5em",
         "font-weight": "bold",
@@ -102,35 +104,35 @@ library.define("symbols",
       }),
 
       element.style(".function-symbol", {
-        "color": colors.gunmetal,
+        "color": theme.gunmetal,
         "display": "inline-block",
         "font-weight": "bold",
       }),
 
 
       element.style(".scope-symbol", {
-        "color": colors.canary,
+        "color": theme.canary,
         "display": "inline-block",
         "padding-left": "0.5em",
         "font-weight": "bold",
       }),
 
       element.style(".object-delimiter", {
-        "color": colors.electric,
+        "color": theme.electric,
         "display": "inline-block",
         "padding-left": "0.5em",
         "font-weight": "bold",
       }),
 
       element.style(".call-symbol", {
-        "color": colors.gunmetal,
+        "color": theme.gunmetal,
         "display": "inline-block",
         "padding-left": "0.5em",
         "font-weight": "bold",
       }),
 
       element.style(".array-symbol", {
-        "color": colors.electric,
+        "color": theme.electric,
         "display": "inline-block",
         "padding-left": "0.5em",
         "font-weight": "bold",
@@ -203,8 +205,8 @@ library.define(
 
 library.define(
   "render-function-call",
-  ["web-element", "./expression-to-element", "make-it-editable", "symbols"],
-  function(element, expressionToElement, makeItEditable, symbols) {
+  ["web-element", "./expression-to-element", "make-it-editable", "symbols", "theme"],
+  function(element, expressionToElement, makeItEditable, symbols, theme) {
 
 
     var stylesheet = element.stylesheet([
@@ -217,7 +219,7 @@ library.define(
       }),
 
       element.style(".arguments", {
-        "margin-left": "1em",
+        "margin-left": theme.tab,
       })
     ])
 
@@ -403,8 +405,8 @@ library.define(
 
 library.define(
   "render-function-literal",
-  ["web-element", "make-it-editable", "symbols", "colors", "expression-to-element", "render-argument-name"],
-  function(element, makeItEditable, symbols, colors, expressionToElement, renderArgumentName) {
+  ["web-element", "make-it-editable", "symbols", "theme", "expression-to-element", "render-argument-name"],
+  function(element, makeItEditable, symbols, theme, expressionToElement, renderArgumentName) {
 
     var previous
 
@@ -445,8 +447,7 @@ library.define(
 
       element.style(".function-literal", {
         "font-family": "sans-serif",
-        "font-size": "1em",
-        "color": colors.black,
+        "color": theme.black,
         "line-height": "1.2em",
         "display": "block",
       }),
@@ -457,18 +458,23 @@ library.define(
       }),
 
       element.style(".function-name", {
-        "color": colors.gunmetal,
+        "color": theme.gunmetal,
         "display": "inline",
         "margin-left": "0.5em",
       }),
 
       element.style(".function-signature", {
-        "color": colors.gunmetal,
+        "color": theme.gunmetal,
         "margin-left": "1em",
         "margin-bottom": "0.5em",
 
+        ".no-arguments": {
+          "display": "inline",
+          "margin-left": "0em",
+        },
+
         ".comma-symbol": {
-          "color": colors.gunmetal,
+          "color": theme.gunmetal,
           "font-weight": "bold",
         }
       }),
@@ -479,8 +485,8 @@ library.define(
 
       element.style(".function-body", {
         "margin-left": "1em",
-        "border-left": "2pt solid "+colors.canary,
-        "padding-left": "0.5em",
+        "border-left": theme.borderWidth+" solid "+theme.canary,
+        "padding-left": theme.tab,
       }),
     ])
 
@@ -489,6 +495,17 @@ library.define(
       function functionLiteralRenderer(expression, tree, bridge, options) {
 
         this.id = expression.id
+
+        var moduleSymbol = element("module", element.style({
+          "font-weight": "bold",
+          "display": "inline-block",
+          "margin-right": "0.5em",
+          "color": theme.gunmetal,
+        }))
+
+        if (expression == tree.root()) {
+          this.addChild(moduleSymbol)
+        }
 
         this.addChild(symbols.function)
 
@@ -502,6 +519,10 @@ library.define(
 
         var sig = element(
           ".function-signature")
+
+        if (expression.argumentNames.length == 0) {
+          sig.addSelector(".no-arguments")
+        }
 
         expression.argumentNames.forEach(function(name, i) {
             var el = renderArgumentName(expression.id, name, i, tree)
@@ -588,8 +609,8 @@ library.define(
 
 library.define(
   "render-variable-assignment",
-  ["web-element", "./expression-to-element", "make-it-editable", "symbols"],
-  function(element, expressionToElement, makeItEditable, symbols) {
+  ["web-element", "./expression-to-element", "make-it-editable", "symbols", "theme"],
+  function(element, expressionToElement, makeItEditable, symbols, theme) {
 
     var stylesheet = element.stylesheet([
       element.style(".variable-assignment", {
@@ -597,7 +618,7 @@ library.define(
       }),
 
       element.style(".rhs", {
-        "margin-left": "0.5em",
+        "margin-left": theme.tab,
       })
     ])
 
@@ -653,8 +674,8 @@ library.define(
 
 library.define(
   "render-object-literal",
-  ["web-element", "render-key-pair", "symbols", "colors"],
-  function(element, renderKeyPair, symbols, colors) {
+  ["web-element", "render-key-pair", "symbols", "theme"],
+  function(element, renderKeyPair, symbols, theme) {
 
     var stylesheet = element.stylesheet([
       element.style(".object-literal", {
@@ -667,7 +688,7 @@ library.define(
 
       element.style(".object-key", {
         "font-weight": "bold",
-        "color": colors.electric,
+        "color": theme.electric,
       }),
 
       element.style(".key-pair", {
@@ -791,13 +812,13 @@ library.define(
 
 library.define(
   "render-array-literal",
-  ["web-element", "./expression-to-element", "symbols"],
-  function(element, expressionToElement, symbols) {
+  ["web-element", "./expression-to-element", "symbols", "theme"],
+  function(element, expressionToElement, symbols, theme) {
 
     var stylesheet = element.stylesheet([
       element.style(".array-literal", {
-        "border-left": "2pt solid #a9a9ff",
-        "padding-left": "0.5em",
+        "border-left": theme.borderWidth+" solid #a9a9ff",
+        "padding-left": theme.tab,
       }),
 
       element.style(".array-item", {

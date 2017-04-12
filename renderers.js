@@ -252,7 +252,7 @@ library.define(
             args.addChild(symbols.br)
           }
 
-          var argEl = expressionToElement(arg, tree, bridge, options)
+          var argEl = expressionToElement(bridge, arg, tree, options)
 
           args.addChild(argEl)
         }
@@ -416,7 +416,7 @@ library.define(
 
       child.role = "function literal line"
 
-      var el = expressionToElement(child, tree, bridge, options)
+      var el = expressionToElement(bridge, child, tree, options)
 
       if (child.kind == "empty expression") {
 
@@ -581,7 +581,7 @@ library.define(
 
         this.addChild(symbols.return)
 
-        var rhs = expressionToElement(expression.expression, tree, bridge, options)
+        var rhs = expressionToElement(bridge, expression.expression, tree, options)
         rhs.addSelector(".returned-expression")
         this.addChild(rhs)
       }
@@ -651,8 +651,8 @@ library.define(
           throw new Error("rhs of assignment is fucked: "+JSON.stringify(expression, null, 2))
         }
 
-        var rhs = expressionToElement(
-          expression.expression, tree, bridge, options)
+        var rhs = expressionToElement(bridge, 
+          expression.expression, tree, options)
 
         // tree.setParent(rhs.id, expression)
 
@@ -761,8 +761,8 @@ library.define(
         this.addChildren(keyEl, symbols.colon)
 
         var valueElement =
-          expressionToElement(
-            valueExpression, tree, bridge, options)
+          expressionToElement(bridge, 
+            valueExpression, tree, options)
 
         valueElement.classes.push("key-value")
 
@@ -843,7 +843,7 @@ library.define(
             options.addSymbolsHere.addChild(symbols.arrayDelimiter)
           }
 
-          var expressionEl = expressionToElement(itemExpression, tree, bridge, options)
+          var expressionEl = expressionToElement(bridge, itemExpression, tree, options)
 
           itemEl.id = itemExpression.id
           delete expressionEl.id

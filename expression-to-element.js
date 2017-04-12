@@ -4,7 +4,7 @@ module.exports = library.export(
   "expression-to-element",
   function() {
 
-    function expressionToElement(expression, tree, bridge, options) {
+    function expressionToElement(bridge, expression, tree, options) {
 
       if (!options) { options = {} }
 

@@ -3,17 +3,17 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "render-expression",
-  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module", "web-element", "an-expression", "./line-controls", "basic-styles", "./menu"],
-  function(makeItEditable, expressionToElement, renderers, bridgeModule, element, anExpression, lineControls, basicStyles, menu) {
+  ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module", "web-element", "an-expression", "./line-controls", "basic-styles", "./menu", library.ref()],
+  function(makeItEditable, expressionToElement, renderers, bridgeModule, element, anExpression, lineControls, basicStyles, menu, lib) {
 
     function renderExpression(bridge, expression, tree) {
 
       prepareBridge(bridge)
 
-      var el = expressionToElement(expression, tree, bridge)
+      var el = expressionToElement(bridge, expression, tree)
 
       bridge.asap(
-        [bridgeModule(library, "an-expression", bridge)],
+        [bridgeModule(lib, "an-expression", bridge)],
         tree.builder()
       )
 
@@ -33,15 +33,19 @@ module.exports = library.export(
       lineControls.defineOn(bridge)
       menu.prepareBridge(bridge)
 
-      var anExpressionBinding = bridgeModule(library, "an-expression", bridge)
+      var anExpressionBinding = bridgeModule(lib, "an-expression", bridge)
 
-      bridgeModule(library, "renderers", bridge)
+      bridgeModule(lib, "renderers", bridge)
 
       var boot = bridge.defineFunction(
-        [anExpressionBinding, bridgeModule(library, "./line-controls", bridge)],
-        function bootExpression(anExpression, lineControls, treeId) {
+        [
+        anExpressionBinding,
+        bridgeModule(lib, "./line-controls", bridge),
+        bridge.asBinding()
+        ],
+        function bootExpression(anExpression, lineControls, bridge, treeId) {
           var tree = anExpression.getTree(treeId)
-          lineControls(tree)
+          lineControls(tree, bridge)
         }
       )
 
@@ -67,11 +71,17 @@ module.exports = library.export(
 
       bridge.see("render-expression/setExpressionProperty", set)
 
-      bridgeModule(library, "make-it-editable", bridge)
+      bridgeModule(lib, "make-it-editable", bridge)
 
       makeItEditable.prepareBridge(bridge)
 
       bridge.see("render-expression", true)
+    }
+
+    renderExpression.defineOn = function(bridge) {
+      prepareBridge(bridge)
+
+      return bridgeModule(lib, "expression-to-element", bridge)
     }
 
     return renderExpression

@@ -1,5 +1,6 @@
 var library = require("module-library")(require)
 
+
 library.define(
   "add-key-pair",
   ["render-key-pair", "an-expression", "add-html"],
@@ -69,15 +70,19 @@ library.define(
   ["expression-to-element", "add-html", "an-expression"],
   function(expressionToElement, addHtml, anExpression) {
 
-    function addLine(treeId, ghostElementId, relativeToThisId, relationship, newExpression) {
+    function addLine(bridge, treeId, ghostElementId, relativeToThisId, relationship, newExpression) {
     
       var tree = anExpression.getTree(treeId)
 
       var parentExpression = tree.getParentOf(relativeToThisId)
 
+      if (!parentExpression) {
+        throw new Error(relativeToThisId+" doesn't seem to have a parent?")
+      }
+      
       newExpression.role = "function literal line"
 
-      var newElement = expressionToElement(
+      var newElement = expressionToElement(bridge, 
           newExpression, tree)
 
       tree.insertExpression(newExpression, relationship, relativeToThisId)

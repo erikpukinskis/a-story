@@ -9,9 +9,10 @@ module.exports = library.export(
     var controlsAreVisible
     var controlsSelector
 
-    function LineControls(tree) {
+    function LineControls(tree, bridge) {
 
       this.tree = tree
+      this.bridge = bridge
        
       scrollToSelect({
         ids: tree.getIds(),
@@ -42,11 +43,11 @@ module.exports = library.export(
       controlsSelector = ".controls-for-"+selectedElement.id
 
       if (pairExpression) {
-        showKeyValueControls(pairExpression, this.tree)
+        showKeyValueControls(this.bridge, pairExpression, this.tree)
       } else if (isLine) {
-        showLineControls(selectedElement, this.tree)
+        showLineControls(this.bridge, selectedElement, this.tree)
       } else if (isItem) {
-        showArrayItemControls(selectedElement, this.tree)
+        showArrayItemControls(this.bridge, selectedElement, this.tree)
       }
 
     }
@@ -64,7 +65,7 @@ module.exports = library.export(
       offsetCameraUp(-1)
     }
 
-    function showArrayItemControls(lineElement, tree) {
+    function showArrayItemControls(bridge, lineElement, tree) {
 
       showPlusses(
         lineElement,
@@ -80,6 +81,7 @@ module.exports = library.export(
           // var add = library.buildSingletonCall("add-line")
 
           add = add.withArgs(
+            bridge.asBinding(),
             tree.id,
             plusButton.assignId(),
             relativeToThisId,
@@ -96,7 +98,7 @@ module.exports = library.export(
 
 
 
-    function showLineControls(lineElement, tree) {
+    function showLineControls(bridge, lineElement, tree) {
 
       showPlusses(
         lineElement,
@@ -112,6 +114,7 @@ module.exports = library.export(
           // var add = library.buildSingletonCall("add-line")
 
           add = add.withArgs(
+            bridge.asBinding(),
             tree.id,
             plusButton.assignId(),
             relativeToThisId,
@@ -126,7 +129,7 @@ module.exports = library.export(
 
     }
 
-    function showKeyValueControls(pair, tree) {
+    function showKeyValueControls(bridge, pair, tree) {
 
       var pairElement = document.getElementById(pair.id)
 
@@ -142,6 +145,7 @@ module.exports = library.export(
           var add = functionCall("library.get(\"add-key-pair\")")
 
           add = add.withArgs(
+            bridge.asBinding(),
             tree.id,
             plusButton.assignId(),
             relationship,

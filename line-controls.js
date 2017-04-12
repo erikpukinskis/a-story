@@ -2,8 +2,8 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "line-controls",
-  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "scroll-to-select", "./choose-expression", "colors"],
-  function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect, chooseExpression, colors) {
+  ["web-element", "function-call", "add-html", "add-line", "add-key-pair", "scroll-to-select", "./choose-expression", "theme"],
+  function(element, functionCall, addHtml, addLine, addKeyPair, scrollToSelect, chooseExpression, theme) {
 
     var selectionIsHidden = true
     var controlsAreVisible
@@ -244,7 +244,7 @@ module.exports = library.export(
 
     var stylesheet = element.stylesheet([
       element.style(".plus", {
-        "color": colors.canary,
+        "color": theme.canary,
         "display": "inline-block",
         "width": "2em",
         "font-weight": "bold",
@@ -252,12 +252,12 @@ module.exports = library.export(
         "cursor": "pointer",
 
         ".array-item": {
-          "color": colors.electric,
+          "color": theme.electric,
         }
       }),
 
       element.style(".menu-item.button", {
-        "background-color": colors.canary,
+        "background-color": theme.canary,
         "color": "black",
 
         ":hover": {

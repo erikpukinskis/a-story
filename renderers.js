@@ -71,7 +71,7 @@ library.define("symbols",
         "font-weight": "bold",
         "font-size": "1.25em",
         "line-height": "0.8em",
-        "color": "#808eff",me
+        "color": "#808eff",
         "margin-left": "0.4em",
       }),
 

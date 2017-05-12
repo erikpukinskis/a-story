@@ -249,7 +249,6 @@ library.define(
 
           if (i > 0) {
             options.addSymbolsHere.addChild(symbols.comma)
-            args.addChild(symbols.br)
           }
 
           var argEl = expressionToElement(bridge, arg, tree, options)
@@ -313,9 +312,9 @@ library.define(
       element.style(".string-literal .string", {
         // "background-color": "#f7f7f7", //"#fffde6",
         "display": "inline",
-        "border-bottom": "1px solid #eee",
+        "border-bottom": "1px solid #aaa",
         "line-height": "1.2em",
-        "color": "#496953",
+        // "color": "#496953",
       }),
 
       element.style(".selected .string", {
@@ -717,7 +716,7 @@ library.define(
           }
           first = false
 
-          var el = renderKeyPair(pairId, key, valueExpression, tree, options)
+          var el = renderKeyPair(bridge, pairId, key, valueExpression, tree, options)
 
           pairs.addChild(el)
         }
@@ -745,7 +744,7 @@ library.define(
 
     var renderKeyPair = element.template(
       ".key-pair",
-      function(pairId, key, valueExpression, tree, options) {
+      function(bridge, pairId, key, valueExpression, tree, options) {
 
         var keyEl = element(
           "span.object-key",

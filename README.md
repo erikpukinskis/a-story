@@ -3,7 +3,7 @@
 ```javascript
 var anExpression = require("an-expression")
 var renderExpression = require("render-expression")
-var BrowserBridge = new BrowserBridge()
+var BrowserBridge = require("browser-bridge")
 var app = require("express")()
 
 var tree = anExpression.tree()

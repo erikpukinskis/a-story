@@ -161,8 +161,8 @@ library.define(
     return element.template(
       ".empty-expression.code-button",
       "empty",
-      function emptyExpressionRenderer(expression) {
-        this.id = expression.id
+      function renderEmptyExpression(expression, tree, bridge, options) {
+
 
         // this stuff is really weird. It seems like I have to do it because expressionToElement is recursive. But really I could do the same thing with expressionRoles and valueExpressionKeys objects.
 
@@ -194,7 +194,7 @@ library.define(
 
     return element.template(
       ".source-code",
-      function emptyExpressionRenderer(expression) {
+      function(expression) {
         this.addChild(expression.source.trim())
       }
     )

@@ -226,7 +226,6 @@ library.define(
     var renderFunctionCall = element.template(
       ".function-call",
       function functionCallRenderer(expression, tree, bridge, options) {
-        this.id = expression.id
 
         var label = element(".function-reference", expression.functionName)
 
@@ -281,7 +280,6 @@ library.define(
     var renderStringLiteral = element.template(
       ".string-literal",
       function stringLiteralRenderer(expression, tree, bridge, options) {
-        this.id = expression.id
 
         if (typeof expression.string != "string") {
           throw new Error("Expected expression to have a string attribute: "+JSON.stringify(expression, null, 2))
@@ -347,7 +345,6 @@ library.define(
     var renderNumberLiteral = element.template(
       "span.number-literal",
       function numberLiteralRenderer(expression, tree, bridge, options) {
-        this.id = expression.id
 
         if (typeof expression.number != "number") {
           throw new Error("Number on expression "+JSON.stringify(expression)+" isn't a number")
@@ -493,8 +490,6 @@ library.define(
       ".function-literal",
       function functionLiteralRenderer(expression, tree, bridge, options) {
 
-        this.id = expression.id
-
         var moduleSymbol = element("module", element.style({
           "font-weight": "bold",
           "display": "inline-block",
@@ -624,7 +619,6 @@ library.define(
     var renderVariableAssignment = element.template(
       ".variable-assignment",
       function(expression, tree, bridge, options) {
-        this.id = expression.id
 
         if (!expression.variableName) {
           throw new Error("can't render a variable assignment without a variable name. Expression: "+JSON.stringify(expression, null, 2))
@@ -698,7 +692,6 @@ library.define(
     var renderObjectLiteral = element.template(
       ".object-literal",
       function(expression, tree, bridge, options) {
-        this.id = expression.id
 
         options.addSymbolsHere.addChild(symbols.openObject)
 
@@ -828,7 +821,6 @@ library.define(
     var renderArrayLiteral = element.template(
       ".array-literal",
       function(expression, tree, bridge, options) {
-        this.id = expression.id
 
         options.addSymbolsHere.addChild(symbols.openArray)
 

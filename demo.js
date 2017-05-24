@@ -1,8 +1,8 @@
 var library = require("module-library")(require)
 
 library.using(
-  ["web-host", "an-expression", "./", "javascript-to-ezjs", "tell-the-universe", "browser-bridge", "web-element"],
-  function(host, anExpression, renderExpression, javascriptToEzjs, tellTheUniverse, BrowserBridge, element) {
+  ["web-host", "an-expression", "./", "javascript-to-ezjs", "tell-the-universe", "browser-bridge", "web-element", "an-expression"],
+  function(host, anExpression, renderExpression, javascriptToEzjs, tellTheUniverse, BrowserBridge, element, anExpression) {
 
     function buildAHouse(issueBond, showSource, library, renderBond) {
       issueBond("floor panel")
@@ -41,7 +41,10 @@ library.using(
 
       // javascriptToEzjs.loud = true
 
-      var tree = javascriptToEzjs(buildAHouse.toString(), universe)
+
+      var tree = anExpression.tree()
+      tree.logTo(universe)
+      javascriptToEzjs(buildAHouse.toString(), tree)
 
       var partial = bridge.partial()
 

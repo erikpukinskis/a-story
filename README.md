@@ -50,6 +50,8 @@ function buildAHouse(issueBond, showSource, library, renderBond) {
 }
 ```
 
+### Screenshot
+
 ![source code screenshot](/screenshot.gif)
 
 ### Internal documentation

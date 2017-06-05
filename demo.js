@@ -5,6 +5,8 @@ library.using(
   function(host, anExpression, renderExpression, javascriptToEzjs, tellTheUniverse, BrowserBridge, element, anExpression) {
 
     function buildAHouse(issueBond, showSource, library, renderBond) {
+      var foo = "bar"
+
       issueBond("floor panel")
 
       issueBond.addTasks([
@@ -44,12 +46,12 @@ library.using(
 
       var tree = anExpression.tree()
       tree.logTo(universe)
+
       javascriptToEzjs(buildAHouse.toString(), tree)
 
       var partial = bridge.partial()
 
-      renderExpression(partial, tree.root(), tree)
-
+      renderExpression(partial, tree.rootId(), tree)
 
       setTimeout(function() {
         anExpression.forgetTrees()

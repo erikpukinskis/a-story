@@ -6,11 +6,11 @@ module.exports = library.export(
   ["make-it-editable", "./expression-to-element", "./renderers", "bridge-module", "web-element", "an-expression", "./line-controls", "basic-styles", "./menu", library.ref()],
   function(makeItEditable, expressionToElement, renderers, bridgeModule, element, anExpression, lineControls, basicStyles, menu, lib) {
 
-    function renderExpression(bridge, expression, tree) {
+    function renderExpression(bridge, expressionId, tree) {
 
       prepareBridge(bridge)
 
-      var el = expressionToElement(bridge, expression, tree)
+      var el = expressionToElement(bridge, expressionId, tree)
 
       bridge.asap(
         [bridgeModule(lib, "an-expression", bridge)],
@@ -55,7 +55,7 @@ module.exports = library.export(
         [anExpressionBinding],
         function getExpressionProperty(anExpression, treeId, expressionId, key) {
           var tree = anExpression.getTree(treeId)
-          return tree.getProperty(key, expressionId)
+          return tree.getAttribute(key, expressionId)
         }
       )
 
@@ -65,7 +65,7 @@ module.exports = library.export(
         [anExpressionBinding],
         function setExpressionProperty(anExpression, treeId, expressionId, key, value) {
           var tree = anExpression.getTree(treeId)
-          tree.setProperty(key, expressionId, value)
+          tree.setAttribute(key, expressionId, value)
         }
       )
 

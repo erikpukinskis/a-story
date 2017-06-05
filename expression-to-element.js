@@ -4,15 +4,11 @@ module.exports = library.export(
   "expression-to-element",
   function() {
 
-    function expressionToElement(bridge, expression, tree, options) {
+    function expressionToElement(bridge, expressionId, tree, options) {
 
       if (!options) { options = {} }
 
-      if (typeof expression != "object" || !expression || !expression.kind) {
-        throw new Error("Trying to turn "+stringify(expression)+" into an element, but it doesn't look like an expression")
-      }
-
-      var kind = expression.kind
+      var kind = tree.getAttribute("kind", expressionId)
 
       var moduleName = "render-"+kind.replace(" ", "-")
 
@@ -23,19 +19,19 @@ module.exports = library.export(
       }
 
       if (!tree) {throw new Error()}
-      var el = render(expression, tree, bridge, options)
+      var el = render(expressionId, tree, bridge, options)
 
-      if (el.id && el.id != expression.id) {
-        console.log("expression:", expression)
+      if (el.id && el.id != expressionId) {
+        console.log("expression:", expressionId)
         console.log("element:", el)
         throw new Error("Expression element ids must match the expression id")
       }
 
-      el.id = expression.id
+      el.id = expressionId
 
-      if (expression.role == "function literal line") {
-        el.addSelector(".function-literal-line")
-      }
+      // if (tree.getRole(expressionId) == "function literal line") {
+      //   el.addSelector(".function-literal-line")
+      // }
 
       return el
     }

@@ -156,8 +156,8 @@ body, button {
 
 
 .source-code {
-  background: black;
-  color: lime;
+  background: lime;
+  color: black;
   white-space: pre;
   font-family: Lucida Console, Monaco, monospace;
   display: inline;
@@ -189,9 +189,9 @@ body, button {
   padding-left: 0.8em;
 }
 
-.leads-to-function-call {
+/*.leads-to-function-call {
   border-left: 2px dashed #eee;
-}
+}*/
 
 /* Is this really supposed to be .indenter? Just guessing. This should be refactored without the descendant selector anyway. */
 

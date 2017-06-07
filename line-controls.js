@@ -28,22 +28,20 @@ module.exports = library.export(
 
       if (!selectedElement) {
         return
-      }      
+      }
 
-      var selectedExpressionId = selectedElement.id
+      var selectedId = selectedElement.id
 
-      var pairExpression = getSelectedKeyPair(this.tree, selectedExpressionId)
+      var isLine = this.tree.getRole(selectedId) == "function literal line"
 
-      var expression = this.tree.get(selectedElement.id)
+      var isItem = this.tree.getRole(selectedId) == "array item"
 
-      var isLine = expression.role == "function literal line"
+      var pairId = getSelectedKeyPairId(this.tree, selectedId)
 
-      var isItem = expression.role == "array item"
+      controlsSelector = ".controls-for-"+selectedId
 
-      controlsSelector = ".controls-for-"+selectedElement.id
-
-      if (pairExpression) {
-        showKeyValueControls(this.bridge, pairExpression, this.tree)
+      if (pairId) {
+        showKeyValueControls(this.bridge, pairId, this.tree)
       } else if (isLine) {
         showLineControls(this.bridge, selectedElement, this.tree)
       } else if (isItem) {
@@ -129,13 +127,15 @@ module.exports = library.export(
 
     }
 
-    function showKeyValueControls(bridge, pair, tree) {
+    function showKeyValueControls(bridge, pairId, tree) {
+      throw new Error("refactor to use pairId instead of keyPair")
 
-      var pairElement = document.getElementById(pair.id)
+      var pairElement = document.getElementById(pairId)
 
       // we have expr-lf06, but we're looking for expr-ts
 
-      var objectExpression = pair.objectExpression
+      var objectId = tree.getAttribute("objectId", pairId)
+      var key = tree.getAttribute("key", pairId)
 
       showPlusses(
         pairElement,
@@ -149,8 +149,8 @@ module.exports = library.export(
             tree.id,
             plusButton.assignId(),
             relationship,
-            objectExpression.id,
-            pair.key
+            objectId,
+            key
           )
 
           plusButton.onclick(add)
@@ -198,22 +198,22 @@ module.exports = library.export(
 
     }
 
-    function getSelectedKeyPair(tree, expressionId) {
-
-      var expression = tree.get(expressionId)
+    function getSelectedKeyPairId(tree, expressionId) {
 
       var nextId = expressionId
-      var parent
-      var possibleValueExpression = expression
+      var parentId
+      var possibleValueId = expressionId
 
-      while(parent = tree.getParentOf(nextId)) {
-        if (parent.kind == "object literal") {
-          var keyPair = tree.getPairForValueId(possibleValueExpression.id)
+      while(parentId = tree.getParentOf(nextId)) {
 
-          return keyPair
+        var parentIsObject = tree.getAttribute("kind", parentId) == "object literal"
+
+        if (parentIsObject) {
+          return tree.getAttribute("pairId", possibleValueId)
         }
-        possibleValueExpression = parent
-        nextId = parent.id
+
+        possibleValueId = parentId
+        nextId = parentId
       }
     }
 

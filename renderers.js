@@ -800,7 +800,6 @@ library.define(
 
           var itemEl = element(".array-item", {id: itemId}, expressionEl)
 
-          debugger
           arrayEl.addChild(itemEl)
 
           options.addSymbolsHere = itemEl

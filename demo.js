@@ -45,6 +45,7 @@ library.using(
 
 
       var tree = anExpression.tree()
+      universe.do("anExpression.tree", tree.id)
       tree.logTo(universe)
 
       javascriptToEzjs(buildAHouse.toString(), tree)
@@ -64,7 +65,7 @@ library.using(
         universe.playItBack()
 
         tree = anExpression.getTree(id)
-        var source = anExpression.toJavascript(tree.root())
+        var source = tree.toJavaScript()
 
         console.log("===\nSOURCE:\n", source+"\n===\n")
 
